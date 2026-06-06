@@ -12,7 +12,7 @@
 //
 // Renders nothing if already unlocked (parent will render the thesis).
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAccount, useChainId, useSignTypedData, useSwitchChain } from 'wagmi'
 import { parseUnits } from 'viem'
 import {
@@ -95,6 +95,8 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   const chainId = useChainId() // returns the wallet's raw chainId number — even for chains we haven't registered in wagmi config
   const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain()
   const { signTypedDataAsync } = useSignTypedData()
+  // Captured for diagnostics when signing fails.
+  const lastTypedData = useRef<any>(null)
   const isConnected = accountStatus === 'connected'
   const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
   // Now correctly catches Ethereum mainnet / Polygon / any non-Base chain.
@@ -176,18 +178,27 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
         environment: env,
       })
 
-      // (3) sign typed data via wagmi (the kit-in-main-flow moment)
+      // (3a) Pre-flight: verify the wallet PROVIDER agrees we're on
+      // Base Sepolia. wagmi can lag the connector during fast switches.
+      const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
+      const providerChainHex: string | undefined = eth?.chainId
+      const providerChainNum = providerChainHex ? parseInt(providerChainHex, 16) : null
+      if (providerChainNum != null && providerChainNum !== PUBLIC.chainId) {
+        throw Object.assign(new Error(`provider chainId ${providerChainNum} ≠ expected ${PUBLIC.chainId}`), { code: 'PROVIDER_CHAIN_MISMATCH' })
+      }
+
+      // (3b) Build the typed-data payload using the kit's own struct helper.
       const struct = toDelegationStruct(delegation)
-      const signature = await signTypedDataAsync({
+      const typedData = {
         account: address,
         domain: {
-          name: 'DelegationManager',
-          version: '1',
+          name: 'DelegationManager' as const,
+          version: '1' as const,
           chainId: PUBLIC.chainId,
           verifyingContract: env.DelegationManager as `0x${string}`,
         },
-        types: SIGNABLE_DELEGATION_TYPED_DATA,
-        primaryType: 'Delegation',
+        types: SIGNABLE_DELEGATION_TYPED_DATA as any,
+        primaryType: 'Delegation' as const,
         message: {
           delegate: struct.delegate as `0x${string}`,
           delegator: struct.delegator as `0x${string}`,
@@ -198,7 +209,42 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
           })),
           salt: BigInt(struct.salt),
         },
-      })
+      }
+      lastTypedData.current = typedData
+
+      // (3c) Sign via wagmi. If wagmi's connector adapter bounces with -32603,
+      // fall back to calling window.ethereum directly with eth_signTypedData_v4.
+      let signature: `0x${string}`
+      try {
+        signature = await signTypedDataAsync(typedData)
+      } catch (wagmiErr: any) {
+        // eslint-disable-next-line no-console
+        console.warn('[UnlockThesis] wagmi signTypedData failed, trying raw provider:', wagmiErr)
+        const code = wagmiErr?.code ?? wagmiErr?.cause?.code
+        if (eth && (code === -32603 || /Internal error|invalid argument/i.test(wagmiErr?.message ?? ''))) {
+          // Manual fallback path — bypasses wagmi's encoder.
+          const payload = {
+            types: { EIP712Domain: [
+              { name: 'name', type: 'string' },
+              { name: 'version', type: 'string' },
+              { name: 'chainId', type: 'uint256' },
+              { name: 'verifyingContract', type: 'address' },
+            ], ...typedData.types },
+            primaryType: 'Delegation',
+            domain: typedData.domain,
+            message: {
+              ...typedData.message,
+              salt: typedData.message.salt.toString(), // hex/number-string for raw RPC
+            },
+          }
+          signature = await eth.request({
+            method: 'eth_signTypedData_v4',
+            params: [address, JSON.stringify(payload)],
+          }) as `0x${string}`
+        } else {
+          throw wagmiErr
+        }
+      }
 
       const signedDelegation = { ...delegation, signature }
       const permissionContext = encodeDelegations([signedDelegation as any])
@@ -226,11 +272,44 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       }
       setState({ kind: 'unlocked', data: json.locked, tx: json.unlock?.settlementTxHash })
     } catch (e) {
-      // Log the raw error to the console so we (and the user) can read the
-      // full structure. The classified version is what the UI surfaces.
+      // Log the raw error + the typed data we tried to sign so we (and the
+      // user) can read the full structure in DevTools and the UI.
       // eslint-disable-next-line no-console
-      console.error('[UnlockThesis] sign/settle failed:', e)
-      const { cause, message, detail } = classifyError(e)
+      console.error('[UnlockThesis] sign/settle failed:', e, { lastTypedData: lastTypedData.current })
+
+      // Build a verbose diagnostic dump for the UI expander.
+      const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
+      const dump = {
+        wagmi: { address, chainId },
+        provider: {
+          chainIdHex: eth?.chainId ?? null,
+          chainIdNum: eth?.chainId ? parseInt(eth.chainId, 16) : null,
+          selectedAddress: eth?.selectedAddress ?? null,
+          isMetaMask: eth?.isMetaMask ?? false,
+        },
+        target: { expectedChainId: PUBLIC.chainId },
+        typedDataDomain: lastTypedData.current?.domain ?? null,
+        typedDataMessage: lastTypedData.current?.message ? {
+          ...lastTypedData.current.message,
+          salt: lastTypedData.current.message.salt?.toString(),
+        } : null,
+        error: {
+          message: (e as any)?.message ?? String(e),
+          code: (e as any)?.code ?? null,
+          shortMessage: (e as any)?.shortMessage ?? null,
+          details: (e as any)?.details ?? null,
+          name: (e as any)?.name ?? null,
+          cause: (e as any)?.cause ? {
+            message: (e as any).cause?.message,
+            code: (e as any).cause?.code,
+            name: (e as any).cause?.name,
+          } : null,
+        },
+      }
+      const { cause, message } = classifyError(e)
+      let detail: string
+      try { detail = JSON.stringify(dump, null, 2) }
+      catch { detail = String(e) }
       setState({ kind: 'error', cause, message, detail })
     }
   }
