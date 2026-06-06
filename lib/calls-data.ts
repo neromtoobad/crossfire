@@ -186,7 +186,20 @@ export const SAMPLE_CALLS: PublishedCall[] = [
 ]
 
 export function loadCalls(): PublishedCall[] {
-  return SAMPLE_CALLS
+  // Server-side: stored calls take precedence; samples back-fill so the feed
+  // is never empty during early demos.
+  if (typeof process === 'undefined' || typeof window !== 'undefined') {
+    return SAMPLE_CALLS
+  }
+  try {
+    // Defer import so client bundle isn't dragged into reading fs.
+    const mod = require('./calls-store.js') as typeof import('./calls-store.js')
+    const stored = mod.loadStoredCalls()
+    if (stored.length === 0) return SAMPLE_CALLS
+    return [...stored, ...SAMPLE_CALLS].slice(0, 12)
+  } catch {
+    return SAMPLE_CALLS
+  }
 }
 
 export function getCallById(id: string): PublishedCall | undefined {
