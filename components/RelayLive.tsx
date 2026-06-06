@@ -6,11 +6,14 @@ import { useEffect, useRef, useState } from 'react'
 import { CF } from '../lib/theme'
 
 type LogLine = { kind: 'info' | 'good' | 'bad'; text: string; tx?: string; status?: string }
+type WebhookConfig = { url: string; source: string } | null
 
 const BASESCAN_MAINNET = (h: string) => `https://basescan.org/tx/${h}`
 
 export function RelayLive() {
   const [enabled, setEnabled] = useState<boolean | null>(null)
+  const [webhookConfig, setWebhookConfig] = useState<WebhookConfig>(null)
+  const [webhookHits, setWebhookHits] = useState<number>(0)
   const [running, setRunning] = useState(false)
   const [lines, setLines] = useState<LogLine[]>([])
   const [taskId, setTaskId] = useState<string | null>(null)
@@ -20,7 +23,12 @@ export function RelayLive() {
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    fetch('/api/relay/run').then((r) => r.json()).then((j) => setEnabled(j.enabled))
+    fetch('/api/relay/run')
+      .then((r) => r.json())
+      .then((j) => {
+        setEnabled(j.enabled)
+        setWebhookConfig(j.webhook ?? null)
+      })
       .catch(() => setEnabled(false))
   }, [])
 
@@ -41,9 +49,19 @@ export function RelayLive() {
       case 'estimated':
         return { kind: 'good', text: `✓ estimate succeeded · required payment ${e.requiredPayment} atoms USDC` }
       case 'submitted':
-        return { kind: 'good', text: `✓ submitted to relayer · TaskId ${String(e.taskId).slice(0,12)}… · webhook ${e.webhook ?? '(polling)'}` }
+        return { kind: 'good', text: `✓ submitted to relayer · TaskId ${String(e.taskId).slice(0,12)}… · webhook ${e.webhook ? 'subscribed' : '(polling)'}` }
       case 'status-tick':
         return { kind: 'info', text: `· status: ${e.statusName} (${e.status})`, status: e.statusName }
+      case 'webhook-config':
+        return e.url
+          ? { kind: 'info', text: `· webhook listener configured · ${e.source === 'env' ? 'env' : 'tunnel'} → ${e.url}` }
+          : { kind: 'info', text: `· no webhook URL configured — falling back to polling only` }
+      case 'webhook-received':
+        return {
+          kind: 'good',
+          text: `↩ WEBHOOK from 1Shot · status ${e.status}${e.txHash ? ` · tx ${String(e.txHash).slice(0,10)}…` : ''}`,
+          tx: e.txHash,
+        }
       case 'terminal':
         return {
           kind: e.isSuccess ? 'good' : 'bad',
@@ -65,6 +83,7 @@ export function RelayLive() {
   async function start() {
     if (running || !enabled) return
     setLines([]); setTaskId(null); setStatus(null); setDone(null); setResultTx(null)
+    setWebhookHits(0)
     setRunning(true)
     const ctrl = new AbortController()
     abortRef.current = ctrl
@@ -94,6 +113,7 @@ export function RelayLive() {
           try { evt = JSON.parse(line) } catch { continue }
           if (evt.type === 'submitted') setTaskId(evt.taskId)
           if (evt.type === 'status-tick') setStatus(evt.statusName)
+          if (evt.type === 'webhook-received') setWebhookHits((n) => n + 1)
           if (evt.type === 'terminal') {
             setStatus(evt.statusName)
             if (evt.txHash) setResultTx(evt.txHash)
@@ -153,13 +173,37 @@ export function RelayLive() {
           </div>
           <p style={{
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
-            marginTop: 8, marginBottom: 0, maxWidth: 580, lineHeight: 1.55,
+            marginTop: 8, marginBottom: 10, maxWidth: 580, lineHeight: 1.55,
           }}>
             One click: USER EOA signs a capped USDC delegation + an in-flight
             EIP-7702 authorization upgrading to a Stateless7702 delegator. 1Shot
             redeems it, pays the fee in USDC, and broadcasts on Base mainnet.
             Gas paid in USDC, no ETH needed.
           </p>
+          {/* Webhook listener status */}
+          {webhookConfig ? (
+            <div className="mono" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '4px 10px', borderRadius: 999,
+              background: CF.bullTint, color: CF.bullInk,
+              border: `1px solid ${CF.bull}33`,
+              fontSize: 10.5, letterSpacing: 0.3, fontWeight: 600,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: CF.bull }} />
+              WEBHOOK LISTENING · {webhookConfig.source.toUpperCase()}
+              {webhookHits > 0 ? <span style={{ color: CF.bull }}>· {webhookHits} received</span> : null}
+            </div>
+          ) : (
+            <div className="mono" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '4px 10px', borderRadius: 999,
+              background: CF.surface2, color: CF.ink3,
+              border: `1px dashed ${CF.line2}`,
+              fontSize: 10.5, letterSpacing: 0.3,
+            }}>
+              webhook not configured · polling only · `npm run tunnel` to enable
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           {enabled === null ? (

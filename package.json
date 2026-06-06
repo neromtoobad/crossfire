@@ -17,6 +17,8 @@
     "council:test": "tsx scripts/test-council.ts",
     "relayer:caps": "tsx scripts/relayer-caps.ts",
     "relay:bet": "tsx scripts/relay-bet.ts",
+    "tunnel": "tsx scripts/tunnel.ts",
+    "tunnel:clear": "tsx scripts/tunnel.ts --clear",
     "dev": "next dev"
   },
   "license": "MIT",

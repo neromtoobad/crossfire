@@ -7,6 +7,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { appendRelayerEvent } from '../../../lib/relayer-state.js'
+import { publish } from '../../../lib/webhook-bus.js'
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   let body: any
@@ -31,13 +32,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     )
   }
 
-  appendRelayerEvent({
-    receivedAt: Date.now(),
-    taskId,
-    status,
-    txHash,
-    rawPayload: body,
-  })
+  const receivedAt = Date.now()
+  appendRelayerEvent({ receivedAt, taskId, status, txHash, rawPayload: body })
+  // Live fan-out — any open NDJSON relay stream subscribed to this taskId
+  // (or the global "any webhook" indicator) gets it instantly.
+  publish({ receivedAt, taskId, status, txHash, raw: body })
 
   return NextResponse.json({ ok: true, taskId, status })
 }
