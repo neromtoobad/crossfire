@@ -203,6 +203,15 @@ export function loadCalls(): PublishedCall[] {
 }
 
 export function getCallById(id: string): PublishedCall | undefined {
+  // Server-side: search live store first, then fall back to samples.
+  if (typeof process !== 'undefined' && typeof window === 'undefined') {
+    try {
+      const mod = require('./calls-store.js') as typeof import('./calls-store.js')
+      const stored = mod.loadStoredCalls()
+      const fromStore = stored.find((c) => c.id === id)
+      if (fromStore) return fromStore
+    } catch { /* fall through */ }
+  }
   return SAMPLE_CALLS.find((c) => c.id === id)
 }
 
