@@ -7,6 +7,7 @@ import { ConnectButton } from '../components/ConnectButton'
 import { CallCard } from '../components/CallCard'
 import { RunCouncilLive } from '../components/RunCouncilLive'
 import { RelayLive } from '../components/RelayLive'
+import { RevertProof } from '../components/RevertProof'
 import { loadCalls } from '../lib/calls-data'
 import { loadMarketsMeta } from '../lib/markets-data'
 import { CF } from '../lib/theme'
@@ -242,11 +243,29 @@ export default async function Landing() {
           </div>
           <h2 style={{
             fontFamily: CF.display, fontWeight: 500, fontSize: 40,
-            letterSpacing: -1, color: CF.ink, margin: '0 0 28px',
+            letterSpacing: -1, color: CF.ink, margin: '0 0 16px',
             fontVariationSettings: '"opsz" 96', maxWidth: 640,
           }}>
             Every primitive verified on a real chain.
           </h2>
+          <p style={{
+            fontFamily: CF.body, fontSize: 15.5, color: CF.ink2, maxWidth: 640,
+            margin: '0 0 24px', lineHeight: 1.55,
+          }}>
+            Run the revert live below, or browse the five receipts from each
+            primitive that ships in CROSSFIRE.
+          </p>
+
+          {/* HERO: live revert proof */}
+          <div style={{ marginBottom: 20 }}>
+            <RevertProof />
+          </div>
+
+          <div className="mono" style={{
+            fontSize: 11, letterSpacing: 2.4, color: CF.ink3, margin: '32px 0 12px',
+          }}>
+            RECEIPTS
+          </div>
           <div style={{
             background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg,
             boxShadow: CF.shadow.card, overflow: 'hidden',
