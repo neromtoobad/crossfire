@@ -8,7 +8,7 @@
 // to /api/mandate. The MetaMask popup is the integration the judges
 // need to see in the demo video.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAccount, useWalletClient } from 'wagmi'
 import { parseUnits } from 'viem'
 import {
@@ -37,8 +37,16 @@ type Props = {
 }
 
 export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
-  const { address, isConnected, chain } = useAccount()
+  // wagmi state hydrates AFTER first render in Next.js SSR — without these
+  // flags we briefly show "Connect wallet" even for users with a session in
+  // localStorage, because the server has no idea about their wallet.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  const { address, status: accountStatus, chain } = useAccount()
   const { data: walletClient } = useWalletClient()
+  const isConnected = accountStatus === 'connected'
+  const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
 
   const [capUsdc, setCapUsdc] = useState<number>(MANDATE_LIMITS.defaultCapUsdc)
   const [hours, setHours] = useState<number>(MANDATE_LIMITS.defaultExpiryHours)
@@ -154,8 +162,25 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
     )
   }
 
+  // ── Hydrating / reconnecting ─────────────────────────────────────────
+  // Show a calm loading state until wagmi has reconciled with the wallet.
+  // Without this, users with a live wallet session see "Connect wallet"
+  // for ~1 second before wagmi reports them as connected.
+  if (!mounted || isReconnecting) {
+    return (
+      <div style={panelStyle()}>
+        <div style={{ fontFamily: CF.mono, fontSize: 10.5, letterSpacing: 1.6, color: CF.dim, marginBottom: 14 }}>
+          CHECKING WALLET…
+        </div>
+        <p style={{ fontFamily: CF.display, color: CF.dim, lineHeight: 1.6, fontSize: 14, margin: 0 }}>
+          One moment — restoring your wallet session.
+        </p>
+      </div>
+    )
+  }
+
   // ── Not connected gate ────────────────────────────────────────────────
-  if (!isConnected) {
+  if (!isConnected || !address) {
     return (
       <div style={panelStyle()}>
         <div style={{ fontFamily: CF.mono, fontSize: 10.5, letterSpacing: 1.6, color: CF.dim, marginBottom: 14 }}>

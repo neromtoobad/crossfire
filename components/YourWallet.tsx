@@ -48,7 +48,13 @@ type Position = {
 }
 
 export function YourWallet() {
-  const { address, isConnected } = useAccount()
+  // wagmi hydration guard — same reasoning as in GrantMandate.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  const { address, status } = useAccount()
+  const isConnected = status === 'connected'
+  const isReconnecting = status === 'reconnecting' || status === 'connecting'
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
 
@@ -131,7 +137,9 @@ export function YourWallet() {
     }
   }
 
-  if (!isConnected) return null
+  // Don't flash an empty state before wagmi resolves.
+  if (!mounted || isReconnecting) return null
+  if (!isConnected || !address) return null
 
   const activeMandates = mandates.filter((m) => !m.revoked && m.expiresAt > Date.now())
   const positionsWithBets = positions.filter((p) => p.hasPosition)

@@ -4,7 +4,7 @@
 // Self-contained styling that matches the landing/dashboard token palette.
 
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const CF = {
   bull: '#3bc4ff',
@@ -20,10 +20,51 @@ const CF = {
 }
 
 export function ConnectButton({ variant = 'primary' }: { variant?: 'primary' | 'ghost' }) {
-  const { address, isConnected, chain } = useAccount()
+  // wagmi hydration guard — see GrantMandate for the same pattern.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  const { address, status, chain } = useAccount()
   const { connect, connectors, isPending, error } = useConnect()
   const { disconnect } = useDisconnect()
   const [open, setOpen] = useState(false)
+
+  const isConnected = status === 'connected'
+  const isReconnecting = status === 'reconnecting' || status === 'connecting'
+
+  // Until wagmi hydrates, render an inert placeholder with the same footprint
+  // so the layout doesn't jump and users with a session don't see "Connect"
+  // for a frame before reconnect lands.
+  if (!mounted || isReconnecting) {
+    return (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 18px',
+          borderRadius: 8,
+          background: CF.panel,
+          color: CF.dim,
+          fontFamily: CF.mono,
+          fontSize: 12,
+          letterSpacing: 0.3,
+          border: `1px solid ${CF.edge}`,
+        }}
+      >
+        <span
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: 999,
+            background: CF.dim,
+            opacity: 0.6,
+          }}
+        />
+        {mounted ? 'reconnecting…' : ''}
+      </span>
+    )
+  }
 
   const baseStyle: React.CSSProperties =
     variant === 'primary'
