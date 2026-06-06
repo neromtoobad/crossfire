@@ -1,0 +1,49 @@
+{
+  "deployedAt": "2026-06-06T14:05:31.033Z",
+  "markets": [
+    {
+      "id": "btc-200k-2026",
+      "title": "Will Bitcoin hit $200,000 by Dec 31, 2026?",
+      "question": "Will Bitcoin trade above $200,000 USD at any point before Dec 31, 2026?",
+      "address": "0xe4fe1aa438d1053d4e8a6976ec509708ae8719ab",
+      "deployTx": "0x2ee7d35c2345e7c06f526eee7b98a8870fb79b17a8e5a0f9ac634a028b8bd3d7",
+      "closeTime": "2026-06-13T14:05:13.000Z",
+      "seedSide": "YES",
+      "seedAmountUsdc": "2",
+      "seedTransferTx": "0x76a7af0ed87f37abbbb133a21974bf83c2c2b19046a21f5b6a07df318c584cac"
+    },
+    {
+      "id": "fed-rate-cut",
+      "title": "Will the Fed cut rates at the next FOMC meeting?",
+      "question": "Will the FOMC vote to cut the federal funds rate at the next scheduled meeting?",
+      "address": "0x8d0b92549ecdc9668becd97cee2090db9dc7c12c",
+      "deployTx": "0x3bd8cfbf619dfb0f822002649b508cdd4de9ad8e1f7714b9449fb2322a80941c",
+      "closeTime": "2026-06-13T14:05:13.000Z",
+      "seedSide": "NO",
+      "seedAmountUsdc": "1.5",
+      "seedTransferTx": "0xa4473adf2390f2d0ec63fea21be4642cfb4beb4abf8e39f560679d5acfe7471c"
+    },
+    {
+      "id": "trump-sbf-pardon",
+      "title": "Will Trump pardon Sam Bankman-Fried?",
+      "question": "Will President Trump issue a pardon for Sam Bankman-Fried in 2026?",
+      "address": "0xa06d034fcaf738784d4670b9145c6c0f6d0b12dc",
+      "deployTx": "0x69ceb08703a1b4a22127458f4c712cbeb822ba738f2c4a2b285519781770be00",
+      "closeTime": "2026-06-13T14:05:13.000Z",
+      "seedSide": "NO",
+      "seedAmountUsdc": "3",
+      "seedTransferTx": "0xe568fc94890a2daf229758c566200d27b139a33b1659407f195a740daf9b2a1b"
+    },
+    {
+      "id": "openai-gpt6-2026",
+      "title": "Will OpenAI release GPT-6 in 2026?",
+      "question": "Will OpenAI release a model branded as GPT-6 (or equivalent flagship) before Dec 31, 2026?",
+      "address": "0x10d7cdf75e2ccca0d23234b295797e0761056888",
+      "deployTx": "0x244fe0f5618572cabf341297180c3df0d4ad8533f77650521ee43796218f6ccf",
+      "closeTime": "2026-06-13T14:05:13.000Z",
+      "seedSide": "YES",
+      "seedAmountUsdc": "1",
+      "seedTransferTx": "0xf039c6781ed2a918f3f7f9afd98e8fc66254e987e84c3bdbae995da861f4510e"
+    }
+  ]
+}

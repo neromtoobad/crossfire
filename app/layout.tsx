@@ -3,6 +3,8 @@ export const metadata = {
   description: 'Adversarial agents on a chain-enforced mandate.',
 }
 
+import { Providers } from './providers'
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -18,9 +20,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           html, body { margin: 0; padding: 0; background: #060608; color: #ededf2; }
           body { font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif; }
           a { color: inherit; }
+          button { font-family: inherit; }
         `}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }

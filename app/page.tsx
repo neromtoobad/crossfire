@@ -1,7 +1,11 @@
 // CROSSFIRE landing — explains the mechanism before the dashboard.
-// Server component (no client JS needed). All on-chain proofs are
-// hard-coded from PROOF.md so the page works even when no dev server
-// is reading the chain.
+// Server-rendered shell with a single client island for the wallet
+// connect button.
+
+import { ConnectButton } from '../components/ConnectButton'
+import { readAllMarketsLive, type MarketLive } from '../lib/markets-data.js'
+
+export const dynamic = 'force-dynamic'
 
 const CF = {
   black: '#000000',
@@ -122,7 +126,8 @@ const TRACKS = [
 ]
 
 // ──────────────────────────────────────────────────────────────────────────
-export default function Landing() {
+export default async function Landing() {
+  const markets = await readAllMarketsLive()
   return (
     <main style={{
       background: CF.bg, color: CF.text, minHeight: '100vh',
@@ -140,13 +145,14 @@ export default function Landing() {
               CROSSFIRE
             </span>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <a href="https://github.com/neromtoobad/crossfire" target="_blank" rel="noreferrer" style={navLinkStyle()}>
               GitHub ↗
             </a>
-            <a href="/dashboard" style={navLinkStyle(true)}>
+            <a href="/dashboard" style={navLinkStyle()}>
               Dashboard →
             </a>
+            <ConnectButton variant="primary" />
           </div>
         </header>
 
@@ -170,8 +176,8 @@ export default function Landing() {
             A user signs <span style={{ color: CF.text }}>once</span> to grant a capped, expiring USDC mandate. An orchestrator splits it into two opposed sub-budgets — a <span style={{ color: CF.bull, fontWeight: 600 }}>Bull</span> arguing YES, a <span style={{ color: CF.bear, fontWeight: 600 }}>Bear</span> arguing NO. Each spends real USDC buying evidence, reasons with Venice, and stakes from its capped budget. The bet that hits the market is the <span style={{ color: CF.text }}>net</span> of their conviction.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-            <a href="/dashboard" style={ctaPrimaryStyle()}>
-              View the live dashboard <span style={{ color: CF.bull, marginLeft: 4 }}>→</span>
+            <a href="#markets" style={ctaPrimaryStyle()}>
+              Pick a market <span style={{ color: CF.bull, marginLeft: 4 }}>↓</span>
             </a>
             <a href="https://github.com/neromtoobad/crossfire/blob/main/PROOF.md" target="_blank" rel="noreferrer" style={ctaSecondaryStyle()}>
               PROOF.md
@@ -202,6 +208,19 @@ export default function Landing() {
             </div>
           </div>
         </section>
+
+        {/* ── markets grid (LIVE from chain) ── */}
+        <Section eyebrow="Pick a market" title="Send the agents on one of these.">
+          <div id="markets" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+            {markets.length === 0 ? (
+              <div style={{ gridColumn: '1 / -1', fontFamily: CF.mono, color: CF.dim, padding: 20 }}>
+                No markets deployed yet. Run <code style={{ color: CF.bull }}>npm run deploy:markets</code>.
+              </div>
+            ) : (
+              markets.map((m) => <MarketCard key={m.id} m={m} />)
+            )}
+          </div>
+        </Section>
 
         {/* ── how it works ── */}
         <Section eyebrow="The mechanism" title="One signature. Two opposed agents. The chain referees.">
@@ -375,6 +394,54 @@ function ctaSecondaryStyle(): React.CSSProperties {
     border: `1px solid ${CF.edge}`, color: CF.dim,
     fontFamily: CF.display, fontSize: 14, fontWeight: 500, letterSpacing: 0.2,
   }
+}
+
+function MarketCard({ m }: { m: MarketLive }) {
+  const yesPct = Math.round(m.impliedProbYes * 100)
+  const totalUsdc = parseFloat(m.totalLiquidityUsdc)
+  const isYesFavoured = m.impliedProbYes >= 0.5
+  const lead = isYesFavoured ? CF.bull : CF.bear
+  return (
+    <a href={`/market/${m.id}`} style={{
+      display: 'block', padding: '22px 22px 20px',
+      background: CF.panel, border: `1px solid ${CF.edge}`, borderRadius: 12,
+      textDecoration: 'none', color: CF.text, position: 'relative', overflow: 'hidden',
+      transition: 'border-color 120ms, transform 120ms',
+    }}>
+      <div style={{
+        position: 'absolute', left: 0, top: 0, bottom: 0, width: 2.5,
+        background: lead, boxShadow: `0 0 10px ${lead}`,
+      }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <div style={{ fontFamily: CF.display, fontSize: 16, fontWeight: 600, color: CF.text, lineHeight: 1.4, paddingRight: 12, flex: 1 }}>
+          {m.title}
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontFamily: CF.mono, fontSize: 22, fontWeight: 600, color: lead, letterSpacing: -0.5 }}>
+            {yesPct}<span style={{ fontSize: 14, color: CF.dim }}>%</span>
+          </div>
+          <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dim, letterSpacing: 1, marginTop: 2 }}>P(YES)</div>
+        </div>
+      </div>
+      {/* YES/NO bar */}
+      <div style={{ height: 6, background: CF.edge, borderRadius: 6, overflow: 'hidden', display: 'flex', marginBottom: 12 }}>
+        <div style={{ width: `${yesPct}%`, background: CF.bull, boxShadow: `0 0 6px ${CF.bull}` }} />
+        <div style={{ width: `${100 - yesPct}%`, background: CF.bear, boxShadow: `0 0 6px ${CF.bear}` }} />
+      </div>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        fontFamily: CF.mono, fontSize: 11, color: CF.dim,
+      }}>
+        <span>YES <span style={{ color: CF.bull }}>{m.totalYes}</span> · NO <span style={{ color: CF.bear }}>{m.totalNo}</span> USDC</span>
+        <span style={{ color: lead, fontFamily: CF.display, fontWeight: 600, fontSize: 12 }}>
+          Send agents →
+        </span>
+      </div>
+      <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dimmer, marginTop: 8 }}>
+        closes in {m.hoursUntilClose}h · {m.address.slice(0, 6)}…{m.address.slice(-4)}
+      </div>
+    </a>
+  )
 }
 
 function Step({
