@@ -9,11 +9,25 @@
 // orchestrator's outer contract.
 
 import { erc20Abi, formatUnits } from 'viem'
-import { sepoliaPublicClient, USDC_SEPOLIA } from '../config.js'
+import {
+  bullAccount,
+  sepoliaPublicClient,
+  USDC_SEPOLIA,
+  userAccount,
+  userWalletSepolia,
+} from '../config.js'
+import { env as envVars } from '../env.js'
 import { marketAbi } from '../market.js'
 import { getMarketMeta, type MarketMeta } from '../markets-data.js'
-import type { AgentVote, PublishedCall } from '../calls-data.js'
+import type { AgentVote, EvidenceItem, PublishedCall } from '../calls-data.js'
 import { runRoleAgent, runSkeptic, generateThesis } from './agents.js'
+import { POST as evidenceHandler } from '../../app/api/evidence/route.js'
+import { buyEvidence } from '../x402-buyer.js'
+import { buildRootMandate } from '../mandate.js'
+import { buildBullBudget } from '../duel.js'
+import { ensureFunded } from '../deploy-sa.js'
+import { buildUserSmartAccount } from '../accounts.js'
+import { addCall } from '../calls-store.js'
 
 // Quality gate thresholds — same shape as the README documents.
 const MIN_AGREE = 3
@@ -24,6 +38,8 @@ const ROLES = ['MacroScout', 'NewsHawk', 'CrowdPulse', 'BookWatcher'] as const
 
 export type CouncilEvent =
   | { type: 'started'; marketId: string; marketTitle: string; impliedProbYes: number }
+  | { type: 'treasury-mandate-signed' }
+  | { type: 'role-evidence'; role: string; signal: string; sourceUrl: string; txHash: string; usdcSpent: string }
   | { type: 'role-vote'; vote: AgentVote }
   | { type: 'majority'; side: 'YES' | 'NO'; agreeing: number; total: number }
   | { type: 'skeptic-verdict'; vote: AgentVote }
@@ -35,10 +51,14 @@ export type CouncilEvent =
 
 export type RunCouncilOptions = {
   onEvent?: (e: CouncilEvent) => void | Promise<void>
-  // Stub evidence per role — Phase 8.3 will fan out real x402 buys.
-  evidenceByRole?: Partial<Record<(typeof ROLES)[number], string>>
+  // Force-feed evidence per role (skip x402 buys). Useful for offline dev.
+  stubEvidenceByRole?: Partial<Record<(typeof ROLES)[number], string>>
+  // Skip x402 evidence buys entirely (Phase 8.2 behaviour).
+  stubEvidence?: boolean
   // Allows the test script to dictate the bond size; otherwise sized by confidence.
   bondUsdc?: number
+  // Persist the PublishedCall to .crossfire/calls.json on success.
+  persist?: boolean
 }
 
 // Council treasury identity. For Phase 8.2 it's just a hardcoded handle.
@@ -83,10 +103,75 @@ export async function runCouncil(
     impliedProbYes,
   })
 
-  // ── 2. Run the four role agents (parallel) ────────────────────────────
-  const evidenceFor = (role: (typeof ROLES)[number]): string =>
-    opts.evidenceByRole?.[role] ?? '(no role-specific evidence; reason from your domain expertise alone)'
+  // ── 2. Buy evidence per role via x402 (or use stubs) ──────────────────
+  // The buyer is BULL EOA (treasury sub-budget); each evidence purchase
+  // redeems through the council's ERC-7710 chain — real USDC moves from
+  // USER SA → facilitator. 4 buys × 0.5 USDC = 2 USDC per council run.
+  const evidenceByRole: Partial<Record<(typeof ROLES)[number], EvidenceItem>> = {}
+  const evidenceTxs: string[] = []
 
+  if (!opts.stubEvidence) {
+    try {
+      // Ensure USER SA has USDC for evidence buys
+      const userSA = await buildUserSmartAccount()
+      await ensureFunded(
+        'USER',
+        userSA.address,
+        userAccount,
+        userWalletSepolia,
+        sepoliaPublicClient,
+        3_000_000n,  // need ≥ 3 USDC
+        3_000_000n,  // top up 3 USDC if low
+      ).catch(() => null)
+
+      const { signedDelegation: signedRoot } = await buildRootMandate()
+      const bullBudget = await buildBullBudget(signedRoot)
+      const parentChain = [bullBudget, signedRoot] as any[]
+      await emit({ type: 'treasury-mandate-signed' })
+
+      // Buy evidence per role in series (avoid ORCH nonce collision since ORCH is facilitator)
+      for (const role of ROLES) {
+        const buy = await buyEvidence({
+          url: `http://localhost/api/evidence?marketId=${marketId}&role=${role}`,
+          buyerPrivateKey: envVars.BULL_PRIVATE_KEY,
+          buyerAddress: bullAccount.address,
+          parentChain,
+          fetchFn: async (req) => (await evidenceHandler(req as any)) as unknown as Response,
+        })
+        evidenceByRole[role] = buy.evidence as EvidenceItem
+        evidenceTxs.push(buy.settlementTxHash)
+        await emit({
+          type: 'role-evidence',
+          role,
+          signal: buy.evidence.signal,
+          sourceUrl: buy.evidence.sourceUrl,
+          txHash: buy.settlementTxHash,
+          usdcSpent: (Number(buy.usdcSpent) / 1e6).toFixed(2),
+        })
+      }
+    } catch (e) {
+      await emit({ type: 'error', message: `x402 evidence buys failed: ${(e as Error).message}` })
+      return null
+    }
+  }
+
+  // Build a per-role evidenceContext string (either from real x402 buys or stubs)
+  const evidenceFor = (role: (typeof ROLES)[number]): string => {
+    if (opts.stubEvidence && opts.stubEvidenceByRole?.[role]) {
+      return opts.stubEvidenceByRole[role]!
+    }
+    const ev = evidenceByRole[role]
+    if (ev) {
+      return `[${role}'s evidence from x402 purchase]
+        signal: ${ev.signal}
+        source: ${ev.sourceUrl}
+        weight: ${ev.weight}
+        Use this signal/weight as your anchor for the vote.`
+    }
+    return '(no role-specific evidence; reason from your domain expertise alone)'
+  }
+
+  // ── 3. Run the four role agents (parallel) ────────────────────────────
   let roleVotes: AgentVote[]
   try {
     roleVotes = await Promise.all(
@@ -182,6 +267,13 @@ export async function runCouncil(
   const bondUsdc = opts.bondUsdc ?? suggestBondUsdc(avgConfidence, edge)
   const id = `call-${marketId}-${Date.now().toString(36)}`
 
+  // Build the evidenceUrls array from the real x402 purchases
+  const evidenceUrls = ROLES.map((role) => {
+    const ev = evidenceByRole[role]
+    if (!ev) return null
+    return { label: `${role}: ${ev.sourceUrl.split('/').slice(2, 4).join('/')}`, url: ev.sourceUrl, signal: ev.signal as any }
+  }).filter(Boolean) as Array<{ label: string; url: string; signal: 'YES' | 'NO' | 'NEUTRAL' }>
+
   const call: PublishedCall = {
     id,
     marketId,
@@ -196,15 +288,20 @@ export async function runCouncil(
     publishedAt: Date.now(),
     publishedBy: COUNCIL_DESK,
     votes: [...roleVotes, skepticVote],
-    skepticVerdict: 'APPROVED',  // gate passed = approved
+    skepticVerdict: 'APPROVED',
     locked: {
       thesis,
-      evidenceUrls: [],  // Phase 8.3 fills these from x402 buys
-      sizingRationale: `Bond ${bondUsdc.toFixed(2)} USDC — sized by average council confidence ${(avgConfidence * 100).toFixed(0)}% × edge ${(edge * 100).toFixed(0)}pts. (Phase 8.3 will adjust by treasury policy.)`,
+      evidenceUrls,
+      sizingRationale: `Bond ${bondUsdc.toFixed(2)} USDC — sized by avg council confidence ${(avgConfidence * 100).toFixed(0)}% × edge ${(edge * 100).toFixed(0)}pts. ${evidenceTxs.length} x402 evidence settlement(s) on-chain.`,
       counterarguments,
     },
   }
 
   await emit({ type: 'published', call })
+
+  if (opts.persist) {
+    try { addCall(call) } catch {}
+  }
+
   return call
 }

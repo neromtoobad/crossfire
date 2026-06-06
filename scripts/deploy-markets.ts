@@ -21,37 +21,46 @@ const ART = JSON.parse(
 const SEVEN_DAYS = BigInt(Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60)
 
 // ── The 4 questions a user picks from ────────────────────────────────────
+// Phase 8.3: no longer pre-seed markets with biased positions. The
+// previous seeds pushed impliedProbYes to 0% or 100%, leaving zero
+// room for the council to find edge. Leaving impliedProbYes at the
+// default 0.5 gives the council a fair canvas to disagree with.
 const QUESTIONS = [
   {
     id: 'btc-200k-2026',
     title: 'Will Bitcoin hit $200,000 by Dec 31, 2026?',
     question: 'Will Bitcoin trade above $200,000 USD at any point before Dec 31, 2026?',
     closeTime: SEVEN_DAYS,
-    // seed: pre-load with a small YES bias (bullish prior)
-    seed: { side: 'YES' as const, amountUsdc: parseUnits('2', 6) },
+    seed: null,
   },
   {
     id: 'fed-rate-cut',
     title: 'Will the Fed cut rates at the next FOMC meeting?',
     question: 'Will the FOMC vote to cut the federal funds rate at the next scheduled meeting?',
     closeTime: SEVEN_DAYS,
-    seed: { side: 'NO' as const, amountUsdc: parseUnits('1.5', 6) },
+    seed: null,
   },
   {
     id: 'trump-sbf-pardon',
     title: 'Will Trump pardon Sam Bankman-Fried?',
     question: 'Will President Trump issue a pardon for Sam Bankman-Fried in 2026?',
     closeTime: SEVEN_DAYS,
-    seed: { side: 'NO' as const, amountUsdc: parseUnits('3', 6) },
+    seed: null,
   },
   {
     id: 'openai-gpt6-2026',
     title: 'Will OpenAI release GPT-6 in 2026?',
     question: 'Will OpenAI release a model branded as GPT-6 (or equivalent flagship) before Dec 31, 2026?',
     closeTime: SEVEN_DAYS,
-    seed: { side: 'YES' as const, amountUsdc: parseUnits('1', 6) },
+    seed: null,
   },
-]
+] as Array<{
+  id: string
+  title: string
+  question: string
+  closeTime: bigint
+  seed: { side: 'YES' | 'NO'; amountUsdc: bigint } | null
+}>
 
 const marketAbi = parseAbi([
   'function buy(bool isYes, uint256 usdcAmount) returns (uint256 sharesOut)',
@@ -73,8 +82,8 @@ async function main() {
   console.log(`  ETH:       ${Number(ethBal) / 1e18} (need ~0.005 for 4 deploys)`)
   console.log(`  USDC:      ${Number(usdcBal) / 1e6} (need ~8 for seed bets)`)
 
-  // total seed = 2 + 1.5 + 3 + 1 = 7.5 USDC
-  const totalSeed = QUESTIONS.reduce((s, q) => s + q.seed.amountUsdc, 0n)
+  // Phase 8.3: most markets deploy without seeds. Sum only the ones that have one.
+  const totalSeed = QUESTIONS.reduce((s, q) => s + (q.seed?.amountUsdc ?? 0n), 0n)
   if (usdcBal < totalSeed) {
     console.warn(`  ⚠ USER EOA only has ${Number(usdcBal) / 1e6} USDC; need ${Number(totalSeed) / 1e6} for seeds.`)
     console.warn(`    Markets will deploy but seeds may fail. Top up USER EOA's USDC if needed.`)
@@ -109,13 +118,10 @@ async function main() {
     const market = receipt.contractAddress as Hex
     console.log(`    deployed: ${market}  (tx ${hash.slice(0, 10)}…)`)
 
-    // Seed: transfer USDC + buyOnBehalf — biases impliedProb a bit.
-    // Retry-loop between the two: public RPCs can return a stale market
-    // USDC balance right after the transfer's receipt, which makes
-    // buyOnBehalf fail InsufficientFreshDeposit.
     let seedTransferTx: Hex | undefined
     let seedBuyOnBehalfTx: Hex | undefined
-    try {
+
+    if (q.seed) try {
       seedTransferTx = await userWalletSepolia.writeContract({
         address: USDC_SEPOLIA,
         abi: erc20Abi,
@@ -155,8 +161,8 @@ async function main() {
       address: market,
       deployTx: hash,
       closeTime: new Date(Number(q.closeTime) * 1000).toISOString(),
-      seedSide: q.seed.side,
-      seedAmountUsdc: (Number(q.seed.amountUsdc) / 1e6).toString(),
+      seedSide: q.seed?.side ?? 'NONE' as any,
+      seedAmountUsdc: q.seed ? (Number(q.seed.amountUsdc) / 1e6).toString() : '0',
       seedTransferTx,
       seedBuyOnBehalfTx,
     })
