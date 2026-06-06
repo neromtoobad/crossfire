@@ -6,7 +6,9 @@
 
 import { ConnectButton } from '../components/ConnectButton'
 import { CallCard } from '../components/CallCard'
+import { RunCouncilLive } from '../components/RunCouncilLive'
 import { loadCalls } from '../lib/calls-data'
+import { loadMarketsMeta } from '../lib/markets-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,6 +68,7 @@ const RECEIPTS = [
 
 export default async function Landing() {
   const calls = loadCalls()
+  const marketChoices = loadMarketsMeta().map((m) => ({ id: m.id, title: m.title }))
 
   return (
     <main style={{
@@ -127,8 +130,13 @@ export default async function Landing() {
           </div>
         </section>
 
+        {/* ── LIVE COUNCIL (Phase 8.8 — watch a call get made) ── */}
+        <section id="live" style={{ padding: '10px 0 14px' }}>
+          <RunCouncilLive markets={marketChoices} />
+        </section>
+
         {/* ── LIVE CALLS FEED ── */}
-        <section id="calls" style={{ padding: '40px 0 20px' }}>
+        <section id="calls" style={{ padding: '24px 0 20px' }}>
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16,
           }}>
