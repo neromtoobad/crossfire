@@ -1,12 +1,16 @@
 // CROSSFIRE landing — feed first.
 //
-// Phase 8.13: stripped to the working product. The feed dominates;
-// pitch material, demo controls, and on-chain proof receipts live on /lab.
+// Phase 8.15: two-tier feed.
+//   1. COUNCIL FEED  — our bonded calls (sample + real). Few but with thesis.
+//   2. WATCH LIST    — hundreds of live Polymarket markets the council is
+//                       monitoring, grouped by tag. Click → polymarket.com.
 
 import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
 import { CallCard } from '../components/CallCard'
+import { WatchCard } from '../components/WatchCard'
 import { loadCallsWithPolymarket } from '../lib/calls-data'
+import { loadWatchlist, loadWatchSnapshot } from '../lib/polymarket-feed'
 import { CF } from '../lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -21,9 +25,6 @@ function LogoMark({ size = 26 }: { size?: number }) {
   )
 }
 
-// Tag any sample/published call into a section bucket so the feed shows
-// each category grouped. Pure heuristic on marketId — anything new lands
-// in "Other".
 function bucketFor(marketId: string): 'sports' | 'crypto' | 'tech' | 'macro' | 'politics' | 'other' {
   if (marketId.startsWith('wc-')) return 'sports'
   if (/btc|eth|sol|crypto/.test(marketId)) return 'crypto'
@@ -34,26 +35,44 @@ function bucketFor(marketId: string): 'sports' | 'crypto' | 'tech' | 'macro' | '
 }
 
 const BUCKET_LABEL: Record<string, string> = {
-  sports:   'SPORTS',
-  crypto:   'CRYPTO',
-  tech:     'TECH',
-  macro:    'MACRO',
-  politics: 'POLITICS',
-  other:    'OTHER',
+  sports:      'SPORTS',
+  crypto:      'CRYPTO',
+  tech:        'TECH',
+  macro:       'MACRO',
+  politics:    'POLITICS',
+  geopolitics: 'GEOPOLITICS',
+  culture:     'CULTURE',
+  other:       'OTHER',
 }
-const BUCKET_ORDER: Array<keyof typeof BUCKET_LABEL> = ['sports', 'crypto', 'tech', 'macro', 'politics', 'other']
+const BUCKET_ORDER: Array<keyof typeof BUCKET_LABEL> = [
+  'sports', 'politics', 'crypto', 'tech', 'macro', 'geopolitics', 'culture', 'other',
+]
+
+function relSync(syncedAt: string | null): string {
+  if (!syncedAt) return 'never'
+  const delta = Date.now() - new Date(syncedAt).getTime()
+  const m = Math.floor(delta / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
+}
 
 export default async function Landing() {
   const calls = await loadCallsWithPolymarket()
+  const watch = loadWatchlist({ perBucket: 12, globalLimit: 120 })
+  const snapshot = loadWatchSnapshot()
 
-  // Group calls by bucket
-  const byBucket = new Map<string, typeof calls>()
+  // Council calls grouped by bucket
+  const councilByBucket = new Map<string, typeof calls>()
   for (const c of calls) {
     const b = bucketFor(c.marketId)
-    if (!byBucket.has(b)) byBucket.set(b, [])
-    byBucket.get(b)!.push(c)
+    if (!councilByBucket.has(b)) councilByBucket.set(b, [])
+    councilByBucket.get(b)!.push(c)
   }
   const bondedOnchain = calls.filter((c) => c.bondTxHash).length
+  const totalWatch = snapshot?.totalMarkets ?? 0
 
   return (
     <main style={{
@@ -92,7 +111,7 @@ export default async function Landing() {
           </nav>
         </header>
 
-        {/* ── compact masthead ── */}
+        {/* ── masthead ── */}
         <section style={{
           padding: '28px 0 22px', borderBottom: `1px solid ${CF.line}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
@@ -125,35 +144,102 @@ export default async function Landing() {
             <div className="mono tnum" style={{
               fontSize: 26, fontWeight: 600, color: CF.ink, letterSpacing: -0.4,
             }}>
-              {calls.length}
+              {calls.length}<span style={{ color: CF.ink3, fontWeight: 400 }}>+{totalWatch}</span>
             </div>
             <div className="mono" style={{
               fontSize: 10.5, letterSpacing: 1.2, color: CF.ink3, marginTop: 2,
             }}>
-              CALLS · {bondedOnchain} <span style={{ color: CF.gold }}>ON-CHAIN ✓</span>
+              {calls.length} BONDED · {bondedOnchain} <span style={{ color: CF.gold }}>ON-CHAIN ✓</span> · {totalWatch} <span style={{ color: CF.ink2 }}>WATCHING</span>
             </div>
           </div>
         </section>
 
-        {/* ── feed, sectioned by category ── */}
-        {BUCKET_ORDER.map((b) => {
-          const list = byBucket.get(b) ?? []
-          if (list.length === 0) return null
-          return (
-            <section key={b} style={{ padding: '28px 0 8px' }}>
-              <div className="mono" style={{
-                fontSize: 10.5, color: CF.ink3, letterSpacing: 2.2, marginBottom: 14,
-                display: 'flex', alignItems: 'center', gap: 8,
+        {/* ── COUNCIL FEED ── */}
+        <section style={{ padding: '32px 0 8px' }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+            marginBottom: 18,
+          }}>
+            <h2 className="mono" style={{
+              fontSize: 11, letterSpacing: 2.4, color: CF.ink, margin: 0, fontWeight: 600,
+            }}>
+              <span style={{ marginRight: 8, color: CF.bull }}>●</span> COUNCIL FEED · {calls.length} BONDED
+            </h2>
+            <span className="mono" style={{ fontSize: 10.5, color: CF.ink3 }}>
+              calls with on-chain bond + paid thesis
+            </span>
+          </div>
+          {BUCKET_ORDER.map((b) => {
+            const list = councilByBucket.get(b) ?? []
+            if (list.length === 0) return null
+            return (
+              <div key={b} style={{ padding: '8px 0 16px' }}>
+                <div className="mono" style={{
+                  fontSize: 10, color: CF.ink3, letterSpacing: 2.2, marginBottom: 10,
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}>
+                  <span style={{ display: 'inline-block', width: 14, height: 1, background: CF.line2 }} />
+                  {BUCKET_LABEL[b]} · <span className="tnum">{list.length}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+                  {list.map((c) => <CallCard key={c.id} call={c} />)}
+                </div>
+              </div>
+            )
+          })}
+        </section>
+
+        {/* ── WATCH LIST ── */}
+        {watch.byBucket.size > 0 ? (
+          <section style={{ padding: '40px 0 8px', borderTop: `1px solid ${CF.line}`, marginTop: 16 }}>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+              marginBottom: 18, flexWrap: 'wrap', gap: 10,
+            }}>
+              <h2 className="mono" style={{
+                fontSize: 11, letterSpacing: 2.4, color: CF.ink, margin: 0, fontWeight: 600,
               }}>
-                <span style={{ display: 'inline-block', width: 14, height: 1, background: CF.line2 }} />
-                {BUCKET_LABEL[b]} · <span className="tnum">{list.length}</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-                {list.map((c) => <CallCard key={c.id} call={c} />)}
-              </div>
-            </section>
-          )
-        })}
+                <span style={{ marginRight: 8, color: CF.amber }}>●</span> WATCH LIST · {totalWatch} LIVE POLYMARKET MARKETS
+              </h2>
+              <span className="mono" style={{ fontSize: 10.5, color: CF.ink3 }}>
+                council monitoring · synced {relSync(watch.syncedAt)} · top by volume
+              </span>
+            </div>
+
+            {BUCKET_ORDER.map((b) => {
+              const list = watch.byBucket.get(b) ?? []
+              if (list.length === 0) return null
+              return (
+                <div key={b} style={{ padding: '8px 0 16px' }}>
+                  <div className="mono" style={{
+                    fontSize: 10, color: CF.ink3, letterSpacing: 2.2, marginBottom: 10,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <span style={{ display: 'inline-block', width: 14, height: 1, background: CF.line2 }} />
+                    {BUCKET_LABEL[b]} · <span className="tnum">{list.length}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                    {list.map((m) => <WatchCard key={m.id} m={m} />)}
+                  </div>
+                </div>
+              )
+            })}
+
+            <div className="mono" style={{
+              marginTop: 18, fontSize: 11, color: CF.ink4,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10,
+            }}>
+              <span>Showing top {Array.from(watch.byBucket.values()).reduce((s, l) => s + l.length, 0)} of {totalWatch} live Polymarket markets · refresh with `npm run sync:polymarket`</span>
+            </div>
+          </section>
+        ) : (
+          <section style={{
+            padding: '40px 0', borderTop: `1px solid ${CF.line}`, marginTop: 16,
+            fontFamily: CF.body, color: CF.ink3, fontSize: 13.5,
+          }}>
+            No watch-list cache yet. Run <code style={{ background: CF.surface2, padding: '2px 6px', borderRadius: 4, fontFamily: CF.mono }}>npm run sync:polymarket</code> to pull live Polymarket markets.
+          </section>
+        )}
 
         {/* ── footer ── */}
         <footer style={{

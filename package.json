@@ -20,6 +20,7 @@
     "tunnel": "tsx scripts/tunnel.ts",
     "tunnel:clear": "tsx scripts/tunnel.ts --clear",
     "council:auto": "tsx scripts/auto-council.ts",
+    "sync:polymarket": "tsx scripts/sync-polymarket.ts",
     "dev": "next dev"
   },
   "license": "MIT",
