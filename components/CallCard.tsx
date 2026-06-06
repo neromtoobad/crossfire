@@ -1,6 +1,9 @@
+'use client'
+
 // CallCard — single published-call card for the public feed.
 // Editorial-light treatment: serif headline, hairline borders, tabular figures,
-// refined Bull/Bear semantic accents.
+// refined Bull/Bear semantic accents. Client component because the Polymarket
+// pill is a nested link that needs onClick to stop card-link propagation.
 
 import Link from 'next/link'
 import type { PublishedCall } from '../lib/calls-data'
@@ -142,6 +145,37 @@ export function CallCard({ call }: { call: PublishedCall }) {
           </span>
         </span>
       </div>
+
+      {/* ── live Polymarket overlay (when slug is mapped) ── */}
+      {call.livePolymarket ? (() => {
+        const pYes = call.livePolymarket.yes
+        const pcYes = call.side === 'YES' ? call.selectedSideProb : 1 - call.selectedSideProb
+        const livePoints = Math.round((pcYes - pYes) * 100)
+        const arrow = livePoints > 0 ? '▲' : livePoints < 0 ? '▼' : '·'
+        const arrowColor = (livePoints > 0) === (call.side === 'YES') ? CF.bull : CF.bear
+        return (
+          <a
+            href={`https://polymarket.com/event/${call.livePolymarket.slug}`}
+            target="_blank" rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '8px 10px', marginBottom: 12,
+              background: CF.surface2, border: `1px solid ${CF.line}`, borderRadius: CF.radius.sm,
+              fontFamily: CF.mono, fontSize: 11, color: CF.ink2,
+            }}
+          >
+            <span>
+              <span style={{ color: CF.ink3, letterSpacing: 1 }}>POLYMARKET LIVE</span>
+              <span className="tnum" style={{ marginLeft: 8, color: CF.ink, fontWeight: 600 }}>{(pYes * 100).toFixed(0)}%</span>
+              <span style={{ marginLeft: 4, color: CF.ink3 }}>YES</span>
+            </span>
+            <span style={{ color: CF.ink3 }}>
+              council <span className="tnum" style={{ color: arrowColor, fontWeight: 600 }}>{arrow} {Math.abs(livePoints)}pts</span>
+            </span>
+          </a>
+        )
+      })() : null}
 
       {/* ── footer ── */}
       <div style={{

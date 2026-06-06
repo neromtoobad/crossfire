@@ -29,7 +29,8 @@
       "deployTx": "0x3084c5c6a7a86b7b0dcc8946e723c4e3bfa4de0ecd728182c7c4f519b6a794c1",
       "closeTime": "2026-06-13T15:38:56.000Z",
       "seedSide": "NONE",
-      "seedAmountUsdc": "0"
+      "seedAmountUsdc": "0",
+      "polymarketSlug": "will-trump-pardon-sam-bankman-fried-before-2027"
     },
     {
       "id": "openai-gpt6-2026",
@@ -39,7 +40,8 @@
       "deployTx": "0x1b1745559d8c95c2bd05368de1aed6beaebf913d02b82670d8ce9421bc504d67",
       "closeTime": "2026-06-13T15:38:56.000Z",
       "seedSide": "NONE",
-      "seedAmountUsdc": "0"
+      "seedAmountUsdc": "0",
+      "polymarketSlug": "will-gpt-6-be-released"
     },
     {
       "id": "wc-argentina-2026",
@@ -49,7 +51,8 @@
       "deployTx": "0xa0380ea55b1be3644101c327035831d2a7301121b5904237c0dd302f95e322b1",
       "closeTime": "2026-07-06T18:14:21.000Z",
       "seedSide": "NONE",
-      "seedAmountUsdc": "0"
+      "seedAmountUsdc": "0",
+      "polymarketSlug": "will-argentina-win-the-2026-fifa-world-cup-245"
     },
     {
       "id": "wc-messi-scores",
@@ -59,7 +62,8 @@
       "deployTx": "0x85cec3a40d91c1c70416c7911214ee9a43b479d3d74cbbbe0a177115a95124bc",
       "closeTime": "2026-07-06T18:14:21.000Z",
       "seedSide": "NONE",
-      "seedAmountUsdc": "0"
+      "seedAmountUsdc": "0",
+      "polymarketSlug": "will-lionel-messi-play-in-the-world-cup"
     },
     {
       "id": "wc-final-penalties",
@@ -99,7 +103,8 @@
       "deployTx": "0xc3958667e08bf9161834c68deed979e5bc54cf38b4bd8a46d43d2496becc89a6",
       "closeTime": "2026-07-06T18:14:21.000Z",
       "seedSide": "NONE",
-      "seedAmountUsdc": "0"
+      "seedAmountUsdc": "0",
+      "polymarketSlug": "will-the-10-year-treasury-yield-hit-5pt0-before-2027-735-167"
     }
   ]
 }

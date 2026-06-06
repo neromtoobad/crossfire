@@ -6,7 +6,7 @@
 import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
 import { CallCard } from '../components/CallCard'
-import { loadCalls } from '../lib/calls-data'
+import { loadCallsWithPolymarket } from '../lib/calls-data'
 import { CF } from '../lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -44,7 +44,7 @@ const BUCKET_LABEL: Record<string, string> = {
 const BUCKET_ORDER: Array<keyof typeof BUCKET_LABEL> = ['sports', 'crypto', 'tech', 'macro', 'politics', 'other']
 
 export default async function Landing() {
-  const calls = loadCalls()
+  const calls = await loadCallsWithPolymarket()
 
   // Group calls by bucket
   const byBucket = new Map<string, typeof calls>()

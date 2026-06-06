@@ -38,6 +38,11 @@ export type PublishedCall = {
   votes: AgentVote[]              // each agent's vote + one-line
   skepticVerdict: 'APPROVED' | 'VETOED'
 
+  // OPTIONAL — live overlay from Polymarket Gamma. Attached server-side in
+  // loadCalls() when the market has a polymarketSlug. The card uses this
+  // to render "vs Polymarket X%" alongside (or instead of) the chain price.
+  livePolymarket?: { yes: number; slug: string; question?: string }
+
   // LOCKED fields (paid to read)
   locked: {
     thesis: string                // full multi-paragraph reasoning
@@ -386,13 +391,41 @@ export function loadCalls(): PublishedCall[] {
     return SAMPLE_CALLS
   }
   try {
-    // Defer import so client bundle isn't dragged into reading fs.
     const mod = require('./calls-store.js') as typeof import('./calls-store.js')
     const stored = mod.loadStoredCalls()
     if (stored.length === 0) return SAMPLE_CALLS
     return [...stored, ...SAMPLE_CALLS].slice(0, 24)
   } catch {
     return SAMPLE_CALLS
+  }
+}
+
+// Server-side: enrich a list of calls with live Polymarket prices when the
+// market has a slug. Issues one batched fetch (cached for 60s). Falls back
+// to the original call list if anything goes wrong — never blocks rendering.
+export async function loadCallsWithPolymarket(): Promise<PublishedCall[]> {
+  const calls = loadCalls()
+  if (typeof window !== 'undefined') return calls
+  try {
+    const [{ loadMarketsMeta }, { getPolymarketPrices }] = await Promise.all([
+      import('./markets-data.js'),
+      import('./polymarket.js'),
+    ])
+    const meta = loadMarketsMeta()
+    const slugByMarketId = new Map<string, string>()
+    for (const m of meta) if (m.polymarketSlug) slugByMarketId.set(m.id, m.polymarketSlug)
+    const slugs = Array.from(new Set(calls.map((c) => slugByMarketId.get(c.marketId)).filter((s): s is string => !!s)))
+    if (slugs.length === 0) return calls
+    const prices = await getPolymarketPrices(slugs)
+    return calls.map((c) => {
+      const slug = slugByMarketId.get(c.marketId)
+      if (!slug) return c
+      const p = prices.get(slug)
+      if (!p) return c
+      return { ...c, livePolymarket: { yes: p.yes, slug, question: p.question } }
+    })
+  } catch {
+    return calls
   }
 }
 

@@ -14,6 +14,8 @@ export type MarketMeta = {
   question: string
   address: `0x${string}`
   closeTime: string
+  /** Polymarket Gamma slug — when set, the UI shows the live Polymarket price. */
+  polymarketSlug?: string
 }
 
 export type MarketLive = MarketMeta & {

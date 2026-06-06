@@ -19,6 +19,7 @@
     "relay:bet": "tsx scripts/relay-bet.ts",
     "tunnel": "tsx scripts/tunnel.ts",
     "tunnel:clear": "tsx scripts/tunnel.ts --clear",
+    "council:auto": "tsx scripts/auto-council.ts",
     "dev": "next dev"
   },
   "license": "MIT",
