@@ -54,7 +54,7 @@ import { buildRootMandate } from './mandate.js'
 import { buyEvidence } from './x402-buyer.js'
 
 const EVIDENCE_PRICE_USDC = 500_000n // 0.5 USDC, must match seller's PAYMENT-REQUIRED
-const DUST_USDC = 100_000n            // 0.1 USDC — below this, abstain
+const DUST_USDC = 1_000_000n          // 1 USDC — if net is below this the system honestly abstains
 const STAKE_BELOW_THRESHOLD = 0       // model returns 0 if |edge|<0.05
 
 type SideResult = {
@@ -241,6 +241,15 @@ export async function runDuel(opts: RunOptions = {}): Promise<DuelOutcome> {
   })
 
   const delegationManager = (await buildUserSmartAccount()).environment.DelegationManager
+
+  // Read market USDC balance BEFORE transfer so we know the real delta after.
+  const marketBalBefore = await sepoliaPublicClient.readContract({
+    address: USDC_SEPOLIA,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [marketAddress],
+  })
+
   const transferHash = await winningWallet.sendTransactionWithDelegation({
     to: USDC_SEPOLIA,
     data: transferCalldata,
@@ -248,17 +257,44 @@ export async function runDuel(opts: RunOptions = {}): Promise<DuelOutcome> {
     permissionContext: winningChainEncoded,
     delegationManager,
   })
-  await sepoliaPublicClient.waitForTransactionReceipt({ hash: transferHash })
+  const transferReceipt = await sepoliaPublicClient.waitForTransactionReceipt({ hash: transferHash })
+  if (transferReceipt.status !== 'success') {
+    throw new Error(`Bet transfer reverted on-chain: ${transferHash}`)
+  }
 
-  // (b) ORCH calls market.buyOnBehalf(USER_SA, isYes, |net|) — permissionless,
-  //     just needs gas. No delegation required.
+  // Read what actually landed in the market — use this as the credit amount
+  // so any "ghost" pre-existing balance can't mis-credit the bet. Public RPCs
+  // can return stale state right after a receipt, so retry until we see the
+  // delta (or 8 × 1.5s timeout).
+  let marketBalAfter = marketBalBefore
+  for (let i = 0; i < 8; i++) {
+    marketBalAfter = await sepoliaPublicClient.readContract({
+      address: USDC_SEPOLIA,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: [marketAddress],
+    })
+    if (marketBalAfter > marketBalBefore) break
+    await new Promise((r) => setTimeout(r, 1500))
+  }
+  const claimAmount = marketBalAfter - marketBalBefore
+  if (claimAmount === 0n) {
+    throw new Error(`Transfer mined but market balance unchanged after 8 retries: ${transferHash}`)
+  }
+
+  // (b) ORCH calls market.buyOnBehalf(USER_SA, isYes, claimAmount) — uses
+  //     the OBSERVED delta, not the requested net, so we credit exactly what
+  //     landed even if RPC routing or earlier ghost deposits muddied things.
   const buyHash = await orchestratorWalletSepolia.writeContract({
     address: marketAddress,
     abi: marketAbi,
     functionName: 'buyOnBehalf',
-    args: [userSA.address, isYes, netUsdcWei],
+    args: [userSA.address, isYes, claimAmount],
   })
-  await sepoliaPublicClient.waitForTransactionReceipt({ hash: buyHash })
+  const buyReceipt = await sepoliaPublicClient.waitForTransactionReceipt({ hash: buyHash })
+  if (buyReceipt.status !== 'success') {
+    throw new Error(`buyOnBehalf reverted on-chain: ${buyHash}`)
+  }
 
   // Public RPC nodes can serve stale state right after a receipt — retry
   // until the credited shares appear in the position read.
