@@ -13,13 +13,14 @@
 // Renders nothing if already unlocked (parent will render the thesis).
 
 import { useEffect, useRef, useState } from 'react'
-import { useAccount, useChainId, useSignTypedData, useSwitchChain } from 'wagmi'
+import { useAccount, useChainId, useSignTypedData, useSwitchChain, useWalletClient } from 'wagmi'
 import { parseUnits } from 'viem'
 import {
   createOpenDelegation,
   ScopeType,
   getSmartAccountsEnvironment,
 } from '@metamask/smart-accounts-kit'
+import { erc7715ProviderActions } from '@metamask/smart-accounts-kit/actions'
 import {
   createCaveatBuilder,
   encodeDelegations,
@@ -109,6 +110,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   const wagmiChainId = useChainId() // wagmi's view — can be stale vs the actual provider
   const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain()
   const { signTypedDataAsync } = useSignTypedData()
+  const { data: walletClient } = useWalletClient()
   // Captured for diagnostics when signing fails.
   const lastTypedData = useRef<any>(null)
 
@@ -251,67 +253,90 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
         throw Object.assign(new Error(`provider chainId ${providerChainNum} ≠ expected ${PUBLIC.chainId}`), { code: 'PROVIDER_CHAIN_MISMATCH' })
       }
 
-      // (3b) Build the typed-data payload using the kit's own struct helper.
-      const struct = toDelegationStruct(delegation)
-      const typedData = {
-        account: address,
-        domain: {
-          name: 'DelegationManager' as const,
-          version: '1' as const,
-          chainId: PUBLIC.chainId,
-          verifyingContract: env.DelegationManager as `0x${string}`,
-        },
-        types: SIGNABLE_DELEGATION_TYPED_DATA as any,
-        primaryType: 'Delegation' as const,
-        message: {
-          delegate: struct.delegate as `0x${string}`,
-          delegator: struct.delegator as `0x${string}`,
-          authority: struct.authority as `0x${string}`,
-          caveats: struct.caveats.map((c: any) => ({
-            enforcer: c.enforcer as `0x${string}`,
-            terms: c.terms as `0x${string}`,
-          })),
-          salt: BigInt(struct.salt),
-        },
+      // (3b) THE RIGHT PATH for MetaMask: ERC-7715 wallet_requestExecutionPermissions.
+      // MetaMask's Smart Accounts Snap intercepts external signTypedData of
+      // primaryType:'Delegation' on internal accounts (anything you added via
+      // MetaMask's "Add account" → "Smart account"). The Snap returns
+      //   "External signature requests cannot sign delegations for internal accounts."
+      // The kit's erc7715ProviderActions wraps wallet_requestExecutionPermissions,
+      // which the Snap accepts and surfaces its native permission UI.
+      const facilitator = (accepted.extra.facilitators?.[0] ?? '') as `0x${string}`
+      if (!facilitator || !/^0x[a-f0-9]{40}$/i.test(facilitator)) {
+        throw new Error(`missing/invalid facilitator address in PAYMENT-REQUIRED`)
       }
-      lastTypedData.current = typedData
 
-      // (3c) Sign via wagmi. If wagmi's connector adapter bounces with -32603,
-      // fall back to calling window.ethereum directly with eth_signTypedData_v4.
-      let signature: `0x${string}`
-      try {
-        signature = await signTypedDataAsync(typedData)
-      } catch (wagmiErr: any) {
-        // eslint-disable-next-line no-console
-        console.warn('[UnlockThesis] wagmi signTypedData failed, trying raw provider:', wagmiErr)
-        const code = wagmiErr?.code ?? wagmiErr?.cause?.code
-        if (eth && (code === -32603 || /Internal error|invalid argument/i.test(wagmiErr?.message ?? ''))) {
-          // Manual fallback path — bypasses wagmi's encoder.
-          const payload = {
-            types: { EIP712Domain: [
-              { name: 'name', type: 'string' },
-              { name: 'version', type: 'string' },
-              { name: 'chainId', type: 'uint256' },
-              { name: 'verifyingContract', type: 'address' },
-            ], ...typedData.types },
-            primaryType: 'Delegation',
-            domain: typedData.domain,
-            message: {
-              ...typedData.message,
-              salt: typedData.message.salt.toString(), // hex/number-string for raw RPC
+      let permissionContext: `0x${string}` | undefined
+      let resolvedDelegationManager: `0x${string}` | undefined
+
+      // Try ERC-7715 first when we have a wallet client (MetaMask + extension wallets that support it).
+      if (walletClient) {
+        try {
+          const erc7715 = walletClient.extend(erc7715ProviderActions())
+          const granted = await erc7715.requestExecutionPermissions([{
+            chainId: PUBLIC.chainId,
+            to: facilitator,
+            permission: {
+              type: 'erc20-token-allowance',
+              data: {
+                tokenAddress: accepted.asset as `0x${string}`,
+                allowanceAmount: BigInt(accepted.amount),
+              },
+              isAdjustmentAllowed: false,
             },
+            from: address as `0x${string}`,
+            expiry: Math.floor(Date.now() / 1000) + 3600, // 1 hour
+            redeemer: [facilitator],
+          }])
+          if (granted && granted.length > 0 && granted[0].context) {
+            permissionContext = granted[0].context as `0x${string}`
+            resolvedDelegationManager = (granted[0].delegationManager ?? env.DelegationManager) as `0x${string}`
+          } else {
+            throw new Error('wallet returned empty permissions response')
           }
-          signature = await eth.request({
-            method: 'eth_signTypedData_v4',
-            params: [address, JSON.stringify(payload)],
-          }) as `0x${string}`
-        } else {
-          throw wagmiErr
+        } catch (erc7715Err: any) {
+          const msg = String(erc7715Err?.message ?? '')
+          // If the wallet doesn't support ERC-7715 (method not found), fall
+          // through to the manual signTypedData path. Otherwise re-throw —
+          // we want errors like "user rejected" to be visible.
+          const methodMissing = /not (supported|found)|unsupported method|unknown method|wallet_requestExecutionPermissions/i.test(msg)
+          if (!methodMissing) throw erc7715Err
+          // eslint-disable-next-line no-console
+          console.warn('[UnlockThesis] ERC-7715 unavailable, falling back to signTypedData:', msg)
         }
       }
 
-      const signedDelegation = { ...delegation, signature }
-      const permissionContext = encodeDelegations([signedDelegation as any])
+      // (3c) Fallback: manual signTypedData of the Delegation. Used for wallets
+      // that don't expose ERC-7715. MetaMask Snap accounts will still reject
+      // this path; the user has to switch to a non-internal account.
+      if (!permissionContext) {
+        const struct = toDelegationStruct(delegation)
+        const typedData = {
+          account: address,
+          domain: {
+            name: 'DelegationManager' as const,
+            version: '1' as const,
+            chainId: PUBLIC.chainId,
+            verifyingContract: env.DelegationManager as `0x${string}`,
+          },
+          types: SIGNABLE_DELEGATION_TYPED_DATA as any,
+          primaryType: 'Delegation' as const,
+          message: {
+            delegate: struct.delegate as `0x${string}`,
+            delegator: struct.delegator as `0x${string}`,
+            authority: struct.authority as `0x${string}`,
+            caveats: struct.caveats.map((c: any) => ({
+              enforcer: c.enforcer as `0x${string}`,
+              terms: c.terms as `0x${string}`,
+            })),
+            salt: BigInt(struct.salt),
+          },
+        }
+        lastTypedData.current = typedData
+        const signature = await signTypedDataAsync(typedData)
+        const signedDelegation = { ...delegation, signature }
+        permissionContext = encodeDelegations([signedDelegation as any]) as `0x${string}`
+        resolvedDelegationManager = env.DelegationManager as `0x${string}`
+      }
 
       setState({ kind: 'settling' })
 
@@ -320,7 +345,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
         x402Version: 2,
         accepted,
         payload: {
-          delegationManager: env.DelegationManager,
+          delegationManager: resolvedDelegationManager,
           permissionContext,
           delegator: address,
         },
