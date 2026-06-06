@@ -52,7 +52,27 @@ type State =
   | { kind: 'signing' }
   | { kind: 'settling' }
   | { kind: 'unlocked'; data: Unlocked; tx?: string }
-  | { kind: 'error'; message: string }
+  | { kind: 'error'; message: string; cause: 'rejected' | 'network' | 'settlement' | 'unknown' }
+
+// Map a thrown error to a user-readable cause. Wagmi/viem surface
+// rejection with code 4001 / specific class names; the rest we group
+// as network or unknown so the retry button can decide what to say.
+function classifyError(e: unknown): { cause: 'rejected' | 'network' | 'settlement' | 'unknown'; message: string } {
+  const err = e as { code?: number; name?: string; shortMessage?: string; message?: string; cause?: { code?: number; name?: string } }
+  const code = err?.code ?? err?.cause?.code
+  const name = err?.name ?? err?.cause?.name ?? ''
+  const msg = err?.shortMessage ?? err?.message ?? String(e)
+  if (code === 4001 || /User rejected|UserRejectedRequest/i.test(name) || /user rejected|user denied/i.test(msg)) {
+    return { cause: 'rejected', message: 'You cancelled the signature in your wallet.' }
+  }
+  if (/settlement failed/i.test(msg)) {
+    return { cause: 'settlement', message: msg.replace(/^settlement failed:?\s*/i, '') }
+  }
+  if (/fetch|network|aborted|timeout|failed to fetch/i.test(msg)) {
+    return { cause: 'network', message: 'Network error reaching the unlock endpoint. Check your connection and try again.' }
+  }
+  return { cause: 'unknown', message: msg.slice(0, 240) }
+}
 
 export function UnlockThesis({ call }: { call: PublishedCall }) {
   const [mounted, setMounted] = useState(false)
@@ -90,7 +110,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   async function handleUnlock() {
     if (!isConnected || !address) return
     if (wrongChain) {
-      setState({ kind: 'error', message: 'Switch to Base Sepolia in your wallet.' })
+      setState({ kind: 'error', cause: 'unknown', message: 'Switch to Base Sepolia (chainId 84532) in your wallet, then click Try again.' })
       return
     }
     setState({ kind: 'signing' })
@@ -174,7 +194,8 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       }
       setState({ kind: 'unlocked', data: json.locked, tx: json.unlock?.settlementTxHash })
     } catch (e) {
-      setState({ kind: 'error', message: (e as Error).message.slice(0, 200) })
+      const { cause, message } = classifyError(e)
+      setState({ kind: 'error', cause, message })
     }
   }
 
@@ -212,9 +233,11 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
 
   // Idle / ready / signing / settling / error
   const busy = state.kind === 'signing' || state.kind === 'settling'
+  const isError = state.kind === 'error'
   const btnText =
-    state.kind === 'signing' ? 'Waiting for signature…' :
+    state.kind === 'signing' ? 'Look at your wallet…' :
     state.kind === 'settling' ? 'Settling on-chain…' :
+    isError ? `Try again · ${call.unlockUsdc.toFixed(2)} USDC` :
     `Unlock thesis · ${call.unlockUsdc.toFixed(2)} USDC`
 
   return (
@@ -224,39 +247,90 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
           The headline is free. Sign a one-shot <span style={{ color: CF.text }}>x402 micropayment</span> for{' '}
           <span style={{ color: CF.text }}>{call.unlockUsdc.toFixed(2)} USDC</span> to unlock the full thesis, evidence URLs, sizing logic, and the Skeptic's counterarguments.
         </p>
+
         {wrongChain ? (
           <div style={{
-            padding: '8px 12px', borderRadius: 7, marginBottom: 12,
-            background: `color-mix(in oklab, ${CF.bear} 12%, transparent)`,
+            padding: '12px 14px', borderRadius: 8, marginBottom: 12,
+            background: `color-mix(in oklab, ${CF.bear} 14%, transparent)`,
             border: `1px solid ${CF.bear}`, color: CF.bear,
-            fontFamily: CF.mono, fontSize: 11,
+            fontFamily: CF.mono, fontSize: 12, lineHeight: 1.45,
           }}>
-            wrong chain — switch to Base Sepolia (chainId 84532)
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>WRONG CHAIN</div>
+            Your wallet is on <span style={{ color: CF.text }}>{chain?.name ?? `chainId ${chain?.id}`}</span>.
+            Switch to <span style={{ color: CF.text }}>Base Sepolia (84532)</span> in MetaMask, then retry.
           </div>
         ) : null}
+
+        {state.kind === 'signing' ? (
+          <div style={{
+            padding: '12px 14px', borderRadius: 8, marginBottom: 12,
+            background: `color-mix(in oklab, ${CF.amber} 10%, transparent)`,
+            border: `1px solid ${CF.amber}`, color: CF.amber,
+            fontFamily: CF.mono, fontSize: 12, lineHeight: 1.5,
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <span style={{
+              display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
+              background: CF.amber, animation: 'cf-pulse 1.2s ease-in-out infinite',
+            }} />
+            <div>
+              <div style={{ fontWeight: 700, color: CF.amber }}>CHECK YOUR WALLET</div>
+              <div style={{ color: CF.dim, marginTop: 2 }}>MetaMask should be asking you to sign a typed-data delegation. If you don't see a popup, click your MetaMask extension icon — it may be hidden.</div>
+            </div>
+          </div>
+        ) : null}
+
+        {state.kind === 'settling' ? (
+          <div style={{
+            padding: '12px 14px', borderRadius: 8, marginBottom: 12,
+            background: `color-mix(in oklab, ${CF.bull} 8%, transparent)`,
+            border: `1px solid color-mix(in oklab, ${CF.bull} 50%, transparent)`, color: CF.bull,
+            fontFamily: CF.mono, fontSize: 12, lineHeight: 1.5,
+          }}>
+            <div style={{ fontWeight: 700 }}>SETTLING ON-CHAIN</div>
+            <div style={{ color: CF.dim, marginTop: 2 }}>The facilitator is redeeming your signed delegation and moving {call.unlockUsdc.toFixed(2)} USDC. This usually takes 5–15 seconds.</div>
+          </div>
+        ) : null}
+
         <button
           onClick={handleUnlock}
           disabled={busy || wrongChain}
           style={{
             padding: '12px 22px', borderRadius: 9, border: 'none',
-            background: busy ? CF.dim : CF.text, color: '#000',
+            background: busy ? CF.dim : isError ? CF.amber : CF.text,
+            color: '#000',
             fontFamily: CF.display, fontSize: 13.5, fontWeight: 600, letterSpacing: 0.2,
             cursor: busy || wrongChain ? 'not-allowed' : 'pointer',
-            boxShadow: !busy && !wrongChain ? `0 0 24px color-mix(in oklab, ${CF.bull} 18%, transparent)` : 'none',
+            boxShadow: !busy && !wrongChain ? `0 0 24px color-mix(in oklab, ${isError ? CF.amber : CF.bull} 18%, transparent)` : 'none',
           }}
         >
           {btnText}
         </button>
-        {state.kind === 'error' ? (
+
+        {isError ? (
           <div style={{
-            marginTop: 12, padding: '8px 12px', borderRadius: 7,
+            marginTop: 12, padding: '10px 14px', borderRadius: 8,
             background: `color-mix(in oklab, ${CF.bear} 10%, transparent)`,
             border: `1px solid ${CF.bear}`, color: CF.bear,
-            fontFamily: CF.mono, fontSize: 11, wordBreak: 'break-word',
+            fontFamily: CF.mono, fontSize: 11.5, wordBreak: 'break-word', lineHeight: 1.5,
           }}>
-            {state.message}
+            <div style={{ fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>
+              {state.cause === 'rejected' ? 'Signature cancelled'
+                : state.cause === 'network' ? 'Network error'
+                : state.cause === 'settlement' ? 'On-chain settlement failed'
+                : 'Unlock failed'}
+            </div>
+            <div style={{ color: '#ffb6c0' }}>{state.message}</div>
           </div>
         ) : null}
+
+        {/* keyframes for the pulsing dot */}
+        <style>{`
+          @keyframes cf-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.35; transform: scale(0.78); }
+          }
+        `}</style>
       </div>
     } />
   )
