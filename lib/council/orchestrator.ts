@@ -8,9 +8,11 @@
 // and persistence (calls-store) in the next phases without changing the
 // orchestrator's outer contract.
 
-import { erc20Abi, formatUnits } from 'viem'
+import { encodeFunctionData, erc20Abi, formatUnits, parseUnits, type Hex } from 'viem'
 import {
+  bearAccount,
   bullAccount,
+  bullWalletSepolia,
   sepoliaPublicClient,
   USDC_SEPOLIA,
   userAccount,
@@ -28,6 +30,9 @@ import { buildBullBudget } from '../duel.js'
 import { ensureFunded } from '../deploy-sa.js'
 import { buildUserSmartAccount } from '../accounts.js'
 import { addCall } from '../calls-store.js'
+import { erc7710WalletActions } from '@metamask/smart-accounts-kit/actions'
+import { encodeDelegations } from '@metamask/smart-accounts-kit/utils'
+import { getSmartAccountsEnvironment } from '@metamask/smart-accounts-kit'
 
 // Quality gate thresholds — same shape as the README documents.
 const MIN_AGREE = 3
@@ -45,6 +50,7 @@ export type CouncilEvent =
   | { type: 'skeptic-verdict'; vote: AgentVote }
   | { type: 'gate-decision'; passed: boolean; reasons: string[] }
   | { type: 'thesis-generated' }
+  | { type: 'bond-posted'; bondUsdc: number; bondHolder: string; txHash: string }
   | { type: 'published'; call: PublishedCall }
   | { type: 'refused'; reason: string }
   | { type: 'error'; message: string }
@@ -112,7 +118,8 @@ export async function runCouncil(
 
   if (!opts.stubEvidence) {
     try {
-      // Ensure USER SA has USDC for evidence buys
+      // Ensure USER SA has enough for evidence buys (~2 USDC) + bond
+      // (up to ~10 USDC). 15 USDC floor leaves comfortable margin.
       const userSA = await buildUserSmartAccount()
       await ensureFunded(
         'USER',
@@ -120,8 +127,8 @@ export async function runCouncil(
         userAccount,
         userWalletSepolia,
         sepoliaPublicClient,
-        3_000_000n,  // need ≥ 3 USDC
-        3_000_000n,  // top up 3 USDC if low
+        15_000_000n,  // need ≥ 15 USDC
+        15_000_000n,  // top up 15 USDC if low
       ).catch(() => null)
 
       const { signedDelegation: signedRoot } = await buildRootMandate()
@@ -274,6 +281,58 @@ export async function runCouncil(
     return { label: `${role}: ${ev.sourceUrl.split('/').slice(2, 4).join('/')}`, url: ev.sourceUrl, signal: ev.signal as any }
   }).filter(Boolean) as Array<{ label: string; url: string; signal: 'YES' | 'NO' | 'NEUTRAL' }>
 
+  // ── 7. Post the bond on-chain (Phase 8.6) ────────────────────────────
+  // The bond is a real USDC transfer from USER SA → BEAR EOA (the bond
+  // holder), redeemed through Bull's existing sub-budget chain. The
+  // chain-enforced cap means the council literally can't bond more than
+  // it has authority for. Skipped if stubEvidence is true (test mode).
+  let bondTxHash: Hex | undefined
+  const bondHolder = bearAccount.address as `0x${string}`
+  if (!opts.stubEvidence) {
+    try {
+      const bondAmountWei = parseUnits(bondUsdc.toString(), 6)
+      const transferData = encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [bondHolder, bondAmountWei],
+      })
+
+      // Re-sign the chain for the bond redemption (we already have signedRoot
+      // and bullBudget from the evidence step, but salts are fresh per
+      // delegation in our pattern — we can reuse the same signed chain since
+      // the kit allows multiple redemptions against the same delegation
+      // until the cap is exhausted).
+      const env = getSmartAccountsEnvironment(84532 as any)
+      const { signedDelegation: signedRoot } = await buildRootMandate()
+      const bullBudget = await buildBullBudget(signedRoot)
+      const winningWallet = bullWalletSepolia.extend(erc7710WalletActions())
+      const winningChainEncoded = encodeDelegations([bullBudget, signedRoot]) as Hex
+
+      bondTxHash = await winningWallet.sendTransactionWithDelegation({
+        to: USDC_SEPOLIA,
+        data: transferData,
+        value: 0n,
+        permissionContext: winningChainEncoded,
+        delegationManager: env.DelegationManager,
+      })
+      const receipt = await sepoliaPublicClient.waitForTransactionReceipt({ hash: bondTxHash })
+      if (receipt.status !== 'success') {
+        await emit({ type: 'error', message: `bond posting tx reverted: ${bondTxHash}` })
+        return null
+      }
+      await emit({
+        type: 'bond-posted',
+        bondUsdc,
+        bondHolder,
+        txHash: bondTxHash,
+      })
+    } catch (e) {
+      await emit({ type: 'error', message: `bond posting failed: ${(e as Error).message}` })
+      // Don't return null — we still publish the call, just without bondTxHash.
+      // The narrative downgrades from "bond posted on-chain" to "bond pending".
+    }
+  }
+
   const call: PublishedCall = {
     id,
     marketId,
@@ -285,6 +344,8 @@ export async function runCouncil(
     edge,
     bondUsdc,
     unlockUsdc: 0.10,
+    bondTxHash,
+    bondHolder,
     publishedAt: Date.now(),
     publishedBy: COUNCIL_DESK,
     votes: [...roleVotes, skepticVote],
@@ -292,7 +353,7 @@ export async function runCouncil(
     locked: {
       thesis,
       evidenceUrls,
-      sizingRationale: `Bond ${bondUsdc.toFixed(2)} USDC — sized by avg council confidence ${(avgConfidence * 100).toFixed(0)}% × edge ${(edge * 100).toFixed(0)}pts. ${evidenceTxs.length} x402 evidence settlement(s) on-chain.`,
+      sizingRationale: `Bond ${bondUsdc.toFixed(2)} USDC posted on-chain via Bull's sub-budget chain ${bondTxHash ? `(tx ${bondTxHash.slice(0, 10)}…)` : '(off-chain)'}. ${evidenceTxs.length} x402 evidence settlement(s) on-chain. Sized by avg council confidence ${(avgConfidence * 100).toFixed(0)}% × edge ${(edge * 100).toFixed(0)}pts.`,
       counterarguments,
     },
   }

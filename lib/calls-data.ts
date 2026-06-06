@@ -28,7 +28,8 @@ export type PublishedCall = {
   bondUsdc: number                // size of the agent's on-chain bond
   unlockUsdc: number              // user pays this to unlock the full thesis
 
-  bondTxHash?: `0x${string}`      // when published on-chain (Phase 8.3)
+  bondTxHash?: `0x${string}`      // ERC-7710 redemption that posted the bond (Phase 8.6)
+  bondHolder?: `0x${string}`      // address holding the bond until resolution
 
   publishedAt: number             // unix ms
   publishedBy: string             // agent desk handle (e.g., "Council-A")

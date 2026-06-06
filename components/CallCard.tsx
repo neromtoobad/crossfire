@@ -159,6 +159,9 @@ export function CallCard({ call }: { call: PublishedCall }) {
       }}>
         <div style={{ fontFamily: CF.mono, fontSize: 11.5, color: CF.dim }}>
           bond <span style={{ color: CF.text, fontWeight: 600 }}>{call.bondUsdc.toFixed(2)} USDC</span>
+          {call.bondTxHash ? (
+            <span style={{ color: CF.bull, marginLeft: 6 }} title={`on-chain bond ${call.bondTxHash}`}>·  on-chain ✓</span>
+          ) : null}
         </div>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,

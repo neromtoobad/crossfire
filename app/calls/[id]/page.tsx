@@ -130,6 +130,17 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
               <div style={{ fontFamily: CF.mono, fontSize: 22, fontWeight: 600, color: CF.text }}>
                 {call.bondUsdc.toFixed(2)} <span style={{ color: CF.dim, fontSize: 13 }}>USDC</span>
               </div>
+              {call.bondTxHash ? (
+                <a href={`https://sepolia.basescan.org/tx/${call.bondTxHash}`} target="_blank" rel="noreferrer" style={{
+                  fontFamily: CF.mono, fontSize: 10, color: CF.bull, textDecoration: 'none', marginTop: 4, display: 'block',
+                }}>
+                  on-chain ✓ {call.bondTxHash.slice(0, 8)}…↗
+                </a>
+              ) : (
+                <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dimmer, marginTop: 4 }}>
+                  off-chain
+                </div>
+              )}
             </div>
           </div>
 
