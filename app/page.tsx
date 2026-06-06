@@ -1,8 +1,7 @@
-// CROSSFIRE landing — public calls feed.
+// CROSSFIRE landing — light editorial system (Phase 8.11).
 //
-// Phase 8.1: hand-crafted sample published calls so the product is
-// legible immediately. Phase 8.2+ will swap loadCalls() for the real
-// council's published-call store.
+// Layout: 1080px column, mathematical 8pt rhythm, hairline dividers.
+// Voice: Fraunces display + Inter body, JetBrains Mono only for tx hashes.
 
 import { ConnectButton } from '../components/ConnectButton'
 import { CallCard } from '../components/CallCard'
@@ -10,38 +9,17 @@ import { RunCouncilLive } from '../components/RunCouncilLive'
 import { RelayLive } from '../components/RelayLive'
 import { loadCalls } from '../lib/calls-data'
 import { loadMarketsMeta } from '../lib/markets-data'
+import { CF } from '../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
-const CF = {
-  black: '#000000',
-  bg: '#060608',
-  panel: '#0c0c11',
-  panelHi: '#101017',
-  edge: '#1b1b23',
-  edgeHi: '#2a2a36',
-  text: '#ededf2',
-  dim: '#8a8a99',
-  dimmer: '#5a5a68',
-  bull: '#3bc4ff',
-  bullDeep: '#0a3a52',
-  bear: '#ff2a4d',
-  bearDeep: '#520a17',
-  white: '#ffffff',
-  amber: '#ffbd45',
-  display: "'Space Grotesk', system-ui, -apple-system, sans-serif",
-  mono: "'JetBrains Mono', ui-monospace, monospace",
-}
-
 function LogoMark({ size = 30 }: { size?: number }) {
+  // Two crossing strokes — Bull blue / Bear crimson — no glow, weight matters.
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block', overflow: 'visible' }}>
-      <line x1="16" y1="16" x2="84" y2="84" stroke={CF.bull} strokeWidth="9" strokeLinecap="round"
-        style={{ filter: `drop-shadow(0 0 ${size * 0.2}px ${CF.bull})`, opacity: 0.9 }} />
-      <line x1="84" y1="16" x2="16" y2="84" stroke={CF.bear} strokeWidth="9" strokeLinecap="round"
-        style={{ filter: `drop-shadow(0 0 ${size * 0.2}px ${CF.bear})`, opacity: 0.9 }} />
-      <circle cx="50" cy="50" r="7" fill={CF.white}
-        style={{ filter: `drop-shadow(0 0 ${size * 0.25}px ${CF.white})` }} />
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }} aria-hidden>
+      <line x1="18" y1="18" x2="82" y2="82" stroke={CF.bull} strokeWidth="7" strokeLinecap="round" />
+      <line x1="82" y1="18" x2="18" y2="82" stroke={CF.bear} strokeWidth="7" strokeLinecap="round" />
+      <circle cx="50" cy="50" r="5" fill={CF.ink} />
     </svg>
   )
 }
@@ -52,7 +30,7 @@ function Tx({ hash, label, network = 'sepolia' }: { hash: string; label?: string
     : `https://sepolia.basescan.org/tx/${hash}`
   return (
     <a href={url} target="_blank" rel="noreferrer" style={{
-      color: CF.bull, textDecoration: 'none', fontFamily: CF.mono, fontSize: 12,
+      color: CF.bull, fontFamily: CF.mono, fontSize: 12, fontVariantNumeric: 'tabular-nums',
     }}>
       {label ?? `${hash.slice(0, 8)}…${hash.slice(-6)}`}
     </a>
@@ -60,11 +38,11 @@ function Tx({ hash, label, network = 'sepolia' }: { hash: string; label?: string
 }
 
 const RECEIPTS = [
-  { phase: '1', what: 'ERC-7710 revert proof', detail: 'Over-cap mandate redemption refused at the enforcer', tx: '0xa8d4775e0cf545119ef7296f87e2e2c8d54fbf26d7fb08abdbb3d2deab12ee45', label: 'in-cap success', net: 'sepolia' as const },
-  { phase: '2', what: 'A2A redelegation', detail: 'Sub-agent redeems through leaf-to-root chain', tx: '0x5cdcdb45505aa49b8f76cf759dbe2a58b3e2300aafc7356969f7ed19b7d6ba41', label: 'Bull 1 USDC', net: 'sepolia' as const },
-  { phase: '3', what: 'x402 + Venice', detail: 'Buyer-with-delegation pays for evidence; real USDC moves', tx: '0x0bd9016b12d6be19428eb346474ff0b1f3d2523bdc9e6a8eafa458354b79cf23', label: 'evidence settled', net: 'sepolia' as const },
-  { phase: '4', what: 'Adversarial net bet', detail: 'Bull 3.80 vs Bear 7.80 → NO bet sized 4.00 USDC through winning chain', tx: '0x44a722e02febe27c7fa2186557fe704bf2c562f47a4bd3764d807ea34fb47a4c', label: 'bet transfer', net: 'sepolia' as const },
-  { phase: '5', what: '1Shot mainnet relay', detail: 'Confirmed (200) · EIP-7702 in-flight upgrade · gas paid in USDC', tx: '0x5a093da29349a1519e67aed5f0b6a518109ade6fed6a5f53ca35f8d6a1312651', label: 'mainnet confirmed', net: 'mainnet' as const },
+  { phase: '01', what: 'ERC-7710 revert proof', detail: 'Over-cap mandate redemption refused at the enforcer.', tx: '0xa8d4775e0cf545119ef7296f87e2e2c8d54fbf26d7fb08abdbb3d2deab12ee45', label: 'in-cap success', net: 'sepolia' as const },
+  { phase: '02', what: 'A2A redelegation', detail: 'Sub-agent redeems through leaf-to-root chain.', tx: '0x5cdcdb45505aa49b8f76cf759dbe2a58b3e2300aafc7356969f7ed19b7d6ba41', label: 'Bull 1 USDC', net: 'sepolia' as const },
+  { phase: '03', what: 'x402 + Venice', detail: 'Buyer-with-delegation pays for evidence; real USDC moves.', tx: '0x0bd9016b12d6be19428eb346474ff0b1f3d2523bdc9e6a8eafa458354b79cf23', label: 'evidence settled', net: 'sepolia' as const },
+  { phase: '04', what: 'Adversarial net bet', detail: 'Bull 3.80 vs Bear 7.80 → NO bet sized 4.00 USDC through winning chain.', tx: '0x44a722e02febe27c7fa2186557fe704bf2c562f47a4bd3764d807ea34fb47a4c', label: 'bet transfer', net: 'sepolia' as const },
+  { phase: '05', what: '1Shot mainnet relay', detail: 'Confirmed (200) · EIP-7702 in-flight upgrade · gas paid in USDC.', tx: '0x5a093da29349a1519e67aed5f0b6a518109ade6fed6a5f53ca35f8d6a1312651', label: 'mainnet confirmed', net: 'mainnet' as const },
 ]
 
 export default async function Landing() {
@@ -73,123 +51,161 @@ export default async function Landing() {
 
   return (
     <main style={{
-      background: CF.bg, color: CF.text, minHeight: '100vh',
-      padding: '0 32px 60px',
+      background: CF.bg, color: CF.ink, minHeight: '100vh',
+      padding: '0 24px 96px',
     }}>
-      <div style={{ maxWidth: 980, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         {/* ── NAV ── */}
         <header style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '20px 0', borderBottom: `1px solid ${CF.edge}`,
+          padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <LogoMark size={26} />
-            <span style={{ fontFamily: CF.display, fontWeight: 700, fontSize: 16, letterSpacing: 3.4, color: CF.text }}>
+            <span style={{
+              fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
+            }}>
               CROSSFIRE
             </span>
+            <span style={{
+              marginLeft: 4, padding: '2px 7px', borderRadius: 999,
+              background: CF.surface2, color: CF.ink2,
+              fontFamily: CF.mono, fontSize: 10, letterSpacing: 0.5,
+            }}>
+              vol. 01 · the desk
+            </span>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <a href="/leaderboard" style={navLinkStyle()}>
-              Leaderboard
+          <nav style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <a href="/leaderboard" style={navLinkStyle}>Leaderboard</a>
+            <a href="#proof" style={navLinkStyle}>Proof</a>
+            <a href="https://github.com/neromtoobad/crossfire" target="_blank" rel="noreferrer" style={navLinkStyle}>
+              GitHub <span style={{ color: CF.ink3 }}>↗</span>
             </a>
-            <a href="https://github.com/neromtoobad/crossfire" target="_blank" rel="noreferrer" style={navLinkStyle()}>
-              GitHub ↗
-            </a>
-            <a href="#proof" style={navLinkStyle()}>
-              Proof
-            </a>
+            <span style={{ width: 12 }} />
             <ConnectButton variant="primary" />
-          </div>
+          </nav>
         </header>
 
-        {/* ── HERO ── */}
-        <section style={{ padding: '64px 0 40px', textAlign: 'center' }}>
-          <div style={{ display: 'inline-block', marginBottom: 24 }}>
-            <LogoMark size={68} />
+        {/* ── EDITORIAL HERO ── */}
+        <section style={{ padding: '72px 0 48px' }}>
+          <div style={{
+            fontFamily: CF.mono, fontSize: 11, letterSpacing: 2.4, color: CF.ink3,
+            marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <span style={{ display: 'inline-block', width: 24, height: 1, background: CF.ink }} />
+            ISSUE 01 · LIVE FEED
           </div>
           <h1 style={{
-            fontFamily: CF.display, fontWeight: 700, fontSize: 44, lineHeight: 1.1,
-            letterSpacing: -1.2, margin: '0 0 18px', color: CF.text,
+            fontFamily: CF.display, fontWeight: 500,
+            fontSize: 'clamp(48px, 7vw, 78px)', lineHeight: 1.02,
+            letterSpacing: -2.4, margin: '0 0 24px', color: CF.ink,
+            fontVariationSettings: '"opsz" 144',
+            maxWidth: 920,
           }}>
-            An adversarial council
-            <br />
-            <span style={{ color: CF.dim }}>publishes prediction-market calls.</span>
+            An adversarial council<br />
+            <span style={{ fontStyle: 'italic', color: CF.ink2 }}>publishes prediction-market calls.</span>
           </h1>
           <p style={{
-            fontFamily: CF.display, fontSize: 17, lineHeight: 1.6,
-            color: CF.dim, maxWidth: 680, margin: '0 auto 30px',
+            fontFamily: CF.body, fontSize: 18, lineHeight: 1.55,
+            color: CF.ink2, maxWidth: 680, margin: '0 0 30px',
           }}>
-            Five role agents read live markets, buy evidence with USDC, vote, and either bond a call or stay silent. Browse the feed free. Pay a few cents in USDC to unlock the full thesis — the reasoning trace, the evidence URLs, the Skeptic's rebuttal, the sizing logic.
+            Five role agents read live markets, buy evidence with USDC, and vote.
+            Calls that survive the Skeptic and the quality gate get an on-chain
+            bond — and a card on the wire. Browse the feed free. Pay a few cents
+            to unlock the full thesis.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-            <a href="#calls" style={ctaPrimary()}>
-              See the live calls <span style={{ color: CF.bull, marginLeft: 4 }}>↓</span>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <a href="#live" style={ctaPrimary}>
+              Watch a call get made <span style={{ marginLeft: 6 }}>→</span>
             </a>
-            <a href="#mechanism" style={ctaSecondary()}>
-              How it works
+            <a href="#calls" style={ctaSecondary}>
+              See the feed
             </a>
           </div>
         </section>
 
-        {/* ── LIVE COUNCIL (Phase 8.8 — watch a call get made) ── */}
-        <section id="live" style={{ padding: '10px 0 14px' }}>
+        {/* ── LIVE COUNCIL ── */}
+        <section id="live" style={{ padding: '12px 0 12px' }}>
           <RunCouncilLive markets={marketChoices} />
         </section>
 
-        {/* ── 1SHOT MAINNET RELAY (Phase 8.10) ── */}
-        <section id="relay" style={{ padding: '0 0 14px' }}>
+        {/* ── 1SHOT MAINNET RELAY ── */}
+        <section id="relay" style={{ padding: '6px 0 12px' }}>
           <RelayLive />
         </section>
 
         {/* ── LIVE CALLS FEED ── */}
-        <section id="calls" style={{ padding: '24px 0 20px' }}>
+        <section id="calls" style={{ padding: '40px 0 24px' }}>
           <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+            marginBottom: 24, paddingBottom: 14, borderBottom: `1px solid ${CF.line}`,
           }}>
-            <h2 style={{
-              fontFamily: CF.display, fontWeight: 700, fontSize: 22, color: CF.text,
-              margin: 0, letterSpacing: -0.3,
-            }}>
-              Live calls
-            </h2>
-            <div style={{ fontFamily: CF.mono, fontSize: 11, color: CF.dim, letterSpacing: 0.5 }}>
+            <div>
+              <div style={{
+                fontFamily: CF.mono, fontSize: 11, letterSpacing: 2.4, color: CF.ink3, marginBottom: 6,
+              }}>
+                THE WIRE · LIVE FEED
+              </div>
+              <h2 style={{
+                fontFamily: CF.display, fontWeight: 500, fontSize: 36,
+                letterSpacing: -1, color: CF.ink, margin: 0,
+                fontVariationSettings: '"opsz" 96',
+              }}>
+                Today's calls
+              </h2>
+            </div>
+            <div className="mono tnum" style={{ fontSize: 11.5, color: CF.ink3, letterSpacing: 0.5 }}>
               {calls.length} bonded · headline free · unlock $0.10 USDC
             </div>
           </div>
 
           {calls.length === 0 ? (
             <div style={{
-              padding: 32, background: CF.panel, border: `1px solid ${CF.edge}`,
-              borderRadius: 12, fontFamily: CF.mono, color: CF.dim, textAlign: 'center',
+              padding: 40, background: CF.surface, border: `1px solid ${CF.line}`,
+              borderRadius: CF.radius.lg, color: CF.ink2, textAlign: 'center',
+              fontFamily: CF.body, fontSize: 14,
             }}>
               No calls published yet. The council is still warming up.
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
               {calls.map((c) => <CallCard key={c.id} call={c} />)}
             </div>
           )}
         </section>
 
         {/* ── MECHANISM ── */}
-        <section id="mechanism" style={{ padding: '50px 0 30px', borderTop: `1px solid ${CF.edge}`, marginTop: 30 }}>
-          <div style={{ fontFamily: CF.mono, fontSize: 11, color: CF.dim, letterSpacing: 2.5, marginBottom: 10 }}>
-            HOW IT WORKS
+        <section id="mechanism" style={{
+          padding: '72px 0 32px', borderTop: `1px solid ${CF.line}`, marginTop: 40,
+        }}>
+          <div style={{
+            fontFamily: CF.mono, fontSize: 11, letterSpacing: 2.4, color: CF.ink3, marginBottom: 10,
+          }}>
+            THE MECHANISM
           </div>
           <h2 style={{
-            fontFamily: CF.display, fontWeight: 700, fontSize: 28, letterSpacing: -0.4,
-            color: CF.text, margin: '0 0 32px',
+            fontFamily: CF.display, fontWeight: 500, fontSize: 40,
+            letterSpacing: -1, color: CF.ink, margin: '0 0 8px',
+            fontVariationSettings: '"opsz" 96', maxWidth: 720,
           }}>
-            Five agents. One Skeptic. The chain enforces the bond.
+            Five agents. One Skeptic.<br />
+            <span style={{ fontStyle: 'italic', color: CF.ink2 }}>The chain enforces the bond.</span>
           </h2>
+          <p style={{
+            fontFamily: CF.body, fontSize: 15.5, color: CF.ink2, maxWidth: 640,
+            margin: '0 0 36px', lineHeight: 1.55,
+          }}>
+            Conviction is not a number an agent claims — it's USDC the council
+            actually spends and stakes, capped by a chain-enforced delegation.
+          </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: `1px solid ${CF.line}` }}>
             <Step
               n="01"
               title="Council reads + votes"
               body={
                 <>
-                  <span style={{ color: CF.bull }}>MacroScout</span>, <span style={{ color: CF.bull }}>NewsHawk</span>, <span style={{ color: CF.bull }}>CrowdPulse</span>, and <span style={{ color: CF.bull }}>BookWatcher</span> each read different inputs. The <span style={{ color: CF.bear }}>Skeptic</span> votes last and can veto.
+                  <em style={{ color: CF.bull, fontStyle: 'normal' }}>MacroScout</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>NewsHawk</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>CrowdPulse</em>, and <em style={{ color: CF.bull, fontStyle: 'normal' }}>BookWatcher</em> each read different inputs. The <em style={{ color: CF.bear, fontStyle: 'normal' }}>Skeptic</em> votes last — and can veto.
                 </>
               }
             />
@@ -198,16 +214,17 @@ export default async function Landing() {
               title="Quality gate"
               body={
                 <>
-                  Publishes only if <span style={{ color: CF.text }}>≥3 of 4 agree</span>, the <span style={{ color: CF.bear }}>Skeptic doesn't veto</span>, edge over market is ≥5 points, and the bond fits the treasury cap.
+                  Publishes only if <strong style={{ color: CF.ink, fontWeight: 600 }}>≥3 of 4 agree</strong>, the Skeptic doesn't veto, edge over market is ≥5 points, and the bond fits the treasury cap.
                 </>
               }
+              middle
             />
             <Step
               n="03"
               title="Bond + unlock"
               body={
                 <>
-                  Passing calls get an on-chain bond via <span style={{ color: CF.text }}>ERC-7710</span> mandate. Headline is free. Users pay a tiny USDC <span style={{ color: CF.text }}>x402 micropayment</span> to read the full thesis.
+                  Passing calls get an on-chain bond via <strong style={{ color: CF.ink, fontWeight: 600 }}>ERC-7710</strong> mandate. Headline is free. Users pay a tiny USDC <strong style={{ color: CF.ink, fontWeight: 600 }}>x402 micropayment</strong> to read the full thesis.
                 </>
               }
             />
@@ -215,38 +232,54 @@ export default async function Landing() {
         </section>
 
         {/* ── ON-CHAIN PROOF ── */}
-        <section id="proof" style={{ padding: '50px 0 30px', borderTop: `1px solid ${CF.edge}`, marginTop: 20 }}>
-          <div style={{ fontFamily: CF.mono, fontSize: 11, color: CF.dim, letterSpacing: 2.5, marginBottom: 10 }}>
+        <section id="proof" style={{
+          padding: '72px 0 32px', borderTop: `1px solid ${CF.line}`, marginTop: 24,
+        }}>
+          <div style={{
+            fontFamily: CF.mono, fontSize: 11, letterSpacing: 2.4, color: CF.ink3, marginBottom: 10,
+          }}>
             ON-CHAIN PROOF
           </div>
           <h2 style={{
-            fontFamily: CF.display, fontWeight: 700, fontSize: 28, letterSpacing: -0.4,
-            color: CF.text, margin: '0 0 24px',
+            fontFamily: CF.display, fontWeight: 500, fontSize: 40,
+            letterSpacing: -1, color: CF.ink, margin: '0 0 28px',
+            fontVariationSettings: '"opsz" 96', maxWidth: 640,
           }}>
             Every primitive verified on a real chain.
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {RECEIPTS.map((r) => (
+          <div style={{
+            background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg,
+            boxShadow: CF.shadow.card, overflow: 'hidden',
+          }}>
+            {RECEIPTS.map((r, i) => (
               <div key={r.phase} style={{
-                display: 'grid', gridTemplateColumns: '50px 1fr auto',
-                gap: 16, alignItems: 'center',
-                padding: '14px 18px', background: CF.panel,
-                border: `1px solid ${CF.edge}`, borderRadius: 8,
+                display: 'grid', gridTemplateColumns: '60px 1fr auto',
+                gap: 20, alignItems: 'center',
+                padding: '18px 24px',
+                borderBottom: i < RECEIPTS.length - 1 ? `1px solid ${CF.line}` : 'none',
               }}>
-                <div style={{ fontFamily: CF.mono, fontSize: 18, fontWeight: 700, color: CF.dim }}>
+                <div className="mono" style={{
+                  fontSize: 14, fontWeight: 600, color: CF.ink3, letterSpacing: 0.5,
+                }}>
                   {r.phase}
                 </div>
                 <div>
-                  <div style={{ fontFamily: CF.display, fontSize: 14, fontWeight: 600, color: CF.text, marginBottom: 3 }}>
+                  <div style={{
+                    fontFamily: CF.body, fontSize: 14.5, fontWeight: 600, color: CF.ink, marginBottom: 4,
+                  }}>
                     {r.what}
                   </div>
-                  <div style={{ fontFamily: CF.display, fontSize: 12, color: CF.dim, lineHeight: 1.5 }}>
+                  <div style={{
+                    fontFamily: CF.body, fontSize: 13, color: CF.ink2, lineHeight: 1.55,
+                  }}>
                     {r.detail}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <Tx hash={r.tx} label={r.label} network={r.net} />
-                  <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dimmer, marginTop: 3 }}>
+                  <div className="mono" style={{
+                    fontSize: 10, color: CF.ink4, marginTop: 4, letterSpacing: 0.4,
+                  }}>
                     {r.net === 'mainnet' ? 'Base mainnet' : 'Base Sepolia'}
                   </div>
                 </div>
@@ -257,19 +290,19 @@ export default async function Landing() {
 
         {/* ── FOOTER ── */}
         <footer style={{
-          marginTop: 40, paddingTop: 24, borderTop: `1px solid ${CF.edge}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14,
+          marginTop: 56, paddingTop: 24, borderTop: `1px solid ${CF.line}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <LogoMark size={18} />
-            <span style={{ fontFamily: CF.mono, fontSize: 11.5, color: CF.dim, letterSpacing: 0.5 }}>
+            <span className="mono" style={{ fontSize: 11, color: CF.ink3, letterSpacing: 0.5 }}>
               accountable agent calls · the chain settles
             </span>
           </div>
-          <div style={{ display: 'flex', gap: 18, fontFamily: CF.mono, fontSize: 12 }}>
-            <a href="https://github.com/neromtoobad/crossfire" target="_blank" rel="noreferrer" style={{ color: CF.dim, textDecoration: 'none' }}>GitHub</a>
-            <a href="https://github.com/neromtoobad/crossfire/blob/main/PROOF.md" target="_blank" rel="noreferrer" style={{ color: CF.dim, textDecoration: 'none' }}>PROOF.md</a>
-            <a href="https://github.com/neromtoobad/crossfire/blob/main/README.md" target="_blank" rel="noreferrer" style={{ color: CF.dim, textDecoration: 'none' }}>README</a>
+          <div style={{ display: 'flex', gap: 18 }}>
+            <a href="https://github.com/neromtoobad/crossfire" target="_blank" rel="noreferrer" className="mono" style={{ fontSize: 12, color: CF.ink2 }}>GitHub</a>
+            <a href="https://github.com/neromtoobad/crossfire/blob/main/PROOF.md" target="_blank" rel="noreferrer" className="mono" style={{ fontSize: 12, color: CF.ink2 }}>PROOF.md</a>
+            <a href="https://github.com/neromtoobad/crossfire/blob/main/README.md" target="_blank" rel="noreferrer" className="mono" style={{ fontSize: 12, color: CF.ink2 }}>README</a>
           </div>
         </footer>
       </div>
@@ -277,54 +310,49 @@ export default async function Landing() {
   )
 }
 
-function navLinkStyle(): React.CSSProperties {
-  return {
-    padding: '8px 14px', borderRadius: 7, textDecoration: 'none',
-    fontFamily: CF.mono, fontSize: 12, letterSpacing: 0.3,
-    border: `1px solid ${CF.edge}`,
-    color: CF.dim,
-  }
+const navLinkStyle: React.CSSProperties = {
+  padding: '8px 12px', borderRadius: CF.radius.md,
+  fontFamily: CF.body, fontSize: 13, fontWeight: 500,
+  color: CF.ink2,
 }
 
-function ctaPrimary(): React.CSSProperties {
-  return {
-    display: 'inline-flex', alignItems: 'center',
-    padding: '12px 20px', borderRadius: 9, textDecoration: 'none',
-    background: CF.text, color: '#000',
-    fontFamily: CF.display, fontSize: 13.5, fontWeight: 600, letterSpacing: 0.2,
-    boxShadow: '0 0 24px color-mix(in oklab, #fff 14%, transparent)',
-  }
+const ctaPrimary: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center',
+  padding: '14px 20px', borderRadius: CF.radius.lg,
+  background: CF.ink, color: CF.bg,
+  fontFamily: CF.body, fontSize: 14, fontWeight: 600,
+  boxShadow: CF.shadow.card,
 }
 
-function ctaSecondary(): React.CSSProperties {
-  return {
-    display: 'inline-flex', alignItems: 'center',
-    padding: '12px 20px', borderRadius: 9, textDecoration: 'none',
-    border: `1px solid ${CF.edge}`, color: CF.dim,
-    fontFamily: CF.display, fontSize: 13.5, fontWeight: 500,
-  }
+const ctaSecondary: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center',
+  padding: '14px 20px', borderRadius: CF.radius.lg,
+  border: `1px solid ${CF.line2}`,
+  background: CF.surface, color: CF.ink,
+  fontFamily: CF.body, fontSize: 14, fontWeight: 500,
 }
 
-function Step({ n, title, body }: { n: string; title: string; body: React.ReactNode }) {
+function Step({ n, title, body, middle = false }: { n: string; title: string; body: React.ReactNode; middle?: boolean }) {
   return (
     <div style={{
-      padding: '22px 22px',
-      background: CF.panel,
-      border: `1px solid ${CF.edge}`,
-      borderRadius: 10,
+      padding: '28px 24px 32px',
+      borderRight: middle ? `1px solid ${CF.line}` : 'none',
+      borderLeft: middle ? `1px solid ${CF.line}` : 'none',
     }}>
-      <div style={{
-        fontFamily: CF.mono, fontSize: 11, letterSpacing: 1.8, color: CF.dim, marginBottom: 14,
+      <div className="mono" style={{
+        fontSize: 11, letterSpacing: 1.6, color: CF.ink3, marginBottom: 18,
       }}>
         {n}
       </div>
       <div style={{
-        fontFamily: CF.display, fontSize: 17, fontWeight: 600, color: CF.text, marginBottom: 10,
+        fontFamily: CF.display, fontWeight: 500, fontSize: 22,
+        letterSpacing: -0.4, color: CF.ink, marginBottom: 12,
+        fontVariationSettings: '"opsz" 36',
       }}>
         {title}
       </div>
       <div style={{
-        fontFamily: CF.display, fontSize: 13, color: CF.dim, lineHeight: 1.6,
+        fontFamily: CF.body, fontSize: 14.5, color: CF.ink2, lineHeight: 1.6,
       }}>
         {body}
       </div>

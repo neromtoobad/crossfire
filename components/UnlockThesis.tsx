@@ -30,14 +30,7 @@ import {
 import { ConnectButton } from './ConnectButton'
 import { PUBLIC } from '../lib/public-config'
 import type { PublishedCall } from '../lib/calls-data'
-
-const CF = {
-  bg: '#060608', panel: '#0c0c11', edge: '#1b1b23', edgeHi: '#2a2a36',
-  text: '#ededf2', dim: '#8a8a99', dimmer: '#5a5a68',
-  bull: '#3bc4ff', bear: '#ff2a4d', amber: '#ffbd45', white: '#ffffff',
-  display: "'Space Grotesk', system-ui, -apple-system, sans-serif",
-  mono: "'JetBrains Mono', ui-monospace, monospace",
-}
+import { CF } from '../lib/theme'
 
 type Unlocked = {
   thesis: string
@@ -208,7 +201,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
 
   // Hydrating
   if (!mounted || isReconnecting) {
-    return <LockedShell call={call} body={<div style={{ color: CF.dim, fontFamily: CF.mono, fontSize: 12 }}>checking wallet…</div>} />
+    return <LockedShell call={call} body={<div style={{ color: CF.ink2, fontFamily: CF.mono, fontSize: 12 }}>checking wallet…</div>} />
   }
 
   // Not connected
@@ -216,9 +209,9 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
     return (
       <LockedShell call={call} body={
         <div>
-          <p style={{ fontFamily: CF.display, color: CF.dim, fontSize: 14, lineHeight: 1.6, margin: '0 0 18px' }}>
+          <p style={{ fontFamily: CF.display, color: CF.ink2, fontSize: 14, lineHeight: 1.6, margin: '0 0 18px' }}>
             Connect your wallet to unlock the full thesis, evidence trail, sizing logic, and counterarguments for{' '}
-            <span style={{ color: CF.text }}>{call.unlockUsdc.toFixed(2)} USDC</span>.
+            <span style={{ color: CF.ink }}>{call.unlockUsdc.toFixed(2)} USDC</span>.
           </p>
           <ConnectButton variant="primary" />
         </div>
@@ -228,7 +221,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
 
   // Checking after connect
   if (state.kind === 'checking') {
-    return <LockedShell call={call} body={<div style={{ color: CF.dim, fontFamily: CF.mono, fontSize: 12 }}>checking unlock status…</div>} />
+    return <LockedShell call={call} body={<div style={{ color: CF.ink2, fontFamily: CF.mono, fontSize: 12 }}>checking unlock status…</div>} />
   }
 
   // Idle / ready / signing / settling / error
@@ -243,9 +236,9 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   return (
     <LockedShell call={call} body={
       <div>
-        <p style={{ fontFamily: CF.display, color: CF.dim, fontSize: 14, lineHeight: 1.6, margin: '0 0 14px' }}>
-          The headline is free. Sign a one-shot <span style={{ color: CF.text }}>x402 micropayment</span> for{' '}
-          <span style={{ color: CF.text }}>{call.unlockUsdc.toFixed(2)} USDC</span> to unlock the full thesis, evidence URLs, sizing logic, and the Skeptic's counterarguments.
+        <p style={{ fontFamily: CF.display, color: CF.ink2, fontSize: 14, lineHeight: 1.6, margin: '0 0 14px' }}>
+          The headline is free. Sign a one-shot <span style={{ color: CF.ink }}>x402 micropayment</span> for{' '}
+          <span style={{ color: CF.ink }}>{call.unlockUsdc.toFixed(2)} USDC</span> to unlock the full thesis, evidence URLs, sizing logic, and the Skeptic's counterarguments.
         </p>
 
         {wrongChain ? (
@@ -256,8 +249,8 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
             fontFamily: CF.mono, fontSize: 12, lineHeight: 1.45,
           }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>WRONG CHAIN</div>
-            Your wallet is on <span style={{ color: CF.text }}>{chain?.name ?? `chainId ${chain?.id}`}</span>.
-            Switch to <span style={{ color: CF.text }}>Base Sepolia (84532)</span> in MetaMask, then retry.
+            Your wallet is on <span style={{ color: CF.ink }}>{chain?.name ?? `chainId ${chain?.id}`}</span>.
+            Switch to <span style={{ color: CF.ink }}>Base Sepolia (84532)</span> in MetaMask, then retry.
           </div>
         ) : null}
 
@@ -275,7 +268,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
             }} />
             <div>
               <div style={{ fontWeight: 700, color: CF.amber }}>CHECK YOUR WALLET</div>
-              <div style={{ color: CF.dim, marginTop: 2 }}>MetaMask should be asking you to sign a typed-data delegation. If you don't see a popup, click your MetaMask extension icon — it may be hidden.</div>
+              <div style={{ color: CF.ink2, marginTop: 2 }}>MetaMask should be asking you to sign a typed-data delegation. If you don't see a popup, click your MetaMask extension icon — it may be hidden.</div>
             </div>
           </div>
         ) : null}
@@ -288,7 +281,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
             fontFamily: CF.mono, fontSize: 12, lineHeight: 1.5,
           }}>
             <div style={{ fontWeight: 700 }}>SETTLING ON-CHAIN</div>
-            <div style={{ color: CF.dim, marginTop: 2 }}>The facilitator is redeeming your signed delegation and moving {call.unlockUsdc.toFixed(2)} USDC. This usually takes 5–15 seconds.</div>
+            <div style={{ color: CF.ink2, marginTop: 2 }}>The facilitator is redeeming your signed delegation and moving {call.unlockUsdc.toFixed(2)} USDC. This usually takes 5–15 seconds.</div>
           </div>
         ) : null}
 
@@ -297,7 +290,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
           disabled={busy || wrongChain}
           style={{
             padding: '12px 22px', borderRadius: 9, border: 'none',
-            background: busy ? CF.dim : isError ? CF.amber : CF.text,
+            background: busy ? CF.ink2 : isError ? CF.amber : CF.ink,
             color: '#000',
             fontFamily: CF.display, fontSize: 13.5, fontWeight: 600, letterSpacing: 0.2,
             cursor: busy || wrongChain ? 'not-allowed' : 'pointer',
@@ -341,8 +334,8 @@ function LockedShell({ call, body }: { call: PublishedCall; body: React.ReactNod
   return (
     <div style={{
       position: 'relative',
-      background: CF.panel,
-      border: `1px solid ${CF.edge}`,
+      background: CF.surface,
+      border: `1px solid ${CF.line}`,
       borderRadius: 12,
       padding: '22px 22px',
       overflow: 'hidden',
@@ -352,8 +345,8 @@ function LockedShell({ call, body }: { call: PublishedCall; body: React.ReactNod
       </div>
       {body}
       <div style={{
-        marginTop: 22, paddingTop: 14, borderTop: `1px dashed ${CF.edge}`,
-        fontFamily: CF.mono, fontSize: 11, color: CF.dimmer,
+        marginTop: 22, paddingTop: 14, borderTop: `1px dashed ${CF.line}`,
+        fontFamily: CF.mono, fontSize: 11, color: CF.ink4,
       }}>
         Unlock once per wallet · refund-on-resolve not implemented (Phase 8.6)
       </div>
@@ -365,7 +358,7 @@ function LockedShell({ call, body }: { call: PublishedCall; body: React.ReactNod
 function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked; tx?: string }) {
   return (
     <div style={{
-      background: CF.panel, border: `1px solid color-mix(in oklab, ${CF.bull} 30%, ${CF.edge})`, borderRadius: 12,
+      background: CF.surface, border: `1px solid color-mix(in oklab, ${CF.bull} 30%, ${CF.line})`, borderRadius: 12,
       padding: '22px 24px',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
@@ -374,7 +367,7 @@ function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked;
         </div>
         {tx ? (
           <a href={`https://sepolia.basescan.org/tx/${tx}`} target="_blank" rel="noreferrer" style={{
-            fontFamily: CF.mono, fontSize: 11, color: CF.dim, textDecoration: 'none',
+            fontFamily: CF.mono, fontSize: 11, color: CF.ink2, textDecoration: 'none',
           }}>
             settlement {tx.slice(0, 10)}… ↗
           </a>
@@ -382,24 +375,24 @@ function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked;
       </div>
 
       <div style={{ marginBottom: 22 }}>
-        <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dim, letterSpacing: 1.5, marginBottom: 8 }}>
+        <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.ink2, letterSpacing: 1.5, marginBottom: 8 }}>
           THESIS
         </div>
-        <p style={{ fontFamily: CF.display, fontSize: 14.5, color: CF.text, lineHeight: 1.65, margin: 0 }}>
+        <p style={{ fontFamily: CF.display, fontSize: 14.5, color: CF.ink, lineHeight: 1.65, margin: 0 }}>
           {data.thesis}
         </p>
       </div>
 
       {data.evidenceUrls && data.evidenceUrls.length > 0 && (
         <div style={{ marginBottom: 22 }}>
-          <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dim, letterSpacing: 1.5, marginBottom: 8 }}>
+          <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.ink2, letterSpacing: 1.5, marginBottom: 8 }}>
             EVIDENCE TRAIL ({data.evidenceUrls.length} sources, all paid via x402)
           </div>
           <ul style={{ paddingLeft: 0, margin: 0, listStyle: 'none' }}>
             {data.evidenceUrls.map((e, i) => (
               <li key={i} style={{
                 padding: '8px 0', display: 'flex', justifyContent: 'space-between',
-                borderBottom: i < data.evidenceUrls.length - 1 ? `1px dashed ${CF.edge}` : 'none',
+                borderBottom: i < data.evidenceUrls.length - 1 ? `1px dashed ${CF.line}` : 'none',
                 fontFamily: CF.mono, fontSize: 12,
               }}>
                 <a href={e.url} target="_blank" rel="noreferrer" style={{ color: CF.bull, textDecoration: 'none', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 12 }}>
@@ -418,19 +411,19 @@ function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked;
       )}
 
       <div style={{ marginBottom: 22 }}>
-        <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dim, letterSpacing: 1.5, marginBottom: 8 }}>
+        <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.ink2, letterSpacing: 1.5, marginBottom: 8 }}>
           COUNTERARGUMENTS (THE SKEPTIC'S CASE AGAINST)
         </div>
-        <p style={{ fontFamily: CF.display, fontSize: 13.5, color: CF.dim, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontFamily: CF.display, fontSize: 13.5, color: CF.ink2, lineHeight: 1.6, margin: 0 }}>
           {data.counterarguments}
         </p>
       </div>
 
       <div>
-        <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dim, letterSpacing: 1.5, marginBottom: 8 }}>
+        <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.ink2, letterSpacing: 1.5, marginBottom: 8 }}>
           SIZING RATIONALE
         </div>
-        <p style={{ fontFamily: CF.display, fontSize: 13, color: CF.dim, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontFamily: CF.display, fontSize: 13, color: CF.ink2, lineHeight: 1.6, margin: 0 }}>
           {data.sizingRationale}
         </p>
       </div>

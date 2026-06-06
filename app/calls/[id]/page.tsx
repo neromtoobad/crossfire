@@ -1,39 +1,24 @@
-// /calls/[id] — per-call detail page.
-// Public: market title, side, percentages, agent votes, Skeptic verdict, bond.
-// Locked behind x402 micropayment: full thesis + evidence trail + counterarguments.
+// /calls/[id] — per-call detail page (editorial-light, Phase 8.11).
 
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCallById, relativeTime } from '../../../lib/calls-data'
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
+import { CF } from '../../../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
-const CF = {
-  bg: '#060608', panel: '#0c0c11', edge: '#1b1b23', edgeHi: '#2a2a36',
-  text: '#ededf2', dim: '#8a8a99', dimmer: '#5a5a68',
-  bull: '#3bc4ff', bear: '#ff2a4d', amber: '#ffbd45', white: '#ffffff',
-  display: "'Space Grotesk', system-ui, -apple-system, sans-serif",
-  mono: "'JetBrains Mono', ui-monospace, monospace",
-}
-
 const AGENT_LETTER: Record<string, string> = {
-  MacroScout: 'M',
-  NewsHawk: 'N',
-  CrowdPulse: 'C',
-  BookWatcher: 'B',
-  Skeptic: 'S',
+  MacroScout: 'M', NewsHawk: 'N', CrowdPulse: 'C', BookWatcher: 'B', Skeptic: 'S',
 }
 
 function LogoMark({ size = 26 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block', overflow: 'visible' }}>
-      <line x1="16" y1="16" x2="84" y2="84" stroke={CF.bull} strokeWidth="9" strokeLinecap="round"
-        style={{ filter: `drop-shadow(0 0 6px ${CF.bull})`, opacity: 0.9 }} />
-      <line x1="84" y1="16" x2="16" y2="84" stroke={CF.bear} strokeWidth="9" strokeLinecap="round"
-        style={{ filter: `drop-shadow(0 0 6px ${CF.bear})`, opacity: 0.9 }} />
-      <circle cx="50" cy="50" r="6" fill="#fff" style={{ filter: `drop-shadow(0 0 8px #fff)` }} />
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }} aria-hidden>
+      <line x1="18" y1="18" x2="82" y2="82" stroke={CF.bull} strokeWidth="7" strokeLinecap="round" />
+      <line x1="82" y1="18" x2="18" y2="82" stroke={CF.bear} strokeWidth="7" strokeLinecap="round" />
+      <circle cx="50" cy="50" r="5" fill={CF.ink} />
     </svg>
   )
 }
@@ -43,7 +28,10 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
   const call = getCallById(id)
   if (!call) notFound()
 
-  const sideColor = call.side === 'YES' ? CF.bull : CF.bear
+  const isYes = call.side === 'YES'
+  const sideColor = isYes ? CF.bull : CF.bear
+  const sideTint = isYes ? CF.bullTint : CF.bearTint
+  const sideInk = isYes ? CF.bullInk : CF.bearInk
   const selectedPct = Math.round(call.selectedSideProb * 100)
   const marketPct = Math.round(call.marketImpliedYes * 100)
   const edgePts = Math.round(call.edge * 100)
@@ -53,24 +41,27 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
   const agreed = roleVotes.filter((v) => v.vote === call.side).length
 
   return (
-    <main style={{ background: CF.bg, color: CF.text, minHeight: '100vh', padding: '0 32px 60px' }}>
+    <main style={{
+      background: CF.bg, color: CF.ink, minHeight: '100vh', padding: '0 24px 96px',
+    }}>
       <div style={{ maxWidth: 880, margin: '0 auto' }}>
-        {/* ── nav ─────────────────────────────────────────────────────── */}
+        {/* ── nav ── */}
         <header style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '20px 0', borderBottom: `1px solid ${CF.edge}`,
+          padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none' }}>
-            <LogoMark size={26} />
-            <span style={{ fontFamily: CF.display, fontWeight: 700, fontSize: 16, letterSpacing: 3.4, color: CF.text }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <LogoMark size={24} />
+            <span style={{
+              fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
+            }}>
               CROSSFIRE
             </span>
           </Link>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <Link href="/" style={{
-              padding: '8px 14px', borderRadius: 7, textDecoration: 'none',
-              fontFamily: CF.mono, fontSize: 12, color: CF.dim,
-              border: `1px solid ${CF.edge}`,
+              padding: '8px 12px', borderRadius: CF.radius.md,
+              fontFamily: CF.body, fontSize: 13, color: CF.ink2, fontWeight: 500,
             }}>
               ← all calls
             </Link>
@@ -78,120 +69,148 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
           </div>
         </header>
 
-        {/* ── header card: title + side + numbers ─────────────────────── */}
-        <section style={{ padding: '36px 0 16px' }}>
-          <div style={{ fontFamily: CF.mono, fontSize: 11, color: CF.dim, letterSpacing: 2, marginBottom: 10 }}>
-            BONDED CALL · {call.publishedBy} · {relativeTime(call.publishedAt)}
+        {/* ── editorial masthead ── */}
+        <section style={{ padding: '48px 0 32px' }}>
+          <div className="mono" style={{
+            fontSize: 11, color: CF.ink3, letterSpacing: 2.2, marginBottom: 14,
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
+            BONDED CALL · {call.publishedBy.toUpperCase()} · {relativeTime(call.publishedAt).toUpperCase()}
           </div>
           <h1 style={{
-            fontFamily: CF.display, fontWeight: 700, fontSize: 32, lineHeight: 1.18,
-            letterSpacing: -0.5, margin: '0 0 26px', color: CF.text,
+            fontFamily: CF.display, fontWeight: 500,
+            fontSize: 'clamp(36px, 5vw, 52px)', lineHeight: 1.08, letterSpacing: -1.6,
+            margin: '0 0 28px', color: CF.ink,
+            fontVariationSettings: '"opsz" 120',
           }}>
             {call.marketTitle}
           </h1>
 
+          {/* ── numbers card ── */}
           <div style={{
-            display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 24, alignItems: 'center',
-            padding: '20px 24px', background: CF.panel, border: `1px solid ${CF.edge}`, borderRadius: 12,
+            display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 28, alignItems: 'center',
+            padding: '24px 28px',
+            background: CF.surface, border: `1px solid ${CF.line}`,
+            borderRadius: CF.radius.lg, boxShadow: CF.shadow.card,
           }}>
             {/* big P(side) */}
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                position: 'absolute', left: -24, top: 0, bottom: 0, width: 2.5,
-                background: sideColor, boxShadow: `0 0 10px ${sideColor}`,
-              }} />
-              <div style={{
-                fontFamily: CF.mono, fontSize: 44, fontWeight: 600, color: sideColor,
-                letterSpacing: -1.5, lineHeight: 1,
+            <div>
+              <div className="mono" style={{
+                fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
               }}>
-                {selectedPct}<span style={{ fontSize: 22, color: CF.dim }}>%</span>
-              </div>
-              <div style={{ fontFamily: CF.mono, fontSize: 11, color: CF.dim, marginTop: 4, letterSpacing: 1 }}>
                 P({call.side})
+              </div>
+              <div className="mono tnum" style={{
+                fontSize: 56, fontWeight: 600, color: sideColor,
+                letterSpacing: -2, lineHeight: 1,
+              }}>
+                {selectedPct}<span style={{ fontSize: 24, color: CF.ink3, fontWeight: 400 }}>%</span>
               </div>
             </div>
             {/* edge */}
-            <div>
-              <div style={{ fontFamily: CF.mono, fontSize: 10.5, color: CF.dim, letterSpacing: 1.5, marginBottom: 6 }}>
+            <div style={{ borderLeft: `1px solid ${CF.line}`, paddingLeft: 28 }}>
+              <div className="mono" style={{
+                fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
+              }}>
                 EDGE OVER MARKET
               </div>
-              <div style={{ fontFamily: CF.mono, fontSize: 22, fontWeight: 600, color: edgePts > 0 ? sideColor : CF.dim }}>
-                {edgePts > 0 ? '+' : ''}{edgePts}<span style={{ fontSize: 13, color: CF.dim }}>pts</span>
+              <div className="mono tnum" style={{
+                fontSize: 26, fontWeight: 600, color: edgePts > 0 ? sideColor : CF.ink3,
+              }}>
+                {edgePts > 0 ? '+' : ''}{edgePts}<span style={{ fontSize: 14, color: CF.ink3, fontWeight: 400 }}>pts</span>
               </div>
-              <div style={{ fontFamily: CF.mono, fontSize: 11, color: CF.dim, marginTop: 4 }}>
-                council says {selectedPct}% {call.side} · market says {marketPct}% YES
+              <div className="mono tnum" style={{ fontSize: 11.5, color: CF.ink3, marginTop: 6 }}>
+                council {selectedPct}% {call.side} · market {marketPct}% YES
               </div>
             </div>
             {/* bond */}
-            <div style={{ textAlign: 'right', borderLeft: `1px solid ${CF.edge}`, paddingLeft: 22 }}>
-              <div style={{ fontFamily: CF.mono, fontSize: 10.5, color: CF.dim, letterSpacing: 1.5, marginBottom: 6 }}>
+            <div style={{ textAlign: 'right', borderLeft: `1px solid ${CF.line}`, paddingLeft: 28 }}>
+              <div className="mono" style={{
+                fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
+              }}>
                 BOND
               </div>
-              <div style={{ fontFamily: CF.mono, fontSize: 22, fontWeight: 600, color: CF.text }}>
-                {call.bondUsdc.toFixed(2)} <span style={{ color: CF.dim, fontSize: 13 }}>USDC</span>
+              <div className="mono tnum" style={{
+                fontSize: 26, fontWeight: 600, color: CF.ink,
+              }}>
+                {call.bondUsdc.toFixed(2)} <span style={{ fontSize: 14, color: CF.ink3, fontWeight: 400 }}>USDC</span>
               </div>
               {call.bondTxHash ? (
-                <a href={`https://sepolia.basescan.org/tx/${call.bondTxHash}`} target="_blank" rel="noreferrer" style={{
-                  fontFamily: CF.mono, fontSize: 10, color: CF.bull, textDecoration: 'none', marginTop: 4, display: 'block',
+                <a href={`https://sepolia.basescan.org/tx/${call.bondTxHash}`} target="_blank" rel="noreferrer" className="mono" style={{
+                  fontSize: 11, color: CF.gold, marginTop: 6, display: 'block', fontWeight: 600,
                 }}>
-                  on-chain ✓ {call.bondTxHash.slice(0, 8)}…↗
+                  on-chain ✓ {call.bondTxHash.slice(0, 10)}…↗
                 </a>
               ) : (
-                <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.dimmer, marginTop: 4 }}>
-                  off-chain
-                </div>
+                <div className="mono" style={{ fontSize: 11, color: CF.ink4, marginTop: 6 }}>off-chain</div>
               )}
             </div>
           </div>
 
-          <div style={{
-            fontFamily: CF.mono, fontSize: 11, color: CF.dim, marginTop: 10,
+          <div className="mono" style={{
+            fontSize: 11.5, color: CF.ink2, marginTop: 14,
+            display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap',
           }}>
-            Side: <span style={{
-              padding: '3px 9px', borderRadius: 999,
-              background: `color-mix(in oklab, ${sideColor} 16%, transparent)`,
-              border: `1px solid color-mix(in oklab, ${sideColor} 50%, transparent)`,
-              color: sideColor, fontWeight: 600,
-            }}>BUY {call.side}</span>
-            {'   ·   '}
-            Market: <a href={`https://sepolia.basescan.org/address/${call.marketAddress}`} target="_blank" rel="noreferrer" style={{ color: CF.dim }}>
-              {call.marketAddress.slice(0, 8)}…{call.marketAddress.slice(-4)} ↗
-            </a>
+            <span style={{
+              padding: '3px 9px', borderRadius: CF.radius.sm,
+              background: sideTint, color: sideInk,
+              fontFamily: CF.mono, fontSize: 10.5, fontWeight: 600, letterSpacing: 1,
+            }}>
+              BUY {call.side}
+            </span>
+            <span>Market: <a href={`https://sepolia.basescan.org/address/${call.marketAddress}`} target="_blank" rel="noreferrer" style={{ color: CF.ink2 }}>
+              {call.marketAddress.slice(0, 10)}…{call.marketAddress.slice(-4)} ↗
+            </a></span>
           </div>
         </section>
 
-        {/* ── agent votes (public) ────────────────────────────────────── */}
-        <section style={{ padding: '20px 0' }}>
-          <div style={{ fontFamily: CF.mono, fontSize: 11, color: CF.dim, letterSpacing: 2, marginBottom: 12 }}>
-            COUNCIL VOTES · {agreed}/{roleVotes.length} agreed
+        {/* ── COUNCIL VOTES ── */}
+        <section style={{ padding: '8px 0 24px' }}>
+          <div className="mono" style={{
+            fontSize: 11, color: CF.ink3, letterSpacing: 2.2, marginBottom: 14,
+          }}>
+            COUNCIL VOTES · {agreed}/{roleVotes.length} AGREED
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
             {call.votes.map((v) => {
               const isSkeptic = v.role === 'Skeptic'
-              const vColor = isSkeptic ? (call.skepticVerdict === 'APPROVED' ? CF.bull : CF.bear)
+              const vColor = isSkeptic
+                ? (call.skepticVerdict === 'APPROVED' ? CF.bull : CF.bear)
                 : v.vote === call.side ? sideColor
-                : v.vote === 'NEUTRAL' ? CF.amber : CF.dimmer
+                  : v.vote === 'NEUTRAL' ? CF.amber : CF.ink3
+              const vTint = isSkeptic
+                ? (call.skepticVerdict === 'APPROVED' ? CF.bullTint : CF.bearTint)
+                : v.vote === call.side ? sideTint
+                  : v.vote === 'NEUTRAL' ? CF.amberTint : CF.surface2
               return (
                 <div key={v.role} style={{
-                  padding: '14px 16px', background: CF.panel, border: `1px solid ${CF.edge}`, borderRadius: 10,
+                  padding: '14px 16px',
+                  background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg,
+                  boxShadow: CF.shadow.card,
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        width: 22, height: 22, borderRadius: 5,
-                        background: `color-mix(in oklab, ${vColor} 16%, transparent)`,
-                        border: `1px solid color-mix(in oklab, ${vColor} 50%, transparent)`,
-                        color: vColor, fontFamily: CF.mono, fontSize: 11, fontWeight: 700,
+                        width: 22, height: 22, borderRadius: CF.radius.sm,
+                        background: vTint, color: vColor, border: `1px solid ${vColor}33`,
+                        fontFamily: CF.mono, fontSize: 11, fontWeight: 700,
                       }}>{AGENT_LETTER[v.role] ?? '?'}</span>
-                      <span style={{ fontFamily: CF.display, fontWeight: 600, color: CF.text, fontSize: 14 }}>{v.role}</span>
+                      <span style={{
+                        fontFamily: CF.body, fontWeight: 600, color: CF.ink, fontSize: 14,
+                      }}>{v.role}</span>
                     </div>
-                    <div style={{ fontFamily: CF.mono, fontSize: 12 }}>
+                    <div className="mono tnum" style={{ fontSize: 12 }}>
                       <span style={{ color: vColor, fontWeight: 600 }}>{v.vote}</span>
-                      <span style={{ color: CF.dim }}>  ·  {(v.confidence * 100).toFixed(0)}%</span>
+                      <span style={{ color: CF.ink3 }}>  ·  {(v.confidence * 100).toFixed(0)}%</span>
                     </div>
                   </div>
-                  <div style={{ fontFamily: CF.display, fontSize: 12.5, color: CF.dim, lineHeight: 1.55 }}>
+                  <div style={{
+                    fontFamily: CF.body, fontSize: 13.5, color: CF.ink2, lineHeight: 1.55,
+                  }}>
                     {v.oneLiner}
                   </div>
                 </div>
@@ -199,23 +218,21 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             })}
           </div>
           {skepticVote ? (
-            <div style={{
-              marginTop: 10, padding: '12px 16px',
-              background: call.skepticVerdict === 'APPROVED'
-                ? `color-mix(in oklab, ${CF.bull} 6%, transparent)`
-                : `color-mix(in oklab, ${CF.bear} 6%, transparent)`,
-              border: `1px solid ${call.skepticVerdict === 'APPROVED' ? CF.bull : CF.bear}`,
-              borderRadius: 10,
-              fontFamily: CF.mono, fontSize: 11.5,
-              color: call.skepticVerdict === 'APPROVED' ? CF.bull : CF.bear,
-              letterSpacing: 0.4,
+            <div className="mono" style={{
+              marginTop: 12, padding: '10px 16px',
+              background: call.skepticVerdict === 'APPROVED' ? CF.bullTint : CF.bearTint,
+              border: `1px solid ${call.skepticVerdict === 'APPROVED' ? CF.bull : CF.bear}40`,
+              borderRadius: CF.radius.md,
+              fontSize: 11.5, fontWeight: 600,
+              color: call.skepticVerdict === 'APPROVED' ? CF.bullInk : CF.bearInk,
+              letterSpacing: 0.6,
             }}>
-              skeptic {call.skepticVerdict === 'APPROVED' ? 'APPROVED' : 'VETOED'} at {(skepticVote.confidence * 100).toFixed(0)}% refutation confidence
+              SKEPTIC {call.skepticVerdict} AT {(skepticVote.confidence * 100).toFixed(0)}% REFUTATION CONFIDENCE
             </div>
           ) : null}
         </section>
 
-        {/* ── unlock thesis (the kit-in-main-flow moment) ────────────── */}
+        {/* ── unlock ── */}
         <section style={{ padding: '20px 0' }}>
           <UnlockThesis call={call} />
         </section>

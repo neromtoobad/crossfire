@@ -1,30 +1,13 @@
 'use client'
 
-// Phase 8.10 — 1Shot mainnet relay button.
-//
-// One click submits a REAL relay on Base mainnet:
-//   - USER (in-flight EIP-7702 upgrade to Stateless7702Delegator) signs an
-//     Erc20TransferAmount delegation to 1Shot's target, capped at 3 USDC
-//   - The relayer settles the fee + a 0.001 USDC work transfer
-//   - We poll relayer_getStatus until Confirmed and show the basescan link
-//
-// Gated server-side by CROSSFIRE_ENABLE_MAINNET_RELAY=true. When disabled,
-// the button shows the enablement hint instead of firing.
+// RelayLive — editorial-light treatment.
 
 import { useEffect, useRef, useState } from 'react'
-
-const CF = {
-  bg: '#060608', panel: '#0c0c11', edge: '#1b1b23', edgeHi: '#2a2a36',
-  text: '#ededf2', dim: '#8a8a99', dimmer: '#5a5a68',
-  bull: '#3bc4ff', bear: '#ff2a4d', amber: '#ffbd45', white: '#ffffff',
-  display: "'Space Grotesk', system-ui, -apple-system, sans-serif",
-  mono: "'JetBrains Mono', ui-monospace, monospace",
-}
+import { CF } from '../lib/theme'
 
 type LogLine = { kind: 'info' | 'good' | 'bad'; text: string; tx?: string; status?: string }
 
 const BASESCAN_MAINNET = (h: string) => `https://basescan.org/tx/${h}`
-const BASESCAN_ADDR = (a: string) => `https://basescan.org/address/${a}`
 
 export function RelayLive() {
   const [enabled, setEnabled] = useState<boolean | null>(null)
@@ -81,28 +64,19 @@ export function RelayLive() {
 
   async function start() {
     if (running || !enabled) return
-    setLines([])
-    setTaskId(null)
-    setStatus(null)
-    setDone(null)
-    setResultTx(null)
+    setLines([]); setTaskId(null); setStatus(null); setDone(null); setResultTx(null)
     setRunning(true)
-
     const ctrl = new AbortController()
     abortRef.current = ctrl
     try {
       const res = await fetch('/api/relay/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-        signal: ctrl.signal,
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}), signal: ctrl.signal,
       })
       if (!res.ok || !res.body) {
         const text = await res.text()
         push({ kind: 'bad', text: `× HTTP ${res.status}: ${text.slice(0, 160)}` })
-        setDone('error')
-        setRunning(false)
-        return
+        setDone('error'); setRunning(false); return
       }
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -144,69 +118,84 @@ export function RelayLive() {
       setRunning(false)
     }
   }
-
   function cancel() { abortRef.current?.abort() }
 
   const statusColor =
     done === 'confirmed' ? CF.bull
     : done === 'reverted' || done === 'rejected' || done === 'error' ? CF.bear
     : running ? CF.amber
-    : CF.dim
+    : CF.ink3
 
   return (
     <div style={{
-      background: CF.panel,
-      border: `1px solid ${CF.edge}`,
-      borderRadius: 12,
-      padding: '22px 22px',
+      background: CF.surface,
+      border: `1px solid ${CF.line}`,
+      borderRadius: CF.radius.lg,
+      boxShadow: CF.shadow.card,
+      padding: '24px 24px 22px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-        <div>
-          <div style={{ fontFamily: CF.mono, fontSize: 10.5, color: CF.amber, letterSpacing: 1.8, marginBottom: 6 }}>
+      <div style={{
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 16, marginBottom: 16,
+      }}>
+        <div style={{ flex: '1 1 360px', minWidth: 0 }}>
+          <div className="mono" style={{
+            fontSize: 10.5, color: CF.gold, letterSpacing: 2, marginBottom: 8,
+          }}>
             ▸ 1SHOT · BASE MAINNET RELAY
           </div>
-          <div style={{ fontFamily: CF.display, fontSize: 18, fontWeight: 600, color: CF.text }}>
+          <div style={{
+            fontFamily: CF.display, fontSize: 26, fontWeight: 500,
+            letterSpacing: -0.6, color: CF.ink, lineHeight: 1.15,
+            fontVariationSettings: '"opsz" 48',
+          }}>
             Relay a real 7710 tx through 1Shot
           </div>
-          <div style={{ fontFamily: CF.display, fontSize: 13, color: CF.dim, marginTop: 4, maxWidth: 580, lineHeight: 1.55 }}>
-            One click: USER EOA signs a capped USDC delegation + an in-flight EIP-7702 authorization upgrading to a Stateless7702 delegator. 1Shot redeems it, pays itself the fee in USDC, and broadcasts on Base mainnet. Gas paid in USDC, no ETH needed.
-          </div>
+          <p style={{
+            fontFamily: CF.body, fontSize: 14, color: CF.ink2,
+            marginTop: 8, marginBottom: 0, maxWidth: 580, lineHeight: 1.55,
+          }}>
+            One click: USER EOA signs a capped USDC delegation + an in-flight
+            EIP-7702 authorization upgrading to a Stateless7702 delegator. 1Shot
+            redeems it, pays the fee in USDC, and broadcasts on Base mainnet.
+            Gas paid in USDC, no ETH needed.
+          </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           {enabled === null ? (
-            <span style={{ color: CF.dim, fontFamily: CF.mono, fontSize: 11 }}>checking…</span>
+            <span className="mono" style={{ color: CF.ink3, fontSize: 11 }}>checking…</span>
           ) : !enabled ? (
-            <span style={{
+            <span className="mono" style={{
               padding: '6px 10px', borderRadius: 999,
-              border: `1px solid ${CF.dimmer}`, color: CF.dim,
-              fontFamily: CF.mono, fontSize: 10.5,
+              border: `1px dashed ${CF.line2}`, color: CF.ink3,
+              fontSize: 10.5,
             }}>
               disabled · set CROSSFIRE_ENABLE_MAINNET_RELAY=true
             </span>
           ) : running ? (
-            <button onClick={cancel} style={btnSecondary()}>Stop polling</button>
+            <button onClick={cancel} style={btnSecondary}>Stop polling</button>
           ) : (
-            <button onClick={start} style={btnPrimary()}>
+            <button onClick={start} style={btnPrimary}>
               Relay via 1Shot
             </button>
           )}
         </div>
       </div>
 
-      {/* status strip */}
       {(running || taskId || done) ? (
         <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12,
-          padding: '10px 14px', marginBottom: 10,
-          background: CF.bg, border: `1px solid ${CF.edge}`, borderRadius: 8,
-          fontFamily: CF.mono, fontSize: 11.5,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: 12,
+          padding: '12px 14px', marginBottom: 10,
+          background: CF.surface2, border: `1px solid ${CF.line}`, borderRadius: CF.radius.md,
+          fontFamily: CF.mono, fontSize: 11.5, fontVariantNumeric: 'tabular-nums',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <span style={{ color: CF.dim }}>chain: <span style={{ color: CF.text }}>Base mainnet</span></span>
-            <span style={{ color: CF.dim }}>fee asset: <span style={{ color: CF.text }}>USDC</span></span>
-            <span style={{ color: CF.dim }}>auth: <span style={{ color: CF.text }}>EIP-7702 (in-flight)</span></span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', color: CF.ink2 }}>
+            <span>chain: <span style={{ color: CF.ink, fontWeight: 600 }}>Base mainnet</span></span>
+            <span>fee: <span style={{ color: CF.ink, fontWeight: 600 }}>USDC</span></span>
+            <span>auth: <span style={{ color: CF.ink, fontWeight: 600 }}>EIP-7702 (in-flight)</span></span>
             {taskId ? (
-              <span style={{ color: CF.dim }}>task: <span style={{ color: CF.text }}>{taskId.slice(0,12)}…</span></span>
+              <span>task: <span style={{ color: CF.ink, fontWeight: 600 }}>{taskId.slice(0,12)}…</span></span>
             ) : null}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -224,7 +213,7 @@ export function RelayLive() {
             </span>
             {resultTx ? (
               <a href={BASESCAN_MAINNET(resultTx)} target="_blank" rel="noreferrer" style={{
-                color: CF.bull, textDecoration: 'none', marginLeft: 4,
+                color: CF.bull, marginLeft: 4,
               }}>
                 {resultTx.slice(0, 10)}… ↗
               </a>
@@ -236,19 +225,21 @@ export function RelayLive() {
       {lines.length > 0 ? (
         <div style={{
           padding: '14px 16px',
-          background: '#06060a', border: `1px solid ${CF.edge}`, borderRadius: 9,
-          fontFamily: CF.mono, fontSize: 12, color: CF.text, lineHeight: 1.55,
-          maxHeight: 340, overflow: 'auto',
+          background: CF.surface2,
+          border: `1px solid ${CF.line}`, borderRadius: CF.radius.md,
+          fontFamily: CF.mono, fontSize: 12, color: CF.ink,
+          lineHeight: 1.6, maxHeight: 340, overflow: 'auto',
+          fontVariantNumeric: 'tabular-nums',
         }}>
           {lines.map((l, i) => (
             <div key={i} style={{
               padding: '3px 0',
-              color: l.kind === 'good' ? CF.bull : l.kind === 'bad' ? CF.bear : CF.text,
+              color: l.kind === 'good' ? CF.bull : l.kind === 'bad' ? CF.bear : CF.ink,
             }}>
               {l.text}
               {l.tx ? (
                 <a href={BASESCAN_MAINNET(l.tx)} target="_blank" rel="noreferrer" style={{
-                  marginLeft: 8, color: CF.dim, textDecoration: 'none',
+                  marginLeft: 8, color: CF.ink3,
                 }}>
                   {l.tx.slice(0, 10)}… ↗
                 </a>
@@ -257,7 +248,7 @@ export function RelayLive() {
           ))}
         </div>
       ) : enabled ? (
-        <div style={{ fontFamily: CF.mono, fontSize: 11, color: CF.dimmer }}>
+        <div className="mono" style={{ fontSize: 11.5, color: CF.ink3 }}>
           Costs ~0.5–2 USDC of real mainnet USDC per click · full relay completes in 30–60s.
         </div>
       ) : null}
@@ -272,20 +263,14 @@ export function RelayLive() {
   )
 }
 
-function btnPrimary(): React.CSSProperties {
-  return {
-    padding: '10px 18px', borderRadius: 7, border: 'none',
-    background: CF.text, color: '#000',
-    fontFamily: CF.display, fontSize: 13, fontWeight: 600,
-    cursor: 'pointer',
-    boxShadow: `0 0 18px color-mix(in oklab, ${CF.amber} 22%, transparent)`,
-  }
+const btnPrimary: React.CSSProperties = {
+  padding: '10px 16px', borderRadius: CF.radius.md, border: 'none',
+  background: CF.ink, color: CF.bg,
+  fontFamily: CF.body, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
-function btnSecondary(): React.CSSProperties {
-  return {
-    padding: '10px 18px', borderRadius: 7,
-    background: 'transparent', color: CF.text,
-    border: `1px solid ${CF.edge}`,
-    fontFamily: CF.display, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-  }
+const btnSecondary: React.CSSProperties = {
+  padding: '10px 16px', borderRadius: CF.radius.md,
+  background: CF.surface, color: CF.ink,
+  border: `1px solid ${CF.line2}`,
+  fontFamily: CF.body, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }

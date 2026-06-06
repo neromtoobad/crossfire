@@ -1,31 +1,10 @@
 'use client'
 
-// Phase 8.8 — visible "watch a call get made" demo button.
-//
-// User picks a market → server streams CouncilEvent objects → we render
-// them as a vertical log with on-chain tx links. Every kit/Venice/x402/A2A
-// piece shows up here in plain English:
-//   - "started" : market context
-//   - "role-evidence" × 4 : x402 evidence buys with real tx hashes
-//   - "role-vote" × 4 : per-agent vote + one-liner
-//   - "skeptic-verdict" : adversarial check
-//   - "gate-decision" : pass/fail with reasons
-//   - "thesis-generated" : Venice produced the written thesis
-//   - "bond-posted" : ERC-7710 redelegation chain redeemed on-chain
-//   - "published" : new card lands in the feed
-//
-// On 'published' or 'refused' we revalidate the page so the new call appears.
+// RunCouncilLive — editorial-light treatment.
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-
-const CF = {
-  bg: '#060608', panel: '#0c0c11', edge: '#1b1b23', edgeHi: '#2a2a36',
-  text: '#ededf2', dim: '#8a8a99', dimmer: '#5a5a68',
-  bull: '#3bc4ff', bear: '#ff2a4d', amber: '#ffbd45', white: '#ffffff',
-  display: "'Space Grotesk', system-ui, -apple-system, sans-serif",
-  mono: "'JetBrains Mono', ui-monospace, monospace",
-}
+import { CF } from '../lib/theme'
 
 export type MarketChoice = { id: string; title: string }
 
@@ -110,10 +89,8 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
     setLines([])
     setDoneState(null)
     setRunning(true)
-
     const ctrl = new AbortController()
     abortRef.current = ctrl
-
     try {
       const res = await fetch('/api/council/run', {
         method: 'POST',
@@ -123,9 +100,7 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
       })
       if (!res.ok || !res.body) {
         push({ ts: Date.now(), kind: 'bad', text: `× HTTP ${res.status}` })
-        setRunning(false)
-        setDoneState('error')
-        return
+        setRunning(false); setDoneState('error'); return
       }
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -159,38 +134,53 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
     }
   }
 
-  function cancel() {
-    abortRef.current?.abort()
-  }
+  function cancel() { abortRef.current?.abort() }
 
   return (
     <div style={{
-      background: CF.panel,
-      border: `1px solid ${CF.edge}`,
-      borderRadius: 12,
-      padding: '22px 22px',
+      background: CF.surface,
+      border: `1px solid ${CF.line}`,
+      borderRadius: CF.radius.lg,
+      boxShadow: CF.shadow.card,
+      padding: '24px 24px 22px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-        <div>
-          <div style={{ fontFamily: CF.mono, fontSize: 10.5, color: CF.bull, letterSpacing: 1.8, marginBottom: 6 }}>
+      <div style={{
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 16, marginBottom: 18,
+      }}>
+        <div style={{ flex: '1 1 360px', minWidth: 0 }}>
+          <div className="mono" style={{
+            fontSize: 10.5, color: CF.bull, letterSpacing: 2, marginBottom: 8,
+          }}>
             ▸ LIVE COUNCIL
           </div>
-          <div style={{ fontFamily: CF.display, fontSize: 18, fontWeight: 600, color: CF.text }}>
+          <div style={{
+            fontFamily: CF.display, fontSize: 26, fontWeight: 500,
+            letterSpacing: -0.6, color: CF.ink, lineHeight: 1.15,
+            fontVariationSettings: '"opsz" 48',
+          }}>
             Watch a call get made
           </div>
-          <div style={{ fontFamily: CF.display, fontSize: 13, color: CF.dim, marginTop: 4, maxWidth: 560, lineHeight: 1.55 }}>
-            Pick a market, hit Run. The orchestrator redelegates to each role agent, buys evidence via x402, runs Venice, and only posts an on-chain USDC bond if the quality gate passes.
-          </div>
+          <p style={{
+            fontFamily: CF.body, fontSize: 14, color: CF.ink2,
+            marginTop: 8, marginBottom: 0, maxWidth: 560, lineHeight: 1.55,
+          }}>
+            Pick a market and hit Run. The orchestrator redelegates to each
+            role agent, buys evidence via x402, runs Venice, and only posts an
+            on-chain USDC bond if the quality gate passes.
+          </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <select
             value={marketId}
             onChange={(e) => setMarketId(e.target.value)}
             disabled={running}
             style={{
-              padding: '10px 12px', background: CF.bg, color: CF.text,
-              border: `1px solid ${CF.edge}`, borderRadius: 7,
-              fontFamily: CF.mono, fontSize: 12, minWidth: 220,
+              padding: '10px 12px',
+              background: CF.surface, color: CF.ink,
+              border: `1px solid ${CF.line2}`, borderRadius: CF.radius.md,
+              fontFamily: CF.body, fontSize: 13, fontWeight: 500,
+              minWidth: 240, cursor: running ? 'not-allowed' : 'pointer',
             }}
           >
             {markets.map((m) => (
@@ -198,7 +188,7 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
             ))}
           </select>
           {running ? (
-            <button onClick={cancel} style={btnSecondary()}>Cancel</button>
+            <button onClick={cancel} style={btnSecondary}>Cancel</button>
           ) : (
             <button onClick={start} disabled={!marketId} style={btnPrimary(!marketId)}>
               Run council
@@ -209,20 +199,26 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
 
       {lines.length > 0 ? (
         <div style={{
-          marginTop: 12, padding: '14px 16px',
-          background: '#06060a', border: `1px solid ${CF.edge}`, borderRadius: 9,
-          fontFamily: CF.mono, fontSize: 12, color: CF.text, lineHeight: 1.55,
+          padding: '14px 16px',
+          background: CF.surface2,
+          border: `1px solid ${CF.line}`, borderRadius: CF.radius.md,
+          fontFamily: CF.mono, fontSize: 12, color: CF.ink,
+          lineHeight: 1.6,
           maxHeight: 360, overflow: 'auto',
+          fontVariantNumeric: 'tabular-nums',
         }}>
           {lines.map((l, i) => (
             <div key={i} style={{
               padding: '3px 0',
-              color: l.kind === 'good' ? CF.bull : l.kind === 'bad' ? CF.bear : l.kind === 'note' ? CF.dim : CF.text,
+              color: l.kind === 'good' ? CF.bull
+                : l.kind === 'bad' ? CF.bear
+                : l.kind === 'note' ? CF.ink3
+                : CF.ink,
             }}>
               {l.text}
               {l.txHash ? (
                 <a href={BASESCAN_TX(l.txHash)} target="_blank" rel="noreferrer" style={{
-                  marginLeft: 8, color: CF.dim, textDecoration: 'none',
+                  marginLeft: 8, color: CF.ink3,
                 }}>
                   {l.txHash.slice(0, 10)}… ↗
                 </a>
@@ -232,7 +228,7 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
           {running ? (
             <div style={{ color: CF.amber, marginTop: 4 }}>· streaming…</div>
           ) : doneState === 'published' ? (
-            <div style={{ color: CF.bull, marginTop: 6 }}>✓ done — feed updated above</div>
+            <div style={{ color: CF.bull, marginTop: 6 }}>✓ done — feed updated below</div>
           ) : doneState === 'refused' ? (
             <div style={{ color: CF.amber, marginTop: 6 }}>· council declined to publish — this is the system working correctly</div>
           ) : doneState === 'error' ? (
@@ -240,30 +236,25 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
           ) : null}
         </div>
       ) : (
-        <div style={{
-          fontFamily: CF.mono, fontSize: 11, color: CF.dimmer, marginTop: 6,
-        }}>
-          A full run takes roughly 60–90s · evidence buys settle on Base Sepolia · costs ~2–9 USDC per published call.
+        <div className="mono" style={{ fontSize: 11.5, color: CF.ink3 }}>
+          A full run takes roughly 60–90s · evidence buys settle on Base Sepolia · ~2–9 USDC per published call.
         </div>
       )}
     </div>
   )
 }
 
-function btnPrimary(disabled: boolean): React.CSSProperties {
-  return {
-    padding: '10px 18px', borderRadius: 7, border: 'none',
-    background: disabled ? CF.dim : CF.text, color: '#000',
-    fontFamily: CF.display, fontSize: 13, fontWeight: 600,
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    boxShadow: disabled ? 'none' : `0 0 18px color-mix(in oklab, ${CF.bull} 18%, transparent)`,
-  }
-}
-function btnSecondary(): React.CSSProperties {
-  return {
-    padding: '10px 18px', borderRadius: 7,
-    background: 'transparent', color: CF.text,
-    border: `1px solid ${CF.edge}`,
-    fontFamily: CF.display, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-  }
+const btnPrimary = (disabled: boolean): React.CSSProperties => ({
+  padding: '10px 16px', borderRadius: CF.radius.md, border: 'none',
+  background: disabled ? CF.surface2 : CF.ink,
+  color: disabled ? CF.ink3 : CF.bg,
+  fontFamily: CF.body, fontSize: 13, fontWeight: 600,
+  cursor: disabled ? 'not-allowed' : 'pointer',
+})
+
+const btnSecondary: React.CSSProperties = {
+  padding: '10px 16px', borderRadius: CF.radius.md,
+  background: CF.surface, color: CF.ink,
+  border: `1px solid ${CF.line2}`,
+  fontFamily: CF.body, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
