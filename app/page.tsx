@@ -8,6 +8,7 @@
 import { loadDashboard } from '../lib/dashboard-state.js'
 import { readAllMarketsLive, type MarketLive } from '../lib/markets-data.js'
 import { ConnectButton } from '../components/ConnectButton'
+import { YourWallet } from '../components/YourWallet'
 
 export const dynamic = 'force-dynamic'
 
@@ -193,6 +194,9 @@ export default async function Dashboard() {
           )}
         </div>
       </section>
+
+      {/* ── YOUR WALLET — per-user mandates + positions (client) ──── */}
+      <YourWallet />
 
       {/* ── KPI strip ────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 14 }}>
