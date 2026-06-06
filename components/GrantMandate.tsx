@@ -50,7 +50,9 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
     | { kind: 'error'; message: string }
   >({ kind: 'idle' })
 
-  const wrongChain = isConnected && chain?.id !== PUBLIC.chainId
+  // Don't fire "wrong chain" while wagmi is still resolving chain — only when
+  // it's definitely known to be something other than Base Sepolia.
+  const wrongChain = isConnected && chain !== undefined && chain.id !== PUBLIC.chainId
 
   async function handleGrant() {
     if (!isConnected || !address || !walletClient) {
@@ -146,7 +148,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
           <a href={`/duel/${marketId}`} style={ctaPrimary()}>
             Run the duel →
           </a>
-          <a href="/dashboard" style={ctaSecondary()}>View dashboard</a>
+          <a href="/" style={ctaSecondary()}>Back to dashboard</a>
         </div>
       </div>
     )

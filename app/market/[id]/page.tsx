@@ -52,8 +52,7 @@ export default async function MarketPage({ params }: { params: Promise<{ id: str
             </span>
           </Link>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <Link href="/" style={navLink()}>← markets</Link>
-            <Link href="/dashboard" style={navLink()}>dashboard →</Link>
+            <Link href="/" style={navLink()}>← back</Link>
             <ConnectButton variant="primary" />
           </div>
         </header>

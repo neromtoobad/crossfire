@@ -66,6 +66,15 @@ async function readUsdc(addr: `0x${string}`): Promise<bigint> {
   })
 }
 
+// Wrap each chain read so a rate-limited public RPC doesn't crash the page.
+async function safe<T>(p: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await p
+  } catch {
+    return fallback
+  }
+}
+
 export async function loadDashboard(): Promise<DashboardData> {
   const userSA = await buildUserSmartAccount()
 
@@ -77,12 +86,12 @@ export async function loadDashboard(): Promise<DashboardData> {
     bearEoaUsdc,
     userSaEth,
   ] = await Promise.all([
-    isDeployed(sepoliaPublicClient, userSA.address),
-    readUsdc(userSA.address),
-    readUsdc(orchestratorAccount.address),
-    readUsdc(bullAccount.address),
-    readUsdc(bearAccount.address),
-    sepoliaPublicClient.getBalance({ address: userSA.address }),
+    safe(isDeployed(sepoliaPublicClient, userSA.address), false),
+    safe(readUsdc(userSA.address), 0n),
+    safe(readUsdc(orchestratorAccount.address), 0n),
+    safe(readUsdc(bullAccount.address), 0n),
+    safe(readUsdc(bearAccount.address), 0n),
+    safe(sepoliaPublicClient.getBalance({ address: userSA.address }), 0n),
   ])
 
   let market: DashboardData['market'] = null
