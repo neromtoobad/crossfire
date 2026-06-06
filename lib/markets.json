@@ -1,5 +1,5 @@
 {
-  "deployedAt": "2026-06-06T15:39:04.507Z",
+  "deployedAt": "2026-06-06T18:14:33.512Z",
   "markets": [
     {
       "id": "btc-200k-2026",
@@ -38,6 +38,66 @@
       "address": "0xaa749180277220bbea46a8cb37ab665b91b88769",
       "deployTx": "0x1b1745559d8c95c2bd05368de1aed6beaebf913d02b82670d8ce9421bc504d67",
       "closeTime": "2026-06-13T15:38:56.000Z",
+      "seedSide": "NONE",
+      "seedAmountUsdc": "0"
+    },
+    {
+      "id": "wc-argentina-2026",
+      "title": "Will Argentina win the 2026 FIFA World Cup?",
+      "question": "Will Argentina lift the trophy at the 2026 FIFA World Cup?",
+      "address": "0xc2384369ad925fe5570e1b6311d84be21a7ac7a7",
+      "deployTx": "0xa0380ea55b1be3644101c327035831d2a7301121b5904237c0dd302f95e322b1",
+      "closeTime": "2026-07-06T18:14:21.000Z",
+      "seedSide": "NONE",
+      "seedAmountUsdc": "0"
+    },
+    {
+      "id": "wc-messi-scores",
+      "title": "Will Lionel Messi score at the 2026 World Cup?",
+      "question": "Will Lionel Messi score a goal (open play or penalty) at the 2026 FIFA World Cup?",
+      "address": "0x94612810486b526e26acc2ec848b4ba42181249a",
+      "deployTx": "0x85cec3a40d91c1c70416c7911214ee9a43b479d3d74cbbbe0a177115a95124bc",
+      "closeTime": "2026-07-06T18:14:21.000Z",
+      "seedSide": "NONE",
+      "seedAmountUsdc": "0"
+    },
+    {
+      "id": "wc-final-penalties",
+      "title": "Will the 2026 World Cup final go to penalties?",
+      "question": "Will the 2026 FIFA World Cup final be decided by a penalty shootout?",
+      "address": "0x49a8401f3f46bca21e1f149665fcc948d5a0ebc8",
+      "deployTx": "0x2f2afb5775aad3d85fcf37ff31c847990ae12dfcd32fa91f712fb555e21447ee",
+      "closeTime": "2026-07-06T18:14:21.000Z",
+      "seedSide": "NONE",
+      "seedAmountUsdc": "0"
+    },
+    {
+      "id": "sol-flip-eth-2026",
+      "title": "Will Solana flip Ethereum on market cap in 2026?",
+      "question": "Will Solana exceed Ethereum in market capitalization at any point in 2026?",
+      "address": "0x1685bdfbf4d229e079e3d83b669a2b4dd399c8bd",
+      "deployTx": "0xc7885afae4207854c813364fe4b6832a6c08f92f82afc0b9e3a60ff6563ace24",
+      "closeTime": "2026-07-06T18:14:21.000Z",
+      "seedSide": "NONE",
+      "seedAmountUsdc": "0"
+    },
+    {
+      "id": "apple-fold-2026",
+      "title": "Will Apple ship a foldable iPhone in 2026?",
+      "question": "Will Apple ship a foldable iPhone (any model, any region) before Dec 31, 2026?",
+      "address": "0x2bf8de1c7c53893e7909fc1712afa6d537d23f05",
+      "deployTx": "0xe64f5a78bf813f6e774707709b4421080665240c4526b350fb8b59d5047075ea",
+      "closeTime": "2026-07-06T18:14:21.000Z",
+      "seedSide": "NONE",
+      "seedAmountUsdc": "0"
+    },
+    {
+      "id": "us-10y-above-5",
+      "title": "Will the US 10-year Treasury yield close above 5% in 2026?",
+      "question": "Will the US 10-year Treasury yield close above 5.0% on any trading day in 2026?",
+      "address": "0xc915dd8c6ed2f4210235d552c6ac5b38a9d0bf50",
+      "deployTx": "0xc3958667e08bf9161834c68deed979e5bc54cf38b4bd8a46d43d2496becc89a6",
+      "closeTime": "2026-07-06T18:14:21.000Z",
       "seedSide": "NONE",
       "seedAmountUsdc": "0"
     }
