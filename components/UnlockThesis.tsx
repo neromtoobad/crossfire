@@ -39,32 +39,52 @@ type Unlocked = {
   counterarguments: string
 }
 
+type ErrorCause = 'rejected' | 'network' | 'settlement' | 'wallet-internal' | 'wrong-chain' | 'unknown'
+
 type State =
   | { kind: 'idle' }
   | { kind: 'checking' }
   | { kind: 'signing' }
   | { kind: 'settling' }
   | { kind: 'unlocked'; data: Unlocked; tx?: string }
-  | { kind: 'error'; message: string; cause: 'rejected' | 'network' | 'settlement' | 'unknown' }
+  | { kind: 'error'; message: string; cause: ErrorCause; detail?: string }
 
 // Map a thrown error to a user-readable cause. Wagmi/viem surface
-// rejection with code 4001 / specific class names; the rest we group
-// as network or unknown so the retry button can decide what to say.
-function classifyError(e: unknown): { cause: 'rejected' | 'network' | 'settlement' | 'unknown'; message: string } {
-  const err = e as { code?: number; name?: string; shortMessage?: string; message?: string; cause?: { code?: number; name?: string } }
+// rejection with code 4001 / class names; -32603 is the JSON-RPC
+// "internal error" code MetaMask returns when the wallet can't process
+// the request — most often a chain mismatch or a locked wallet.
+function classifyError(e: unknown): { cause: ErrorCause; message: string; detail?: string } {
+  const err = e as { code?: number; name?: string; shortMessage?: string; message?: string; details?: string; cause?: { code?: number; name?: string; message?: string } }
   const code = err?.code ?? err?.cause?.code
   const name = err?.name ?? err?.cause?.name ?? ''
   const msg = err?.shortMessage ?? err?.message ?? String(e)
+  const detail = [err?.details, err?.cause?.message].filter(Boolean).join(' · ')
+
   if (code === 4001 || /User rejected|UserRejectedRequest/i.test(name) || /user rejected|user denied/i.test(msg)) {
-    return { cause: 'rejected', message: 'You cancelled the signature in your wallet.' }
+    return { cause: 'rejected', message: 'You cancelled the signature in your wallet.', detail }
+  }
+  if (/wrong chain|chain mismatch|unrecognized chain|switch chain/i.test(msg)) {
+    return {
+      cause: 'wrong-chain',
+      message: 'Your wallet is on the wrong chain. Switch to Base Sepolia (84532) and try again.',
+      detail,
+    }
+  }
+  if (code === -32603 || /Internal error|internal JSON-RPC error|invalid argument 0/i.test(msg)) {
+    return {
+      cause: 'wallet-internal',
+      message:
+        'Your wallet returned an internal error. Most common causes: (1) wallet is on the wrong chain — switch to Base Sepolia (84532); (2) wallet is locked — unlock it and retry; (3) MetaMask needs a refresh — try closing and reopening the extension.',
+      detail: detail || msg.slice(0, 240),
+    }
   }
   if (/settlement failed/i.test(msg)) {
-    return { cause: 'settlement', message: msg.replace(/^settlement failed:?\s*/i, '') }
+    return { cause: 'settlement', message: msg.replace(/^settlement failed:?\s*/i, ''), detail }
   }
   if (/fetch|network|aborted|timeout|failed to fetch/i.test(msg)) {
-    return { cause: 'network', message: 'Network error reaching the unlock endpoint. Check your connection and try again.' }
+    return { cause: 'network', message: 'Network error reaching the unlock endpoint. Check your connection and try again.', detail }
   }
-  return { cause: 'unknown', message: msg.slice(0, 240) }
+  return { cause: 'unknown', message: msg.slice(0, 240), detail }
 }
 
 export function UnlockThesis({ call }: { call: PublishedCall }) {
@@ -75,7 +95,12 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   const { signTypedDataAsync } = useSignTypedData()
   const isConnected = accountStatus === 'connected'
   const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
+  // Treat "chain not yet known" as a soft wrong-chain state — block the
+  // click until wagmi confirms which chain the wallet is on, otherwise
+  // we'll fire a signTypedData with chainId=84532 against a wallet that
+  // might be on mainnet, which the wallet bounces as code -32603.
   const wrongChain = isConnected && chain !== undefined && chain.id !== PUBLIC.chainId
+  const chainUnknown = isConnected && chain === undefined
 
   const [state, setState] = useState<State>({ kind: 'idle' })
 
@@ -103,7 +128,19 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   async function handleUnlock() {
     if (!isConnected || !address) return
     if (wrongChain) {
-      setState({ kind: 'error', cause: 'unknown', message: 'Switch to Base Sepolia (chainId 84532) in your wallet, then click Try again.' })
+      setState({
+        kind: 'error', cause: 'wrong-chain',
+        message: `Your wallet is on ${chain?.name ?? `chainId ${chain?.id}`}. Switch to Base Sepolia (84532) and try again.`,
+      })
+      return
+    }
+    if (chainUnknown) {
+      // Wagmi hasn't reconciled the wallet's chain yet — signing now would
+      // produce a -32603 from MetaMask. Force the user to wait a beat.
+      setState({
+        kind: 'error', cause: 'wrong-chain',
+        message: 'Waiting for wallet to report its chain. Give it a second, then click Try again.',
+      })
       return
     }
     setState({ kind: 'signing' })
@@ -187,8 +224,12 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       }
       setState({ kind: 'unlocked', data: json.locked, tx: json.unlock?.settlementTxHash })
     } catch (e) {
-      const { cause, message } = classifyError(e)
-      setState({ kind: 'error', cause, message })
+      // Log the raw error to the console so we (and the user) can read the
+      // full structure. The classified version is what the UI surfaces.
+      // eslint-disable-next-line no-console
+      console.error('[UnlockThesis] sign/settle failed:', e)
+      const { cause, message, detail } = classifyError(e)
+      setState({ kind: 'error', cause, message, detail })
     }
   }
 
@@ -244,13 +285,23 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
         {wrongChain ? (
           <div style={{
             padding: '12px 14px', borderRadius: 8, marginBottom: 12,
-            background: `color-mix(in oklab, ${CF.bear} 14%, transparent)`,
-            border: `1px solid ${CF.bear}`, color: CF.bear,
+            background: CF.bearTint,
+            border: `1px solid ${CF.bear}`, color: CF.bearInk,
             fontFamily: CF.mono, fontSize: 12, lineHeight: 1.45,
           }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>WRONG CHAIN</div>
             Your wallet is on <span style={{ color: CF.ink }}>{chain?.name ?? `chainId ${chain?.id}`}</span>.
             Switch to <span style={{ color: CF.ink }}>Base Sepolia (84532)</span> in MetaMask, then retry.
+          </div>
+        ) : chainUnknown ? (
+          <div style={{
+            padding: '12px 14px', borderRadius: 8, marginBottom: 12,
+            background: CF.amberTint,
+            border: `1px solid ${CF.amber}`, color: CF.amber,
+            fontFamily: CF.mono, fontSize: 12, lineHeight: 1.45,
+          }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>WAITING FOR WALLET</div>
+            Your wallet hasn't reported which chain it's on yet. Open MetaMask once to settle it, then try again.
           </div>
         ) : null}
 
@@ -287,35 +338,62 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
 
         <button
           onClick={handleUnlock}
-          disabled={busy || wrongChain}
+          disabled={busy || wrongChain || chainUnknown}
           style={{
-            padding: '12px 22px', borderRadius: 9, border: 'none',
+            padding: '12px 22px', borderRadius: CF.radius.md, border: 'none',
             background: busy ? CF.ink2 : isError ? CF.amber : CF.ink,
-            color: '#000',
-            fontFamily: CF.display, fontSize: 13.5, fontWeight: 600, letterSpacing: 0.2,
-            cursor: busy || wrongChain ? 'not-allowed' : 'pointer',
-            boxShadow: !busy && !wrongChain ? `0 0 24px color-mix(in oklab, ${isError ? CF.amber : CF.bull} 18%, transparent)` : 'none',
+            color: busy ? CF.bg : isError ? CF.ink : CF.bg,
+            fontFamily: CF.body, fontSize: 13.5, fontWeight: 600,
+            cursor: (busy || wrongChain || chainUnknown) ? 'not-allowed' : 'pointer',
           }}
         >
           {btnText}
         </button>
 
-        {isError ? (
-          <div style={{
-            marginTop: 12, padding: '10px 14px', borderRadius: 8,
-            background: `color-mix(in oklab, ${CF.bear} 10%, transparent)`,
-            border: `1px solid ${CF.bear}`, color: CF.bear,
-            fontFamily: CF.mono, fontSize: 11.5, wordBreak: 'break-word', lineHeight: 1.5,
-          }}>
-            <div style={{ fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>
-              {state.cause === 'rejected' ? 'Signature cancelled'
-                : state.cause === 'network' ? 'Network error'
-                : state.cause === 'settlement' ? 'On-chain settlement failed'
-                : 'Unlock failed'}
+        {isError ? (() => {
+          const label =
+            state.cause === 'rejected'        ? 'Signature cancelled' :
+            state.cause === 'network'         ? 'Network error' :
+            state.cause === 'settlement'      ? 'On-chain settlement failed' :
+            state.cause === 'wallet-internal' ? 'Wallet internal error' :
+            state.cause === 'wrong-chain'     ? 'Chain mismatch' :
+                                                'Unlock failed'
+          return (
+            <div style={{
+              marginTop: 12, padding: '12px 14px', borderRadius: 8,
+              background: CF.bearTint,
+              border: `1px solid ${CF.bear}`, color: CF.bearInk,
+              fontFamily: CF.body, fontSize: 13, lineHeight: 1.55,
+            }}>
+              <div className="mono" style={{
+                fontWeight: 700, marginBottom: 6, color: CF.bear,
+                textTransform: 'uppercase', letterSpacing: 1, fontSize: 11,
+              }}>
+                {label}
+              </div>
+              <div style={{ color: CF.bearInk }}>{state.message}</div>
+              {state.detail ? (
+                <details style={{ marginTop: 8 }}>
+                  <summary style={{
+                    cursor: 'pointer', color: CF.bear,
+                    fontFamily: CF.mono, fontSize: 11, letterSpacing: 0.4,
+                  }}>
+                    show full error
+                  </summary>
+                  <div className="mono" style={{
+                    marginTop: 6, padding: '8px 10px', borderRadius: 6,
+                    background: CF.surface, color: CF.ink2,
+                    border: `1px solid ${CF.line}`,
+                    fontSize: 11, lineHeight: 1.5,
+                    wordBreak: 'break-word', whiteSpace: 'pre-wrap',
+                  }}>
+                    {state.detail}
+                  </div>
+                </details>
+              ) : null}
             </div>
-            <div style={{ color: '#ffb6c0' }}>{state.message}</div>
-          </div>
-        ) : null}
+          )
+        })() : null}
 
         {/* keyframes for the pulsing dot */}
         <style>{`
