@@ -53,6 +53,20 @@ type State =
 // rejection with code 4001 / class names; -32603 is the JSON-RPC
 // "internal error" code MetaMask returns when the wallet can't process
 // the request — most often a chain mismatch or a locked wallet.
+// Friendly chain label for the wrong-chain banner.
+function chainLabel(id: number): string {
+  const known: Record<number, string> = {
+    1: 'Ethereum mainnet (chainId 1)',
+    10: 'Optimism (chainId 10)',
+    137: 'Polygon (chainId 137)',
+    42161: 'Arbitrum One (chainId 42161)',
+    8453: 'Base mainnet (chainId 8453)',
+    84532: 'Base Sepolia (chainId 84532)',
+    11155111: 'Ethereum Sepolia (chainId 11155111)',
+  }
+  return `Your wallet is on ${known[id] ?? `chainId ${id}`}`
+}
+
 function classifyError(e: unknown): { cause: ErrorCause; message: string; detail?: string } {
   const err = e as { code?: number; name?: string; shortMessage?: string; message?: string; details?: string; cause?: { code?: number; name?: string; message?: string } }
   const code = err?.code ?? err?.cause?.code
@@ -92,11 +106,32 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   useEffect(() => { setMounted(true) }, [])
 
   const { address, status: accountStatus } = useAccount()
-  const chainId = useChainId() // returns the wallet's raw chainId number — even for chains we haven't registered in wagmi config
+  const wagmiChainId = useChainId() // wagmi's view — can be stale vs the actual provider
   const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain()
   const { signTypedDataAsync } = useSignTypedData()
   // Captured for diagnostics when signing fails.
   const lastTypedData = useRef<any>(null)
+
+  // ── Live provider chain (ground truth) ────────────────────────────────
+  // Track the wallet provider's chainId directly. wagmi can be cookie-hydrated
+  // to a stale value while the actual MetaMask network is something else.
+  const [providerChainId, setProviderChainId] = useState<number | null>(null)
+  useEffect(() => {
+    const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
+    if (!eth) return
+    const sync = async () => {
+      try {
+        const hex = await eth.request({ method: 'eth_chainId' })
+        setProviderChainId(hex ? parseInt(hex, 16) : null)
+      } catch { setProviderChainId(null) }
+    }
+    sync()
+    const onChanged = (chainHex: string) => setProviderChainId(parseInt(chainHex, 16))
+    eth.on?.('chainChanged', onChanged)
+    return () => { eth.removeListener?.('chainChanged', onChanged) }
+  }, [])
+  // Effective chainId: prefer the live provider value when known.
+  const chainId = providerChainId ?? wagmiChainId
   const isConnected = accountStatus === 'connected'
   const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
   // Now correctly catches Ethereum mainnet / Polygon / any non-Base chain.
@@ -125,10 +160,39 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
     })()
   }, [isConnected, address, call.id])
 
+  // Switch chains. Reads the provider directly because wagmi's switchChain
+  // can short-circuit if its (stale) state says we're already on the target.
   async function handleSwitchChain() {
+    const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
+    const targetHex = `0x${PUBLIC.chainId.toString(16)}` // 0x14a34
     try {
-      await switchChainAsync({ chainId: PUBLIC.chainId })
-      // After switch, wipe any prior error and let the user click Unlock again.
+      if (eth) {
+        try {
+          await eth.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: targetHex }],
+          })
+        } catch (switchErr: any) {
+          // 4902 = chain unknown to wallet → add it, then user can switch.
+          if (switchErr?.code === 4902) {
+            await eth.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: targetHex,
+                chainName: 'Base Sepolia',
+                nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+                rpcUrls: ['https://sepolia.base.org'],
+                blockExplorerUrls: ['https://sepolia.basescan.org'],
+              }],
+            })
+          } else {
+            throw switchErr
+          }
+        }
+      } else {
+        // Fallback to wagmi if window.ethereum isn't present (rare in browsers).
+        await switchChainAsync({ chainId: PUBLIC.chainId })
+      }
       setState({ kind: 'idle' })
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -374,8 +438,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
           }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>WRONG CHAIN</div>
-              Your wallet is on <span style={{ color: CF.ink }}>chainId {chainId}</span>.
-              CROSSFIRE settles on <span style={{ color: CF.ink }}>Base Sepolia (84532)</span>.
+              {chainLabel(chainId)}. CROSSFIRE settles on <span style={{ color: CF.ink }}>Base Sepolia (84532)</span>.
             </div>
             <button
               onClick={handleSwitchChain}
