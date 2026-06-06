@@ -1,0 +1,37 @@
+{
+  "name": "crossfire",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CROSSFIRE — adversarial agents on a chain-enforced mandate. MetaMask Smart Accounts Kit x 1Shot x Venice.",
+  "scripts": {
+    "check:accounts": "tsx scripts/check-accounts.ts",
+    "deploy:orchestrator": "tsx scripts/deploy-orchestrator.ts",
+    "proof": "tsx scripts/proof.ts",
+    "duel:skeleton": "tsx scripts/duel-skeleton.ts",
+    "buy:evidence": "tsx scripts/buy-evidence.ts",
+    "conviction": "tsx scripts/conviction.ts",
+    "deploy:market": "tsx scripts/deploy-market.ts",
+    "duel": "tsx scripts/run-duel.ts",
+    "relayer:caps": "tsx scripts/relayer-caps.ts",
+    "relay:bet": "tsx scripts/relay-bet.ts",
+    "dev": "next dev"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@metamask/smart-accounts-kit": "^1.6.0",
+    "dotenv": "^16.4.7",
+    "next": "^16.2.7",
+    "openai": "^6.42.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "viem": "^2.52.2"
+  }
+}

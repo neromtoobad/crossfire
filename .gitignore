@@ -1,0 +1,39 @@
+# dependencies
+node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# secrets — NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# next.js
+/.next/
+/out/
+
+# foundry
+cache/
+out/
+broadcast/
+
+# testing
+/coverage
+
+# generated verdict card images (regeneratable)
+artifacts/
+
+# crossfire runtime state — webhook payloads + duel snapshots
+.crossfire/
+
+# misc
+.DS_Store
+*.pem
+.vercel
+*.tsbuildinfo
+next-env.d.ts
