@@ -13,7 +13,7 @@
 // Renders nothing if already unlocked (parent will render the thesis).
 
 import { useEffect, useState } from 'react'
-import { useAccount, useSignTypedData } from 'wagmi'
+import { useAccount, useChainId, useSignTypedData, useSwitchChain } from 'wagmi'
 import { parseUnits } from 'viem'
 import {
   createOpenDelegation,
@@ -91,16 +91,14 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  const { address, status: accountStatus, chain } = useAccount()
+  const { address, status: accountStatus } = useAccount()
+  const chainId = useChainId() // returns the wallet's raw chainId number — even for chains we haven't registered in wagmi config
+  const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain()
   const { signTypedDataAsync } = useSignTypedData()
   const isConnected = accountStatus === 'connected'
   const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
-  // Treat "chain not yet known" as a soft wrong-chain state — block the
-  // click until wagmi confirms which chain the wallet is on, otherwise
-  // we'll fire a signTypedData with chainId=84532 against a wallet that
-  // might be on mainnet, which the wallet bounces as code -32603.
-  const wrongChain = isConnected && chain !== undefined && chain.id !== PUBLIC.chainId
-  const chainUnknown = isConnected && chain === undefined
+  // Now correctly catches Ethereum mainnet / Polygon / any non-Base chain.
+  const wrongChain = isConnected && chainId !== PUBLIC.chainId
 
   const [state, setState] = useState<State>({ kind: 'idle' })
 
@@ -125,21 +123,25 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
     })()
   }, [isConnected, address, call.id])
 
+  async function handleSwitchChain() {
+    try {
+      await switchChainAsync({ chainId: PUBLIC.chainId })
+      // After switch, wipe any prior error and let the user click Unlock again.
+      setState({ kind: 'idle' })
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[UnlockThesis] chain switch failed:', e)
+      const { cause, message, detail } = classifyError(e)
+      setState({ kind: 'error', cause, message, detail })
+    }
+  }
+
   async function handleUnlock() {
     if (!isConnected || !address) return
     if (wrongChain) {
       setState({
         kind: 'error', cause: 'wrong-chain',
-        message: `Your wallet is on ${chain?.name ?? `chainId ${chain?.id}`}. Switch to Base Sepolia (84532) and try again.`,
-      })
-      return
-    }
-    if (chainUnknown) {
-      // Wagmi hasn't reconciled the wallet's chain yet — signing now would
-      // produce a -32603 from MetaMask. Force the user to wait a beat.
-      setState({
-        kind: 'error', cause: 'wrong-chain',
-        message: 'Waiting for wallet to report its chain. Give it a second, then click Try again.',
+        message: `Your wallet is on chainId ${chainId}. Switch to Base Sepolia (84532) and try again.`,
       })
       return
     }
@@ -287,21 +289,28 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
             padding: '12px 14px', borderRadius: 8, marginBottom: 12,
             background: CF.bearTint,
             border: `1px solid ${CF.bear}`, color: CF.bearInk,
-            fontFamily: CF.mono, fontSize: 12, lineHeight: 1.45,
+            fontFamily: CF.mono, fontSize: 12, lineHeight: 1.5,
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
+            flexWrap: 'wrap',
           }}>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>WRONG CHAIN</div>
-            Your wallet is on <span style={{ color: CF.ink }}>{chain?.name ?? `chainId ${chain?.id}`}</span>.
-            Switch to <span style={{ color: CF.ink }}>Base Sepolia (84532)</span> in MetaMask, then retry.
-          </div>
-        ) : chainUnknown ? (
-          <div style={{
-            padding: '12px 14px', borderRadius: 8, marginBottom: 12,
-            background: CF.amberTint,
-            border: `1px solid ${CF.amber}`, color: CF.amber,
-            fontFamily: CF.mono, fontSize: 12, lineHeight: 1.45,
-          }}>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>WAITING FOR WALLET</div>
-            Your wallet hasn't reported which chain it's on yet. Open MetaMask once to settle it, then try again.
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>WRONG CHAIN</div>
+              Your wallet is on <span style={{ color: CF.ink }}>chainId {chainId}</span>.
+              CROSSFIRE settles on <span style={{ color: CF.ink }}>Base Sepolia (84532)</span>.
+            </div>
+            <button
+              onClick={handleSwitchChain}
+              disabled={isSwitchingChain}
+              style={{
+                padding: '8px 14px', borderRadius: CF.radius.md, border: 'none',
+                background: CF.ink, color: CF.bg,
+                fontFamily: CF.body, fontSize: 12.5, fontWeight: 600,
+                cursor: isSwitchingChain ? 'wait' : 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {isSwitchingChain ? 'Switching…' : 'Switch to Base Sepolia'}
+            </button>
           </div>
         ) : null}
 
@@ -338,13 +347,13 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
 
         <button
           onClick={handleUnlock}
-          disabled={busy || wrongChain || chainUnknown}
+          disabled={busy || wrongChain}
           style={{
             padding: '12px 22px', borderRadius: CF.radius.md, border: 'none',
             background: busy ? CF.ink2 : isError ? CF.amber : CF.ink,
             color: busy ? CF.bg : isError ? CF.ink : CF.bg,
             fontFamily: CF.body, fontSize: 13.5, fontWeight: 600,
-            cursor: (busy || wrongChain || chainUnknown) ? 'not-allowed' : 'pointer',
+            cursor: (busy || wrongChain) ? 'not-allowed' : 'pointer',
           }}
         >
           {btnText}
