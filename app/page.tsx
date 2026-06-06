@@ -85,6 +85,9 @@ export default async function Landing() {
             </span>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <a href="/leaderboard" style={navLinkStyle()}>
+              Leaderboard
+            </a>
             <a href="https://github.com/neromtoobad/crossfire" target="_blank" rel="noreferrer" style={navLinkStyle()}>
               GitHub ↗
             </a>
