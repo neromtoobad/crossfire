@@ -267,6 +267,11 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
 
       let permissionContext: `0x${string}` | undefined
       let resolvedDelegationManager: `0x${string}` | undefined
+      // ERC-7715 dependencies (factory + factoryData) for counterfactual
+      // smart account deployment. When the user's MetaMask Smart Account
+      // isn't yet deployed, the server must deploy it via these before
+      // redeeming the delegation.
+      let dependencies: Array<{ factory: `0x${string}`; factoryData: `0x${string}` }> = []
 
       // Try ERC-7715 first when we have a wallet client (MetaMask + extension wallets that support it).
       if (walletClient) {
@@ -290,6 +295,11 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
           if (granted && granted.length > 0 && granted[0].context) {
             permissionContext = granted[0].context as `0x${string}`
             resolvedDelegationManager = (granted[0].delegationManager ?? env.DelegationManager) as `0x${string}`
+            // Capture deps: when the user's SCA hasn't been deployed yet,
+            // these factory + factoryData pairs are how we deploy it before
+            // redeeming the delegation.
+            const rawDeps = (granted[0] as any).dependencies as Array<{ factory: `0x${string}`; factoryData: `0x${string}` }> | undefined
+            if (Array.isArray(rawDeps)) dependencies = rawDeps
           } else {
             throw new Error('wallet returned empty permissions response')
           }
@@ -348,6 +358,9 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
           delegationManager: resolvedDelegationManager,
           permissionContext,
           delegator: address,
+          // ERC-7715 dependencies so the server can deploy the user's SCA
+          // via factory + factoryData before redeeming the delegation.
+          dependencies,
         },
       }
       const paymentHeader = btoa(JSON.stringify(paymentPayload))
@@ -357,7 +370,14 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       })
       const json = await second.json()
       if (!second.ok || !json.unlocked) {
-        throw new Error(json.error ?? `unlock failed: ${second.status}`)
+        // Surface server-side detail so the error block tells the user
+        // exactly what went wrong on-chain instead of a generic label.
+        const baseMessage = json.error ?? `unlock failed: ${second.status}`
+        const fullMessage = json.detail ? `${baseMessage}: ${json.detail}` : baseMessage
+        const err: any = new Error(fullMessage)
+        err.serverDetail = json.detail
+        err.serverError = json.error
+        throw err
       }
       setState({ kind: 'unlocked', data: json.locked, tx: json.unlock?.settlementTxHash })
     } catch (e) {

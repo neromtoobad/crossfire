@@ -76,6 +76,32 @@ export async function settlePayment(
 ): Promise<{ txHash: Hex; usdcSettled: bigint }> {
   const amount = BigInt(payload.accepted.amount)
 
+  // ── Pre-flight: when the delegator is a counterfactual MetaMask Smart
+  // Account, the kit's ERC-7715 response carries the factory + factoryData
+  // needed to deploy it. If the delegator has no code yet, deploy via the
+  // factory(ies) so the DelegationManager can validate signatures via
+  // ERC-1271 in the next call.
+  const deps = payload.payload.dependencies ?? []
+  if (deps.length > 0) {
+    const delegatorAddr = payload.payload.delegator as Hex
+    const code = await sepoliaPublicClient.getCode({ address: delegatorAddr })
+    const isAlreadyDeployed = !!code && code !== '0x'
+    if (!isAlreadyDeployed) {
+      for (const dep of deps) {
+        if (!dep.factory || !dep.factoryData) continue
+        const deployTx = await orchestratorWalletSepolia.sendTransaction({
+          to: dep.factory,
+          data: dep.factoryData,
+          value: 0n,
+        })
+        const deployReceipt = await sepoliaPublicClient.waitForTransactionReceipt({ hash: deployTx })
+        if (deployReceipt.status !== 'success') {
+          throw new Error(`SCA factory deploy reverted: ${deployTx}`)
+        }
+      }
+    }
+  }
+
   // The inner action the redemption performs on behalf of the root delegator:
   //   USDC.transfer(payTo, amount)
   const transferCalldata = encodeFunctionData({

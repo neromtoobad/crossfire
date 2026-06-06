@@ -24,6 +24,12 @@ export type X402PaymentPayload = {
     delegationManager: Hex
     permissionContext: Hex // base64-decoded later; here it's already-encoded delegation chain hex
     delegator: Hex // address whose funds settle the payment
+    /**
+     * ERC-7715 dependencies. When the delegator is a counterfactual MetaMask
+     * Smart Account, these factory + factoryData pairs deploy it before
+     * the redemption. If the delegator already has code, deps are skipped.
+     */
+    dependencies?: Array<{ factory: Hex; factoryData: Hex }>
   }
 }
 
