@@ -1,11 +1,18 @@
+import { headers } from 'next/headers'
+import { cookieToInitialState } from 'wagmi'
+import { getConfig } from '../lib/wagmi-config.js'
+import { Providers } from './providers'
+
 export const metadata = {
   title: 'CROSSFIRE',
   description: 'Adversarial agents on a chain-enforced mandate.',
 }
 
-import { Providers } from './providers'
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Read wallet connection state from cookies set by the wagmi cookieStorage.
+  // This lets the SSR-rendered HTML already know the user is connected.
+  const initialState = cookieToInitialState(getConfig(), (await headers()).get('cookie'))
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -24,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}</style>
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers initialState={initialState}>{children}</Providers>
       </body>
     </html>
   )
