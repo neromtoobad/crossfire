@@ -7,6 +7,7 @@
 import { ConnectButton } from '../components/ConnectButton'
 import { CallCard } from '../components/CallCard'
 import { RunCouncilLive } from '../components/RunCouncilLive'
+import { RelayLive } from '../components/RelayLive'
 import { loadCalls } from '../lib/calls-data'
 import { loadMarketsMeta } from '../lib/markets-data'
 
@@ -133,6 +134,11 @@ export default async function Landing() {
         {/* ── LIVE COUNCIL (Phase 8.8 — watch a call get made) ── */}
         <section id="live" style={{ padding: '10px 0 14px' }}>
           <RunCouncilLive markets={marketChoices} />
+        </section>
+
+        {/* ── 1SHOT MAINNET RELAY (Phase 8.10) ── */}
+        <section id="relay" style={{ padding: '0 0 14px' }}>
+          <RelayLive />
         </section>
 
         {/* ── LIVE CALLS FEED ── */}
