@@ -9,15 +9,19 @@
 // need to see in the demo video.
 
 import { useEffect, useState } from 'react'
-import { useAccount, useWalletClient } from 'wagmi'
+import { useAccount, useSignTypedData } from 'wagmi'
 import { parseUnits } from 'viem'
 import {
   createDelegation,
   ScopeType,
   getSmartAccountsEnvironment,
 } from '@metamask/smart-accounts-kit'
-import { createCaveatBuilder, generateSalt } from '@metamask/smart-accounts-kit/utils'
-import { signDelegation as signDelegationAction } from '@metamask/smart-accounts-kit/actions'
+import {
+  createCaveatBuilder,
+  generateSalt,
+  SIGNABLE_DELEGATION_TYPED_DATA,
+  toDelegationStruct,
+} from '@metamask/smart-accounts-kit/utils'
 import { ConnectButton } from './ConnectButton'
 import { PUBLIC, MANDATE_LIMITS } from '../lib/public-config'
 
@@ -44,9 +48,24 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
   useEffect(() => { setMounted(true) }, [])
 
   const { address, status: accountStatus, chain } = useAccount()
-  const { data: walletClient } = useWalletClient()
+  const { signTypedDataAsync } = useSignTypedData()
   const isConnected = accountStatus === 'connected'
   const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
+
+  // ── debug panel — shown in every state until we confirm wagmi works ──
+  const debugBox = (
+    <div style={{
+      padding: '10px 14px', marginBottom: 12, borderRadius: 8,
+      background: '#0a0a14', border: `1px dashed ${CF.edgeHi}`,
+      fontFamily: CF.mono, fontSize: 10.5, color: CF.dim, lineHeight: 1.7,
+    }}>
+      <div style={{ color: CF.dim, marginBottom: 4, letterSpacing: 1.5 }}>WAGMI DEBUG</div>
+      mounted: <span style={{ color: mounted ? CF.bull : CF.bear }}>{String(mounted)}</span>
+      {' · '}status: <span style={{ color: isConnected ? CF.bull : CF.bear }}>{accountStatus}</span>
+      {' · '}address: <span style={{ color: address ? CF.bull : CF.bear }}>{address ?? 'none'}</span>
+      {' · '}chainId: <span style={{ color: chain?.id === PUBLIC.chainId ? CF.bull : CF.amber }}>{chain?.id ?? 'none'}</span>
+    </div>
+  )
 
   const [capUsdc, setCapUsdc] = useState<number>(MANDATE_LIMITS.defaultCapUsdc)
   const [hours, setHours] = useState<number>(MANDATE_LIMITS.defaultExpiryHours)
@@ -63,8 +82,8 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
   const wrongChain = isConnected && chain !== undefined && chain.id !== PUBLIC.chainId
 
   async function handleGrant() {
-    if (!isConnected || !address || !walletClient) {
-      setStatus({ kind: 'error', message: 'Connect your wallet first.' })
+    if (!isConnected || !address) {
+      setStatus({ kind: 'error', message: `Connect your wallet first. (status: ${accountStatus})` })
       return
     }
     if (wrongChain) {
@@ -99,14 +118,32 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
       })
 
       // ── This is the MetaMask popup moment ──
-      // The kit's signDelegation action takes a viem-compatible wallet
-      // client and asks it to sign EIP-712 typed data for the delegation.
-      // wagmi's walletClient is viem-compatible, so this just works.
-      const signature = await signDelegationAction(walletClient as any, {
+      // We bypass the kit's signDelegationAction (which needs a pre-
+      // instantiated walletClient that wagmi may not have ready yet) and
+      // call wagmi's useSignTypedData hook directly. The typed-data
+      // structure is the kit's spec, hashed identically to what the
+      // DelegationManager expects.
+      const struct = toDelegationStruct(delegation)
+      const signature = await signTypedDataAsync({
         account: address,
-        delegation,
-        delegationManager: env.DelegationManager,
-        chainId: PUBLIC.chainId,
+        domain: {
+          name: 'DelegationManager',
+          version: '1',
+          chainId: PUBLIC.chainId,
+          verifyingContract: env.DelegationManager as `0x${string}`,
+        },
+        types: SIGNABLE_DELEGATION_TYPED_DATA,
+        primaryType: 'Delegation',
+        message: {
+          delegate: struct.delegate as `0x${string}`,
+          delegator: struct.delegator as `0x${string}`,
+          authority: struct.authority as `0x${string}`,
+          caveats: struct.caveats.map((c: any) => ({
+            enforcer: c.enforcer as `0x${string}`,
+            terms: c.terms as `0x${string}`,
+          })),
+          salt: BigInt(struct.salt),
+        },
       })
 
       const signedDelegation = { ...delegation, signature }
@@ -163,12 +200,10 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
   }
 
   // ── Hydrating / reconnecting ─────────────────────────────────────────
-  // Show a calm loading state until wagmi has reconciled with the wallet.
-  // Without this, users with a live wallet session see "Connect wallet"
-  // for ~1 second before wagmi reports them as connected.
   if (!mounted || isReconnecting) {
     return (
       <div style={panelStyle()}>
+        {debugBox}
         <div style={{ fontFamily: CF.mono, fontSize: 10.5, letterSpacing: 1.6, color: CF.dim, marginBottom: 14 }}>
           CHECKING WALLET…
         </div>
@@ -183,6 +218,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
   if (!isConnected || !address) {
     return (
       <div style={panelStyle()}>
+        {debugBox}
         <div style={{ fontFamily: CF.mono, fontSize: 10.5, letterSpacing: 1.6, color: CF.dim, marginBottom: 14 }}>
           STEP 1 — CONNECT WALLET
         </div>
@@ -196,6 +232,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
 
   return (
     <div style={panelStyle()}>
+      {debugBox}
       <div style={{ fontFamily: CF.mono, fontSize: 10.5, letterSpacing: 1.6, color: CF.bull, marginBottom: 14 }}>
         STEP 2 — GRANT MANDATE
       </div>
