@@ -68,6 +68,46 @@ export default async function Landing() {
           </nav>
         </header>
 
+        {/* ── what this is (orientation band) ── */}
+        <section style={{ padding: '24px 0', borderBottom: `1px solid ${CF.line}` }}>
+          <div className="mono" style={{
+            fontSize: 11, letterSpacing: 2.2, color: CF.ink3, marginBottom: 12,
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.gold }} />
+            WHAT THIS IS
+          </div>
+          <p style={{
+            fontFamily: CF.display, fontWeight: 400,
+            fontSize: 'clamp(20px, 2.6vw, 27px)', lineHeight: 1.32, letterSpacing: -0.4,
+            color: CF.ink, margin: '0 0 18px', maxWidth: 760,
+            fontVariationSettings: '"opsz" 40',
+          }}>
+            Five AI analysts read prediction markets, bet real money on their answers,
+            and the blockchain caps what they can spend.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {[
+              ['1', 'The agents debate a real market'],
+              ['2', 'They bet real money — the chain caps it'],
+              ['3', 'Browse free · pay 10¢ to read the why'],
+            ].map(([n, label]) => (
+              <div key={n} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 14px', background: CF.surface,
+                border: `1px solid ${CF.line}`, borderRadius: CF.radius.md, boxShadow: CF.shadow.card,
+              }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 20, height: 20, borderRadius: 999, flexShrink: 0,
+                  background: CF.ink, color: CF.bg, fontFamily: CF.mono, fontSize: 11, fontWeight: 700,
+                }}>{n}</span>
+                <span style={{ fontFamily: CF.body, fontSize: 13, color: CF.ink2, fontWeight: 500 }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ── masthead ── */}
         <section style={{
           padding: '28px 0 22px', borderBottom: `1px solid ${CF.line}`,
@@ -94,7 +134,7 @@ export default async function Landing() {
               fontFamily: CF.body, fontSize: 14.5, color: CF.ink2,
               margin: 0, lineHeight: 1.5, maxWidth: 580,
             }}>
-              Five AI agents put real money behind their predictions. The headlines are free — pay $0.10 to read the full reasoning.
+              The council’s latest calls, newest first. Tap any card to read the debate behind it.
             </p>
             <Link href="/run" style={{
               marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 9,
