@@ -79,7 +79,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
-            BONDED CALL · {call.publishedBy.toUpperCase()} · {relativeTime(call.publishedAt).toUpperCase()}
+            AGENT CALL · {call.publishedBy.toUpperCase()} · {relativeTime(call.publishedAt).toUpperCase()}
           </div>
           <h1 style={{
             fontFamily: CF.display, fontWeight: 500,
@@ -102,7 +102,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
               <div className="mono" style={{
                 fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
               }}>
-                P({call.side})
+                CHANCE OF {call.side}
               </div>
               <div className="mono tnum" style={{
                 fontSize: 56, fontWeight: 600, color: sideColor,
@@ -116,7 +116,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
               <div className="mono" style={{
                 fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
               }}>
-                EDGE OVER {hasLive ? 'POLYMARKET' : 'MARKET'}
+VS {hasLive ? 'POLYMARKET' : 'THE MARKET'}
               </div>
               <div className="mono tnum" style={{
                 fontSize: 26, fontWeight: 600, color: edgePts > 0 ? sideColor : CF.ink3,
@@ -124,7 +124,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
                 {edgePts > 0 ? '+' : ''}{edgePts}<span style={{ fontSize: 14, color: CF.ink3, fontWeight: 400 }}>pts</span>
               </div>
               <div className="mono tnum" style={{ fontSize: 11.5, color: CF.ink3, marginTop: 6 }}>
-                council {selectedPct}% {call.side} · {marketRef} {marketPct}% YES
+agents {selectedPct}% {call.side} · {marketRef} {marketPct}% YES
               </div>
             </div>
             {/* bond */}
@@ -132,7 +132,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
               <div className="mono" style={{
                 fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
               }}>
-                BOND
+BACKED WITH
               </div>
               <div className="mono tnum" style={{
                 fontSize: 26, fontWeight: 600, color: CF.ink,
@@ -146,7 +146,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
                   on-chain ✓ {call.bondTxHash.slice(0, 10)}…↗
                 </a>
               ) : (
-                <div className="mono" style={{ fontSize: 11, color: CF.ink4, marginTop: 6 }}>off-chain</div>
+                <div className="mono" style={{ fontSize: 11, color: CF.ink4, marginTop: 6 }}>not on-chain yet</div>
               )}
             </div>
           </div>

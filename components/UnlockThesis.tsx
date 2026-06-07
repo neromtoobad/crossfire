@@ -299,7 +299,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       <LockedShell call={call} body={
         <div>
           <p style={{ fontFamily: CF.display, color: CF.ink2, fontSize: 14, lineHeight: 1.6, margin: '0 0 18px' }}>
-            Connect your wallet to unlock the full thesis, evidence trail, sizing logic, and counterarguments for{' '}
+            Connect your wallet to read the full reasoning, the evidence, why they bet this much, and the case against — for{' '}
             <span style={{ color: CF.ink }}>{call.unlockUsdc.toFixed(2)} USDC</span>.
           </p>
           <ConnectButton variant="primary" />
@@ -320,14 +320,14 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
     state.kind === 'signing' ? 'Look at your wallet…' :
     state.kind === 'settling' ? 'Settling on-chain…' :
     isError ? `Try again · ${call.unlockUsdc.toFixed(2)} USDC` :
-    `Unlock thesis · ${call.unlockUsdc.toFixed(2)} USDC`
+    `Read the full call · ${call.unlockUsdc.toFixed(2)} USDC`
 
   return (
     <LockedShell call={call} body={
       <div>
         <p style={{ fontFamily: CF.display, color: CF.ink2, fontSize: 14, lineHeight: 1.6, margin: '0 0 14px' }}>
-          The headline is free. Sign a one-shot <span style={{ color: CF.ink }}>x402 micropayment</span> for{' '}
-          <span style={{ color: CF.ink }}>{call.unlockUsdc.toFixed(2)} USDC</span> to unlock the full thesis, evidence URLs, sizing logic, and the Skeptic's counterarguments.
+          The headline is free. Pay{' '}
+          <span style={{ color: CF.ink }}>{call.unlockUsdc.toFixed(2)} USDC</span> once to read the full reasoning, the evidence, why they bet this much, and the strongest case against.
         </p>
 
         {wrongChain ? (
@@ -473,14 +473,14 @@ function LockedShell({ call, body }: { call: PublishedCall; body: React.ReactNod
       overflow: 'hidden',
     }}>
       <div style={{ fontFamily: CF.mono, fontSize: 10.5, color: CF.amber, letterSpacing: 1.8, marginBottom: 12 }}>
-        🔒 LOCKED THESIS
+        🔒 LOCKED
       </div>
       {body}
       <div style={{
         marginTop: 22, paddingTop: 14, borderTop: `1px dashed ${CF.line}`,
         fontFamily: CF.mono, fontSize: 11, color: CF.ink4,
       }}>
-        Unlock once per wallet · refund-on-resolve not implemented (Phase 8.6)
+        Pay once per wallet to read it.
       </div>
     </div>
   )
@@ -495,7 +495,7 @@ function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked;
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div style={{ fontFamily: CF.mono, fontSize: 10.5, color: CF.bull, letterSpacing: 1.8 }}>
-          ✓ UNLOCKED THESIS
+          ✓ UNLOCKED
         </div>
         {tx ? (
           <a href={`https://sepolia.basescan.org/tx/${tx}`} target="_blank" rel="noreferrer" style={{
@@ -508,7 +508,7 @@ function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked;
 
       <div style={{ marginBottom: 22 }}>
         <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.ink2, letterSpacing: 1.5, marginBottom: 8 }}>
-          THESIS
+          THE FULL CALL
         </div>
         <p style={{ fontFamily: CF.display, fontSize: 14.5, color: CF.ink, lineHeight: 1.65, margin: 0 }}>
           {data.thesis}
@@ -518,7 +518,7 @@ function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked;
       {data.evidenceUrls && data.evidenceUrls.length > 0 && (
         <div style={{ marginBottom: 22 }}>
           <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.ink2, letterSpacing: 1.5, marginBottom: 8 }}>
-            EVIDENCE TRAIL ({data.evidenceUrls.length} sources, all paid via x402)
+EVIDENCE · {data.evidenceUrls.length} sources the agents paid for
           </div>
           <ul style={{ paddingLeft: 0, margin: 0, listStyle: 'none' }}>
             {data.evidenceUrls.map((e, i) => (
@@ -544,7 +544,7 @@ function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked;
 
       <div style={{ marginBottom: 22 }}>
         <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.ink2, letterSpacing: 1.5, marginBottom: 8 }}>
-          COUNTERARGUMENTS (THE SKEPTIC'S CASE AGAINST)
+THE CASE AGAINST · FROM THE SKEPTIC
         </div>
         <p style={{ fontFamily: CF.display, fontSize: 13.5, color: CF.ink2, lineHeight: 1.6, margin: 0 }}>
           {data.counterarguments}
@@ -553,7 +553,7 @@ function UnlockedView({ call, data, tx }: { call: PublishedCall; data: Unlocked;
 
       <div>
         <div style={{ fontFamily: CF.mono, fontSize: 10, color: CF.ink2, letterSpacing: 1.5, marginBottom: 8 }}>
-          SIZING RATIONALE
+WHY THEY BET THIS MUCH
         </div>
         <p style={{ fontFamily: CF.display, fontSize: 13, color: CF.ink2, lineHeight: 1.6, margin: 0 }}>
           {data.sizingRationale}

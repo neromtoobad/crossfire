@@ -62,7 +62,7 @@ export function CouncilFeedSection({
           fontSize: 11, letterSpacing: 2.4, color: CF.ink, margin: 0, fontWeight: 600,
         }}>
           <span style={{ marginRight: 8, color: CF.bull }}>●</span>
-          COUNCIL FEED · {calls.length} BONDED · {bondedOnchain} ON-CHAIN ✓
+          COUNCIL FEED · {calls.length} CALLS · {bondedOnchain} ON-CHAIN ✓
         </h2>
         <span className="mono" style={{ fontSize: 10.5, color: CF.ink3 }}>
           our agents' calls with thesis unlock

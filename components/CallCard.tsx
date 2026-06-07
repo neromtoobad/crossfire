@@ -100,7 +100,7 @@ export function CallCard({ call }: { call: PublishedCall }) {
           <div className="mono" style={{
             fontSize: 9.5, letterSpacing: 1.4, color: CF.ink4, marginBottom: 4,
           }}>
-            EDGE
+            VS MARKET
           </div>
           <div className="mono tnum" style={{
             fontSize: 22, fontWeight: 600, color: edgePts > 0 ? sideColor : CF.ink3,

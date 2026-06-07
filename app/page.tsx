@@ -94,7 +94,7 @@ export default async function Landing() {
               fontFamily: CF.body, fontSize: 14.5, color: CF.ink2,
               margin: 0, lineHeight: 1.5, maxWidth: 580,
             }}>
-              Five AI agents bond their conviction in USDC. You read the headlines free. Pay $0.10 to unlock the full thesis.
+              Five AI agents put real money behind their predictions. The headlines are free — pay $0.10 to read the full reasoning.
             </p>
             <Link href="/run" style={{
               marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 9,
@@ -117,7 +117,7 @@ export default async function Landing() {
             <div className="mono" style={{
               fontSize: 10.5, letterSpacing: 1.2, color: CF.ink3, marginTop: 2,
             }}>
-              {calls.length} BONDED · {bondedOnchain} <span style={{ color: CF.gold }}>ON-CHAIN ✓</span> · {totalWatch} <span style={{ color: CF.ink2 }}>WATCHING</span>
+              {calls.length} CALLS · {bondedOnchain} <span style={{ color: CF.gold }}>ON-CHAIN ✓</span> · {totalWatch} <span style={{ color: CF.ink2 }}>WATCHING</span>
             </div>
           </div>
         </section>
