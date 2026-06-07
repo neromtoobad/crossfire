@@ -456,6 +456,29 @@ export function getCallById(id: string): PublishedCall | undefined {
   return SAMPLE_CALLS.find((c) => c.id === id)
 }
 
+// Server-side: same as getCallById but attaches the live Polymarket line when
+// the market has a slug — so the detail page references the SAME real-world
+// price the feed card shows (no 50%-vs-7% contradiction). Falls back cleanly.
+export async function getCallByIdWithPolymarket(id: string): Promise<PublishedCall | undefined> {
+  const call = getCallById(id)
+  if (!call || typeof window !== 'undefined') return call
+  try {
+    const [{ loadMarketsMeta }, { getPolymarketPrices }] = await Promise.all([
+      import('./markets-data.js'),
+      import('./polymarket.js'),
+    ])
+    const meta = loadMarketsMeta()
+    const slug = meta.find((m) => m.id === call.marketId)?.polymarketSlug
+    if (!slug) return call
+    const prices = await getPolymarketPrices([slug])
+    const p = prices.get(slug)
+    if (!p) return call
+    return { ...call, livePolymarket: { yes: p.yes, slug, question: p.question } }
+  } catch {
+    return call
+  }
+}
+
 export function relativeTime(ms: number): string {
   const delta = Date.now() - ms
   const hr = Math.floor(delta / 3600000)

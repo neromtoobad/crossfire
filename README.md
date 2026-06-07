@@ -105,6 +105,27 @@ What's already verified on-chain. Every claim links to its tx on Basescan.
 
 Full receipts: [PROOF.md](./PROOF.md).
 
+### Reproduce it yourself
+
+We don't ship a coverage badge over mocked chain calls. Every core claim is a
+script that hits the **real chain** and prints a Basescan link you can open. Clone,
+fill `.env.local`, and run:
+
+| Command | What it proves on-chain | Lands on |
+|---|---|---|
+| `npm run proof` | The hero shot. Signs a 50 USDC mandate, redeems 1 USDC (succeeds), attempts 60 USDC → **reverts at the caveat enforcer** with `ERC20TransferAmountEnforcer:allowance-exceeded`. No code stops it; the chain does. | Base Sepolia |
+| `npm run duel:skeleton` | A2A redelegation: orchestrator → sub-agent, sub-agent redeems through the leaf-to-root chain, over-sub-cap reverts. `child.delegator == parent.delegate` asserted. | Base Sepolia |
+| `npm run conviction` | x402 evidence buy: a buyer-with-delegation pays a metered USDC micropayment to the seller route, then Venice reasons over the evidence. | Base Sepolia |
+| `npm run test:unlock:direct` | The user unlock path end-to-end: a plain EOA pays USDC, the server verifies the transfer, the thesis unlocks. | Base Sepolia |
+| `npm run relay:bet` | One real **Base-mainnet** 1Shot `relayer_send7710Transaction` — EIP-7702 in-flight upgrade, gas paid in USDC. | Base **mainnet** |
+| `npm run council:test` | The full 5-role Venice council: 4 role votes + Skeptic veto + quality gate. Venice only — no fallback. | (off-chain reasoning) |
+| `npm run test:debate` | The live debate engine: 3 rounds, agents rebut each other, hidden position markers parsed into votes. | (off-chain reasoning) |
+
+Two guarantees are enforced by the build, not by trust:
+
+- **Venice is the only model provider.** `grep -rniE "groq\|api\.openai\.com\|api\.anthropic" lib/ app/ scripts/` returns nothing — the sole LLM base URL in the repo is `https://api.venice.ai/api/v1`. If Venice is down, the council does not decide. We never added a fallback.
+- **The cap is the contract's, not the code's.** There is no `if (amount > cap) reject` anywhere in the agent path. The over-cap revert in `npm run proof` comes from MetaMask's `ERC20TransferAmountEnforcer`, on-chain.
+
 ---
 
 ## Tracks targeted and how each is satisfied
@@ -121,35 +142,30 @@ Full receipts: [PROOF.md](./PROOF.md).
 
 ## What works now vs what's next
 
-The hard chain primitives are already done. The pivot to the Precall model is mostly UI + role-prompts + scoring.
+The full Precall Arena is built and running — chain primitives, the 5-agent council, the live debate, the feed, unlock, and the accountability loop. What remains is packaging: deploy, record, submit.
 
-### Done (verified with on-chain receipts)
-- ERC-7710 mandate signing (kit's `createDelegation` + `signDelegation`)
-- ERC-7710 revert proof at the caveat enforcer
-- Bull/Bear redelegation duel (the 2-agent version of the council)
-- x402 seller route (`app/api/evidence/route.ts`)
-- x402 buyer-with-delegation flow (`lib/x402-buyer.ts`)
-- Venice integration (`lib/venice.ts`) — conviction + verdict-card image
-- BinaryMarket on Base Sepolia (`contracts/src/BinaryMarket.sol`) with `buyOnBehalf` for credit flow
-- 4 themed markets deployed (`lib/markets.json`)
-- 1Shot mainnet relay client + send/estimate/status (`lib/relayer.ts`)
-- 1Shot webhook handler (`app/api/relayer-webhook/route.ts`)
-- One real Base-mainnet 1Shot relay confirmed
-- wagmi + MetaMask wallet connect (`components/ConnectButton.tsx`)
-- ERC-7710 grant-mandate UI via wagmi's `useSignTypedData` (`components/GrantMandate.tsx`)
+### Done (the whole product, verified with on-chain receipts)
+- ERC-7710 mandate signing (kit's `createDelegation` + `signDelegation`) — and a **user-facing** grant via MetaMask's native ERC-7715 Advanced Permissions dialog (`components/GrantCouncilMandate.tsx`)
+- ERC-7710 revert proof at the caveat enforcer (`npm run proof`)
+- 5-role redelegation council + Skeptic veto (the A2A chain) — the 2-agent Bull/Bear duel was its predecessor
+- **Live agent debate** — 3 rounds, agents rebut each other, streamed token-by-token into the transcript (`lib/council/debate.ts`, `components/DebateTranscript.tsx`)
+- x402 seller route (`app/api/evidence/route.ts`) + buyer-with-delegation (`lib/x402-buyer.ts`) — metered evidence buys
+- x402 user-unlock flow — pay USDC to read the full thesis (`components/UnlockThesis.tsx`, verified `npm run test:unlock:direct`)
+- Venice integration (`lib/venice.ts`) — the only model provider, conviction + verdict-card image
+- BinaryMarket on Base Sepolia with `buyOnBehalf`; themed markets deployed
+- **1,889 live Polymarket markets** synced into the feed (`npm run sync:polymarket`), grouped into a tabbed watch list
+- Live Polymarket odds on every call; auto-council cron (`npm run council:auto`)
+- 1Shot mainnet relay client + send/estimate/status (`lib/relayer.ts`) + webhook handler — one real Base-mainnet relay confirmed
+- Brier-scored leaderboard with the **accountability loop**: an agent's track record sets a budget multiplier that sizes its next bond (`lib/leaderboard.ts`)
+- wagmi + MetaMask wallet connect; editorial-light design system (`lib/theme.ts`)
 
-### Next (pivoting to the Precall model)
+### Next (packaging only)
 
-| | Task | What it adds |
+| | Task | Status |
 |---|---|---|
-| 8.1 | Reframe the landing page as a calls feed (initially with sample published calls so the product is legible immediately) | Visual product clarity |
-| 8.2 | Expand `lib/venice.ts` into 5 role-prompts: MacroScout / NewsHawk / CrowdPulse / BookWatcher / Skeptic | The council |
-| 8.3 | `lib/publish.ts`: quality gate (≥3 of 4 agree, Skeptic not vetoing, edge ≥ 0.05) and on-chain bond posting | The bond mechanism |
-| 8.4 | `app/calls/[id]/page.tsx`: per-call detail page with locked thesis below the headline | The unlock surface |
-| 8.5 | `app/api/unlock/route.ts`: x402 seller that gates the full thesis behind a tiny USDC payment | The unlock flow |
-| 8.6 | `lib/scoring.ts`: Brier scores, per-agent leaderboard | The reputation layer |
-| 8.7 | Demo video (sub-3-min, MetaMask Smart Accounts visible in the main flow) | Required for every track |
-| 8.8 | Submit to A2A / Best Agent / x402+7710 / Venice / 1Shot | Done |
+| 1 | Deploy to Vercel as a single origin (live judge-clickable URL) | pending |
+| 2 | Demo video (sub-3-min) — debate → bond + revert → one 1Shot mainnet relay | pending |
+| 3 | Submit to A2A / x402+7710 / Venice / 1Shot / Smart Accounts | pending |
 
 ---
 

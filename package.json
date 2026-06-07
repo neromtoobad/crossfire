@@ -15,6 +15,7 @@
     "deploy:markets": "tsx scripts/deploy-markets.ts",
     "duel": "tsx scripts/run-duel.ts",
     "council:test": "tsx scripts/test-council.ts",
+    "test:debate": "tsx scripts/test-debate.ts",
     "relayer:caps": "tsx scripts/relayer-caps.ts",
     "relay:bet": "tsx scripts/relay-bet.ts",
     "tunnel": "tsx scripts/tunnel.ts",

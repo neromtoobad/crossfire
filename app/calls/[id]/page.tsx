@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getCallById, relativeTime } from '../../../lib/calls-data'
+import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data'
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { GrantCouncilMandate } from '../../../components/GrantCouncilMandate'
@@ -26,7 +26,7 @@ function LogoMark({ size = 26 }: { size?: number }) {
 
 export default async function CallDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const call = getCallById(id)
+  const call = await getCallByIdWithPolymarket(id)
   if (!call) notFound()
 
   const isYes = call.side === 'YES'
@@ -34,8 +34,17 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
   const sideTint = isYes ? CF.bullTint : CF.bearTint
   const sideInk = isYes ? CF.bullInk : CF.bearInk
   const selectedPct = Math.round(call.selectedSideProb * 100)
-  const marketPct = Math.round(call.marketImpliedYes * 100)
-  const edgePts = Math.round(call.edge * 100)
+
+  // Single source of truth for the "market line": prefer the live Polymarket
+  // price (the same reference the feed card shows) over the un-seeded on-chain
+  // 50% implied. Edge is recomputed against whichever line we display, so the
+  // header never contradicts the card. (QA ISSUE-002)
+  const hasLive = !!call.livePolymarket
+  const marketYes = hasLive ? call.livePolymarket!.yes : call.marketImpliedYes
+  const marketPct = Math.round(marketYes * 100)
+  const marketSideProb = isYes ? marketYes : 1 - marketYes
+  const edgePts = Math.round((call.selectedSideProb - marketSideProb) * 100)
+  const marketRef = hasLive ? 'Polymarket live' : 'on-chain implied'
 
   const roleVotes = call.votes.filter((v) => v.role !== 'Skeptic')
   const skepticVote = call.votes.find((v) => v.role === 'Skeptic')
@@ -114,7 +123,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
               <div className="mono" style={{
                 fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
               }}>
-                EDGE OVER MARKET
+                EDGE OVER {hasLive ? 'POLYMARKET' : 'MARKET'}
               </div>
               <div className="mono tnum" style={{
                 fontSize: 26, fontWeight: 600, color: edgePts > 0 ? sideColor : CF.ink3,
@@ -122,7 +131,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
                 {edgePts > 0 ? '+' : ''}{edgePts}<span style={{ fontSize: 14, color: CF.ink3, fontWeight: 400 }}>pts</span>
               </div>
               <div className="mono tnum" style={{ fontSize: 11.5, color: CF.ink3, marginTop: 6 }}>
-                council {selectedPct}% {call.side} · market {marketPct}% YES
+                council {selectedPct}% {call.side} · {marketRef} {marketPct}% YES
               </div>
             </div>
             {/* bond */}

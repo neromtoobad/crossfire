@@ -5,6 +5,7 @@
 import { venice } from '../venice.js'
 import type { AgentRole, AgentVote } from '../calls-data.js'
 import { ROLE_PROMPTS, type RolePromptInput, skepticPrompt } from './prompts.js'
+import { clampToWord } from './debate.js'
 
 const COUNCIL_MODEL = 'qwen3-235b-a22b-instruct-2507'
 
@@ -67,7 +68,7 @@ export async function runRoleAgent({
     role,
     vote: asVote(parsed.vote),
     confidence: clamp(num(parsed.confidence, 0.5), 0, 1),
-    oneLiner: String(parsed.oneLiner ?? '').slice(0, 320) || `(${role} returned no rationale)`,
+    oneLiner: clampToWord(String(parsed.oneLiner ?? ''), 320) || `(${role} returned no rationale)`,
   }
 }
 
@@ -116,7 +117,7 @@ export async function runSkeptic({
     role: 'Skeptic',
     vote: majoritySide,  // Skeptic acknowledges majority; confidence carries the veto signal
     confidence: clamp(num(parsed.confidence, 0.2), 0, 1),
-    oneLiner: String(parsed.oneLiner ?? '').slice(0, 320) || `(Skeptic returned no refutation)`,
+    oneLiner: clampToWord(String(parsed.oneLiner ?? ''), 320) || `(Skeptic returned no refutation)`,
   }
 }
 

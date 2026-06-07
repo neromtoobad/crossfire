@@ -242,5 +242,17 @@ function oneLineFrom(text: string): string {
   const clean = text.replace(MARKER_RE, '').replace(/\s+/g, ' ').trim()
   const sentences = clean.match(/[^.!?]+[.!?]+/g) ?? [clean]
   const joined = sentences.slice(0, 2).join(' ').trim()
-  return (joined || clean).slice(0, 320)
+  return clampToWord(joined || clean, 320)
+}
+
+// Cap a string at `max` chars WITHOUT cutting a word in half. If it overflows,
+// trim back to the last whitespace and append an ellipsis. Prevents the
+// "…in the final days of his" mid-word truncation on cards.
+export function clampToWord(text: string, max: number): string {
+  const t = text.trim()
+  if (t.length <= max) return t
+  const cut = t.slice(0, max - 1)
+  const lastSpace = cut.lastIndexOf(' ')
+  const base = (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.!?-]+$/, '')
+  return `${base}…`
 }
