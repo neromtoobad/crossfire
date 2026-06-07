@@ -126,6 +126,36 @@ export async function settlePayment(
     'function redeemDelegations(bytes[] permissionContexts, bytes32[] modes, bytes[] executionCalldatas)',
   ])
 
+  // Simulate first to capture the precise revert reason (which enforcer
+  // rejected, ERC-1271 failure, etc.). viem's writeContract throws with a
+  // helpful 'Details: execution reverted' string but no enforcer name —
+  // simulation gives us the named revert.
+  try {
+    await sepoliaPublicClient.simulateContract({
+      account: orchestratorAccount.address,
+      address: payload.payload.delegationManager,
+      abi: dmAbi,
+      functionName: 'redeemDelegations',
+      args: [
+        [payload.payload.permissionContext],
+        [ExecutionMode.SingleDefault as Hex],
+        [executionCalldata],
+      ],
+    })
+  } catch (simErr: any) {
+    // Extract every layer of viem's error chain so the message tells us
+    // which enforcer / which contract rejected.
+    const layers: string[] = []
+    let cur: any = simErr
+    while (cur) {
+      if (cur.shortMessage) layers.push(cur.shortMessage)
+      if (cur.metaMessages?.length) layers.push(cur.metaMessages.join(' | '))
+      if (cur.details && !layers.some((l) => l.includes(cur.details))) layers.push(cur.details)
+      cur = cur.cause
+    }
+    throw new Error(`redeemDelegations simulation failed: ${layers.join(' :: ').slice(0, 600)}`)
+  }
+
   const txHash = await orchestratorWalletSepolia.writeContract({
     address: payload.payload.delegationManager,
     abi: dmAbi,
