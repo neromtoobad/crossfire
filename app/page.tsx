@@ -9,6 +9,7 @@ import { CouncilFeedSection } from '../components/CouncilFeedSection'
 import { WatchListSection } from '../components/WatchListSection'
 import { loadCallsWithPolymarket } from '../lib/calls-data'
 import { loadWatchSnapshot } from '../lib/polymarket-feed'
+import { loadMarketsMeta } from '../lib/markets-data'
 import { CF } from '../lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,15 @@ export default async function Landing() {
   const calls = await loadCallsWithPolymarket()
   const snapshot = loadWatchSnapshot()
   const bondedOnchain = calls.filter((c) => c.bondTxHash).length
-  const totalWatch = snapshot?.totalMarkets ?? 0
+
+  // The council markets that map to a Polymarket slug already show as bonded
+  // calls in the COUNCIL FEED. Drop those same slugs from the WATCH LIST so a
+  // market never appears in both sections.
+  const councilSlugs = new Set(
+    loadMarketsMeta().map((m) => m.polymarketSlug).filter(Boolean) as string[],
+  )
+  const watchMarkets = (snapshot?.markets ?? []).filter((m) => !councilSlugs.has(m.slug))
+  const totalWatch = watchMarkets.length
 
   return (
     <main style={{
@@ -113,11 +122,11 @@ export default async function Landing() {
         <CouncilFeedSection calls={calls} bondedOnchain={bondedOnchain} />
 
         {/* ── WATCH LIST (tabbed) ── */}
-        {snapshot && snapshot.markets.length > 0 ? (
+        {watchMarkets.length > 0 ? (
           <WatchListSection
-            markets={snapshot.markets}
-            totalMarkets={snapshot.totalMarkets}
-            syncedAt={snapshot.syncedAt}
+            markets={watchMarkets}
+            totalMarkets={totalWatch}
+            syncedAt={snapshot?.syncedAt ?? null}
           />
         ) : (
           <section style={{

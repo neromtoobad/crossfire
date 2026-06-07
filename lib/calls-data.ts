@@ -384,19 +384,33 @@ export const SAMPLE_CALLS: PublishedCall[] = [
   },
 ]
 
+// Collapse a call list to ONE call per market — the newest. The council
+// appends a fresh call every run, so the same market can have several stored
+// entries (plus a hand-crafted sample). The feed should show each market once.
+function dedupeByMarket(calls: PublishedCall[]): PublishedCall[] {
+  const newestByMarket = new Map<string, PublishedCall>()
+  for (const c of calls) {
+    const prev = newestByMarket.get(c.marketId)
+    if (!prev || c.publishedAt > prev.publishedAt) newestByMarket.set(c.marketId, c)
+  }
+  return [...newestByMarket.values()].sort((a, b) => b.publishedAt - a.publishedAt)
+}
+
 export function loadCalls(): PublishedCall[] {
   // Server-side: stored calls take precedence; samples back-fill so the feed
   // is never empty during early demos.
   if (typeof process === 'undefined' || typeof window !== 'undefined') {
-    return SAMPLE_CALLS
+    return dedupeByMarket(SAMPLE_CALLS)
   }
   try {
     const mod = require('./calls-store.js') as typeof import('./calls-store.js')
     const stored = mod.loadStoredCalls()
-    if (stored.length === 0) return SAMPLE_CALLS
-    return [...stored, ...SAMPLE_CALLS].slice(0, 24)
+    if (stored.length === 0) return dedupeByMarket(SAMPLE_CALLS)
+    // Stored first so a real published call wins over the sample for the same
+    // market; dedupeByMarket then keeps the newest per market.
+    return dedupeByMarket([...stored, ...SAMPLE_CALLS]).slice(0, 24)
   } catch {
-    return SAMPLE_CALLS
+    return dedupeByMarket(SAMPLE_CALLS)
   }
 }
 
