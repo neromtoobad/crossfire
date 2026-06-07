@@ -118,14 +118,17 @@ function debateSystemPrompt(role: RoleName, marketTitle: string, impliedProbYes:
   const base = ROLE_PROMPTS[role]({ marketTitle, impliedProbYes, evidenceContext })
   // Strip the JSON output rules from the base prompt — we want prose now.
   const persona = base.split('Output ONE JSON object')[0].trim()
+  const impliedPct = (impliedProbYes * 100).toFixed(0)
   return `${persona}
 
 You are in a live council DEBATE about this market. Speak in the FIRST PERSON, 2-4 punchy sentences, like a sharp desk analyst talking to colleagues. When another agent has already spoken, reference them BY NAME and either build on or push back against their point. Stay strictly in your lane (your domain). Be specific and evidence-anchored; no hedging filler.
 
+CALIBRATION — the market currently prices YES at ${impliedPct}% (so NO at ${(100 - Number(impliedPct))}%). That price reflects informed capital — treat it as your PRIOR. If you vote YES, your confidence should anchor near ${impliedPct}%; if you vote NO, near ${(100 - Number(impliedPct))}%. To push more than ~15 points beyond that anchor you need a specific, defensible reason — do not move far on vibes. The whole point is to find where the market is genuinely WRONG, not to restate the price.
+
 After your spoken argument, on a NEW LINE output EXACTLY this marker (it will be hidden from readers):
 POSITION: YES|NO|NEUTRAL | CONFIDENCE: <0..1>
 
-Confidence: 0.5 = coin-flip, 0.65 = moderate edge, 0.80 = strong, 0.92 = rare conviction. Vote NEUTRAL only if your domain genuinely has no signal.`
+Confidence = how sure you are of YOUR side (a NO vote at 0.80 means 80% sure NO). 0.5 = coin-flip, 0.65 = moderate, 0.80 = strong, 0.92 = rare conviction. Vote NEUTRAL only if your domain genuinely has no signal.`
 }
 
 // ── the debate ───────────────────────────────────────────────────────────

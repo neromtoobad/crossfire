@@ -10,6 +10,7 @@
 import { useMemo, useState } from 'react'
 import { CF } from '../lib/theme'
 import { WatchCard } from './WatchCard'
+import { WatchDebateModal, type WatchTarget } from './WatchDebateModal'
 import type { WatchMarket } from '../lib/polymarket-feed'
 
 type Tab = 'trending' | 'sports' | 'politics' | 'crypto' | 'tech' | 'macro' | 'geopolitics' | 'culture' | 'other'
@@ -39,6 +40,7 @@ export function WatchListSection({
   syncedAt: string | null
 }) {
   const [tab, setTab] = useState<Tab>('trending')
+  const [scoutTarget, setScoutTarget] = useState<WatchTarget | null>(null)
 
   // Compute counts per bucket once (memoized).
   const bucketCounts = useMemo(() => {
@@ -127,7 +129,7 @@ export function WatchListSection({
             ? <>showing top <span className="tnum" style={{ color: CF.ink }}>{shownInTab}</span> trending by volume</>
             : <>showing <span className="tnum" style={{ color: CF.ink }}>{shownInTab}</span> of <span className="tnum">{totalInTab}</span> in {labelFor(tab)}</>}
         </span>
-        <span style={{ color: CF.ink4 }}>click any card to open in polymarket ↗</span>
+        <span style={{ color: CF.ink4 }}>click any card to send it to the council ⚖</span>
       </div>
 
       {/* grid */}
@@ -141,9 +143,21 @@ export function WatchListSection({
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-          {visible.map((m) => <WatchCard key={m.id} m={m} />)}
+          {visible.map((m) => (
+            <WatchCard
+              key={m.id}
+              m={m}
+              onScout={(mk) => setScoutTarget({
+                question: mk.question, yesPrice: mk.yes, slug: mk.slug, eventSlug: mk.eventSlug,
+              })}
+            />
+          ))}
         </div>
       )}
+
+      {scoutTarget ? (
+        <WatchDebateModal target={scoutTarget} onClose={() => setScoutTarget(null)} />
+      ) : null}
     </section>
   )
 }

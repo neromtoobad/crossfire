@@ -1,5 +1,8 @@
-// Compact card for a Polymarket "watch list" market — feed-density treatment.
-// Smaller than CallCard, links out to polymarket.com.
+'use client'
+
+// Compact card for a Polymarket "watch list" market. Phase 9.2: the primary
+// click now SENDS THE MARKET TO THE COUNCIL (live debate); a small secondary
+// link opens it on Polymarket.
 
 import { CF } from '../lib/theme'
 import type { WatchMarket } from '../lib/polymarket-feed'
@@ -22,18 +25,21 @@ function trendArrow(change?: number): { arrow: string; color: string } {
   return { arrow: '·', color: CF.ink3 }
 }
 
-export function WatchCard({ m }: { m: WatchMarket }) {
+export function WatchCard({ m, onScout }: { m: WatchMarket; onScout?: (m: WatchMarket) => void }) {
   const pct = Math.round(m.yes * 100)
   const sideColor = pct >= 50 ? CF.bull : pct >= 20 ? CF.amber : CF.bear
   const sideTint  = pct >= 50 ? CF.bullTint : pct >= 20 ? CF.amberTint : CF.bearTint
   const dayTrend  = trendArrow(m.oneDayPriceChange)
   const weekTrend = trendArrow(m.oneWeekPriceChange)
   const daysToClose = m.endDate ? Math.max(0, Math.round((new Date(m.endDate).getTime() - Date.now()) / 86400000)) : null
+  const pmUrl = `https://polymarket.com/event/${m.eventSlug}?market=${m.slug}`
 
   return (
-    <a
-      href={`https://polymarket.com/event/${m.eventSlug}?market=${m.slug}`}
-      target="_blank" rel="noreferrer"
+    <div
+      onClick={() => onScout?.(m)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onScout?.(m) }}
       style={{
         display: 'block',
         background: CF.surface,
@@ -42,6 +48,7 @@ export function WatchCard({ m }: { m: WatchMarket }) {
         padding: '14px 16px',
         color: CF.ink,
         boxShadow: CF.shadow.card,
+        cursor: onScout ? 'pointer' : 'default',
       }}
     >
       <div style={{
@@ -84,9 +91,6 @@ export function WatchCard({ m }: { m: WatchMarket }) {
         paddingTop: 8, borderTop: `1px dashed ${CF.line}`,
       }}>
         <span className="tnum" title="Cumulative volume">vol <span style={{ color: CF.ink }}>{fmtUsd(m.volumeUsd)}</span></span>
-        {m.liquidityUsd > 0 ? (
-          <span className="tnum" title="Open liquidity">liq <span style={{ color: CF.ink2 }}>{fmtUsd(m.liquidityUsd)}</span></span>
-        ) : null}
         {m.oneDayPriceChange != null ? (
           <span title="1-day price change" className="tnum">
             1d <span style={{ color: dayTrend.color }}>{dayTrend.arrow} {Math.abs((m.oneDayPriceChange) * 100).toFixed(1)}pts</span>
@@ -102,8 +106,21 @@ export function WatchCard({ m }: { m: WatchMarket }) {
             ends <span className="tnum" style={{ color: CF.ink2 }}>{daysToClose}d</span>
           </span>
         ) : null}
-        <span style={{ marginLeft: 'auto', color: CF.ink4 }}>open in polymarket ↗</span>
+
+        {/* secondary: open on Polymarket without triggering the scout */}
+        <span
+          role="link"
+          tabIndex={0}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(pmUrl, '_blank', 'noopener') }}
+          style={{ marginLeft: 'auto', color: CF.ink4, cursor: 'pointer' }}
+        >
+          Polymarket ↗
+        </span>
+        {/* primary affordance */}
+        <span style={{ color: CF.bull, fontWeight: 700, letterSpacing: 0.4 }}>
+          ⚖ debate →
+        </span>
       </div>
-    </a>
+    </div>
   )
 }
