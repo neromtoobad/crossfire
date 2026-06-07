@@ -211,10 +211,10 @@ export function GrantCouncilMandate({ onDone }: { onDone?: () => void } = {}) {
         ▸ BACK THE COUNCIL · METAMASK SMART ACCOUNTS KIT
       </div>
       <div style={{ fontFamily: CF.display, fontSize: 22, fontWeight: 500, letterSpacing: -0.4, color: CF.ink, marginBottom: 8, fontVariationSettings: '"opsz" 40' }}>
-        Grant the council a mandate
+        Set the council’s budget
       </div>
       <p style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink2, lineHeight: 1.55, margin: '0 0 16px', maxWidth: 560 }}>
-        Authorize the council to spend up to <strong style={{ color: CF.ink, fontWeight: 600 }}>{CAP_USDC} USDC</strong> on your behalf for the next {EXPIRY_HOURS} hour via a MetaMask <strong style={{ color: CF.ink, fontWeight: 600 }}>Advanced Permission (ERC-7715)</strong>. Capped, expiring, redeemable only by the council — and revocable in your wallet anytime. The chain, not the code, enforces the limit.
+        Let the council spend up to <strong style={{ color: CF.ink, fontWeight: 600 }}>${CAP_USDC}</strong> for the next {EXPIRY_HOURS} hour — and only the council can use it. It’s capped, expires on its own, and you can cancel anytime from your wallet. The blockchain enforces the limit, not our code.
       </p>
 
       {!isConnected || !address ? (

@@ -25,35 +25,35 @@ type StageMeta = { title: string; tags: string[]; caption: string; hero?: boolea
 
 const STAGES: StageMeta[] = [
   {
-    title: 'Authorize the council',
+    title: 'Approve a spending limit',
     tags: ['MetaMask Kit', 'ERC-7715'],
     caption:
-      'You sign once. MetaMask Advanced Permissions grants a capped, expiring USDC mandate to the council. The cap is the chain’s, not the code’s.',
+      'You sign once in MetaMask to let the council spend a few dollars — and not a cent more. It expires on its own, and you can cancel anytime. The limit lives on the blockchain, so no bug in our code can get past it.',
   },
   {
-    title: 'The council debates and bonds',
+    title: 'The agents debate — and bet',
     tags: ['A2A', 'Venice', 'x402'],
     caption:
-      'Five agents on redelegated sub-budgets argue the market live. Venice is the only brain. The net of their conviction becomes an on-chain bond.',
+      'Each of the five agents gets a slice of your budget. They research the question, debate it live, and a skeptic pushes back. If the call holds up, they put real money behind it.',
   },
   {
-    title: 'The chain enforces the cap',
+    title: 'The blockchain blocks overspending',
     tags: ['ERC-7710'],
     caption:
-      'Now try to spend past the mandate. The caveat enforcer reverts it live. No if-statement in our code stops it — the chain refuses.',
+      'Now watch an agent try to spend more than you allowed. The blockchain rejects it on the spot. Nothing in our code stops it — the network itself refuses.',
     hero: true,
   },
   {
-    title: 'Settle on Base mainnet',
+    title: 'Settle it for real on Base',
     tags: ['1Shot'],
     caption:
-      'Executed once through 1Shot’s permissionless relayer. EIP-7702 upgrade in flight, gas paid in USDC, webhook flips to success.',
+      'The final bet goes out on Base, the live network, relayed by 1Shot. The fee is even paid in USDC, so you never need ETH for gas.',
   },
   {
-    title: 'Accountability',
+    title: 'Keep score',
     tags: ['Brier'],
     caption:
-      'Every call is scored against the resolved outcome. A sharper track record earns a bigger budget on the next call. Reputation is capital.',
+      'Every call is graded once the real outcome is known. Agents with a better track record earn a bigger budget next time. Being right pays.',
   },
 ]
 
@@ -101,9 +101,10 @@ export function LiveRun({ markets }: { markets: MarketChoice[] }) {
           fontFamily: CF.body, fontSize: 17, color: CF.ink2, lineHeight: 1.6,
           maxWidth: 620, margin: '0 0 22px',
         }}>
-          The whole loop, end to end. You grant a capped mandate, the council debates
-          and bonds its conviction, the enforcer rejects anything over the cap, and
-          1Shot settles it on Base mainnet. Five real on-chain acts, one flow.
+          See the whole thing happen, start to finish. You approve a small spending
+          limit, five AI agents research a prediction and bet real money on it, the
+          blockchain blocks anything over your limit, and the bet settles on Base.
+          Five real on-chain steps, one flow.
         </p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {['MetaMask Kit', 'A2A', 'x402 + ERC-7710', 'Venice', '1Shot'].map((t) => (
@@ -207,11 +208,11 @@ function AccountabilityPanel({ onView }: { onView: () => void }) {
     }}>
       <div style={{ minWidth: 0 }}>
         <div className="mono" style={{ fontSize: 10.5, letterSpacing: 1.4, color: CF.ink4, marginBottom: 6 }}>
-          THE ACCOUNTABILITY LOOP
+          KEEPING SCORE
         </div>
         <div style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink2, lineHeight: 1.5, maxWidth: 460 }}>
-          Sharp agents (Brier &lt; 0.10) earn a 1.5× budget; miscalibrated ones get throttled to 0.7×.
-          The leaderboard is the memory the next bond is sized against.
+          Agents that call it right earn up to a 1.5× bigger budget; ones that miss get cut to 0.7×.
+          The leaderboard is the memory that sizes the next bet.
         </div>
       </div>
       <Link

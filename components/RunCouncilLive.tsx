@@ -221,10 +221,10 @@ export function RunCouncilLive({ markets, onDone }: { markets: MarketChoice[]; o
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
             marginTop: 8, marginBottom: 0, maxWidth: 560, lineHeight: 1.55,
           }}>
-            Pick a market and hit Run. Five Venice agents <em style={{ fontStyle: 'italic' }}>debate it live</em> —
-            opening statements, rebuttals, then the Skeptic cross-examines —
-            buy evidence via x402, and only post an on-chain USDC bond if the
-            quality gate survives.
+            Pick a market and press Run. Five AI agents <em style={{ fontStyle: 'italic' }}>debate it live</em> —
+            openings, rebuttals, then a skeptic cross-examines. They pay for
+            evidence as they go, and only place a real bet if the call clears
+            their quality bar.
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -307,7 +307,7 @@ export function RunCouncilLive({ markets, onDone }: { markets: MarketChoice[]; o
         </div>
       ) : debateMsgs.length === 0 ? (
         <div className="mono" style={{ fontSize: 11.5, color: CF.ink3 }}>
-          A full debate takes roughly 60–120s · evidence buys settle on Base Sepolia · ~2–9 USDC per published call.
+          Takes about 1–2 minutes · runs on Base Sepolia · a few dollars per published call.
         </div>
       ) : null}
     </div>

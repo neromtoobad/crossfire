@@ -175,16 +175,14 @@ export function RelayLive({ onDone }: { onDone?: () => void } = {}) {
             letterSpacing: -0.6, color: CF.ink, lineHeight: 1.15,
             fontVariationSettings: '"opsz" 48',
           }}>
-            Relay a real 7710 tx through 1Shot
+            Send a real transaction through 1Shot
           </div>
           <p style={{
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
             marginTop: 8, marginBottom: 10, maxWidth: 580, lineHeight: 1.55,
           }}>
-            One click: USER EOA signs a capped USDC delegation + an in-flight
-            EIP-7702 authorization upgrading to a Stateless7702 delegator. 1Shot
-            redeems it, pays the fee in USDC, and broadcasts on Base mainnet.
-            Gas paid in USDC, no ETH needed.
+            One click sends a real transaction on Base mainnet through 1Shot.
+            The fee is paid in USDC, so there’s no need to hold ETH for gas.
           </p>
           {/* Webhook listener status */}
           {webhookConfig ? (

@@ -140,16 +140,16 @@ export function RevertProof({ onDone }: { onDone?: () => void } = {}) {
             letterSpacing: -0.6, color: CF.ink, lineHeight: 1.15,
             fontVariationSettings: '"opsz" 48',
           }}>
-            The chain refuses the over-cap mandate
+            Watch the blockchain block an overspend
           </div>
           <p style={{
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
             marginTop: 8, marginBottom: 0, maxWidth: 580, lineHeight: 1.55,
           }}>
-            One click. ORCH redeems a 50 USDC mandate for 1 USDC — accepted.
-            Then ORCH attempts 60 USDC against the same mandate — the
-            <em style={{ fontStyle: 'italic', color: CF.ink }}> ERC20TransferAmountEnforcer </em>
-            reverts the transaction. No code path stops it. The chain does.
+            One click. First it spends $1 against a $50 limit — that goes through.
+            Then it tries to spend $60 against that same limit, and the blockchain
+            <em style={{ fontStyle: 'italic', color: CF.ink }}> rejects the transaction </em>
+            on the spot. Our code never blocks it. The network does.
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
