@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { getCallById, relativeTime } from '../../../lib/calls-data'
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
+import { GrantCouncilMandate } from '../../../components/GrantCouncilMandate'
 import { CF } from '../../../lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -232,8 +233,13 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
           ) : null}
         </section>
 
+        {/* ── back the council: MetaMask Advanced Permissions (ERC-7715) ── */}
+        <section style={{ padding: '12px 0' }}>
+          <GrantCouncilMandate />
+        </section>
+
         {/* ── unlock ── */}
-        <section style={{ padding: '20px 0' }}>
+        <section style={{ padding: '12px 0' }}>
           <UnlockThesis call={call} />
         </section>
       </div>
