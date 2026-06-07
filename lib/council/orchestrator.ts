@@ -23,6 +23,7 @@ import { marketAbi } from '../market.js'
 import { getMarketMeta, type MarketMeta } from '../markets-data.js'
 import type { AgentVote, EvidenceItem, PublishedCall } from '../calls-data.js'
 import { runRoleAgent, runSkeptic, generateThesis } from './agents.js'
+import { runDebate, type DebateEvent } from './debate.js'
 import { POST as evidenceHandler } from '../../app/api/evidence/route.js'
 import { buyEvidence } from '../x402-buyer.js'
 import { buildRootMandate } from '../mandate.js'
@@ -54,6 +55,8 @@ export type CouncilEvent =
   | { type: 'published'; call: PublishedCall }
   | { type: 'refused'; reason: string }
   | { type: 'error'; message: string }
+  // Phase 9.1 — live debate events (only emitted when opts.debate is on)
+  | DebateEvent
 
 export type RunCouncilOptions = {
   onEvent?: (e: CouncilEvent) => void | Promise<void>
@@ -65,6 +68,9 @@ export type RunCouncilOptions = {
   bondUsdc?: number
   // Persist the PublishedCall to .crossfire/calls.json on success.
   persist?: boolean
+  // Phase 9.1 — run the agents as a streamed multi-round debate instead of
+  // parallel one-shot votes. Slower + more Venice calls, but it's the show.
+  debate?: boolean
 }
 
 // Council treasury identity. For Phase 8.2 it's just a hardcoded handle.
@@ -178,27 +184,54 @@ export async function runCouncil(
     return '(no role-specific evidence; reason from your domain expertise alone)'
   }
 
-  // ── 3. Run the four role agents (parallel) ────────────────────────────
+  // ── 3+4. Role agents + Skeptic ────────────────────────────────────────
+  // Two modes:
+  //   debate (opt-in) — sequential multi-round streamed debate; agents read
+  //                     each other and react. The show.
+  //   default         — parallel one-shot votes + a Skeptic pass. Fast +
+  //                     cheap; used by the auto-cron.
   let roleVotes: AgentVote[]
-  try {
-    roleVotes = await Promise.all(
-      ROLES.map((role) =>
-        runRoleAgent({
-          role,
-          marketTitle: meta.title,
-          impliedProbYes,
-          evidenceContext: evidenceFor(role),
-        }),
-      ),
-    )
-  } catch (e) {
-    await emit({ type: 'error', message: `role agent failed: ${(e as Error).message}` })
-    return null
+  // Definite-assignment: set in the debate branch OR the !debate Skeptic block.
+  let skepticVote!: AgentVote
+
+  if (opts.debate) {
+    try {
+      const out = await runDebate({
+        marketTitle: meta.title,
+        impliedProbYes,
+        evidenceFor,
+        emit,
+      })
+      roleVotes = out.roleVotes
+      skepticVote = out.skepticVote
+    } catch (e) {
+      await emit({ type: 'error', message: `debate failed: ${(e as Error).message}` })
+      return null
+    }
+    // Mirror the debate result onto the legacy events so existing UI + the
+    // gate logic still see role-vote / skeptic-verdict.
+    for (const v of roleVotes) await emit({ type: 'role-vote', vote: v })
+    await emit({ type: 'skeptic-verdict', vote: skepticVote })
+  } else {
+    try {
+      roleVotes = await Promise.all(
+        ROLES.map((role) =>
+          runRoleAgent({
+            role,
+            marketTitle: meta.title,
+            impliedProbYes,
+            evidenceContext: evidenceFor(role),
+          }),
+        ),
+      )
+    } catch (e) {
+      await emit({ type: 'error', message: `role agent failed: ${(e as Error).message}` })
+      return null
+    }
+    for (const v of roleVotes) await emit({ type: 'role-vote', vote: v })
   }
 
-  for (const v of roleVotes) await emit({ type: 'role-vote', vote: v })
-
-  // ── 3. Determine majority side (among non-NEUTRAL non-Skeptic votes) ─
+  // ── Determine majority side (among non-NEUTRAL non-Skeptic votes) ─────
   const yesCount = roleVotes.filter((v) => v.vote === 'YES').length
   const noCount = roleVotes.filter((v) => v.vote === 'NO').length
   if (yesCount === 0 && noCount === 0) {
@@ -214,20 +247,21 @@ export async function runCouncil(
     total: ROLES.length,
   })
 
-  // ── 4. Skeptic reviews the four votes ─────────────────────────────────
-  let skepticVote: AgentVote
-  try {
-    skepticVote = await runSkeptic({
-      marketTitle: meta.title,
-      impliedProbYes,
-      majoritySide,
-      otherVotes: roleVotes,
-    })
-  } catch (e) {
-    await emit({ type: 'error', message: `skeptic failed: ${(e as Error).message}` })
-    return null
+  // ── Skeptic (default mode only — debate already ran the Skeptic) ──────
+  if (!opts.debate) {
+    try {
+      skepticVote = await runSkeptic({
+        marketTitle: meta.title,
+        impliedProbYes,
+        majoritySide,
+        otherVotes: roleVotes,
+      })
+    } catch (e) {
+      await emit({ type: 'error', message: `skeptic failed: ${(e as Error).message}` })
+      return null
+    }
+    await emit({ type: 'skeptic-verdict', vote: skepticVote })
   }
-  await emit({ type: 'skeptic-verdict', vote: skepticVote })
 
   // ── 5. Quality gate ───────────────────────────────────────────────────
   const reasons: string[] = []

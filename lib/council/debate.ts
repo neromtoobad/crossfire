@@ -1,0 +1,239 @@
+// Phase 9.1 — the live debate engine.
+//
+// Instead of 5 parallel votes that never see each other, the council now
+// DEBATES in sequential rounds. Each agent reads the running transcript and
+// reacts to what came before — genuine agent-to-agent coordination.
+//
+//   Round 1 · Opening statements   — each role agent states a position
+//   Round 2 · Rebuttal & revision  — each agent rebuts/defends, having read R1
+//   Round 3 · The Skeptic           — cross-examines the emerging majority
+//
+// Every turn is STREAMED token-by-token from Venice, so the UI watches the
+// argument form word by word. Each turn ends with a hidden POSITION marker
+// we parse for the vote; the marker never reaches the client.
+
+import { venice } from '../venice.js'
+import type { AgentRole, AgentVote } from '../calls-data.js'
+import { ROLE_PROMPTS } from './prompts.js'
+
+const COUNCIL_MODEL = 'qwen3-235b-a22b-instruct-2507'
+
+const ROLES = ['MacroScout', 'NewsHawk', 'CrowdPulse', 'BookWatcher'] as const
+type RoleName = (typeof ROLES)[number]
+
+// ── events the debate emits (folded into CouncilEvent) ───────────────────
+export type DebateEvent =
+  | { type: 'debate-round'; round: number; title: string }
+  | { type: 'debate-turn-start'; round: number; role: AgentRole }
+  | { type: 'debate-token'; round: number; role: AgentRole; token: string }
+  | { type: 'debate-turn-end'; round: number; role: AgentRole; vote?: 'YES' | 'NO' | 'NEUTRAL'; confidence?: number }
+
+type Emit = (e: DebateEvent) => void | Promise<void>
+
+type DebateMessage = { role: AgentRole; round: number; text: string; vote?: string; confidence?: number }
+
+// ── helpers ──────────────────────────────────────────────────────────────
+function clamp(x: number, lo: number, hi: number): number { return Math.min(Math.max(x, lo), hi) }
+function num(x: unknown, fb: number): number { const n = Number(x); return Number.isFinite(n) ? n : fb }
+function asVote(x: unknown): 'YES' | 'NO' | 'NEUTRAL' {
+  const s = String(x ?? '').toUpperCase()
+  return s === 'YES' || s === 'NO' || s === 'NEUTRAL' ? (s as any) : 'NEUTRAL'
+}
+
+// Parse the trailing "POSITION: <side> CONFIDENCE: <0..1>" marker.
+const MARKER_RE = /POSITION:\s*(YES|NO|NEUTRAL)\s*\|?\s*CONFIDENCE:\s*([0-9.]+)/i
+function parsePosition(full: string): { vote: 'YES' | 'NO' | 'NEUTRAL'; confidence: number } {
+  const m = full.match(MARKER_RE)
+  if (!m) return { vote: 'NEUTRAL', confidence: 0.5 }
+  return { vote: asVote(m[1]), confidence: clamp(num(m[2], 0.5), 0, 1) }
+}
+
+// Where the displayable prose ends (everything before the POSITION marker).
+function visibleLen(full: string): number {
+  const idx = full.search(/\n?\s*POSITION:/i)
+  return idx >= 0 ? idx : full.length
+}
+
+// Stream one Venice completion, emitting only the prose (marker stripped).
+async function streamTurn(
+  systemPrompt: string,
+  userPrompt: string,
+  onToken: (t: string) => void | Promise<void>,
+  temperature = 0.55,
+): Promise<string> {
+  const stream = await venice.chat.completions.create({
+    model: COUNCIL_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature,
+    stream: true,
+    // @ts-expect-error - Venice extension passed through the OpenAI SDK
+    venice_parameters: { enable_web_scraping: true },
+  })
+
+  // Hold back the trailing N chars while streaming so a partial "POSITION"
+  // marker (which arrives before its ":") never escapes to the UI. The full
+  // marker is "\n\nPOSITION: NO | CONFIDENCE: …"; 16 chars covers the prefix.
+  const HOLDBACK = 16
+  let full = ''
+  let emitted = 0
+  for await (const chunk of stream) {
+    const delta = chunk.choices?.[0]?.delta?.content ?? ''
+    if (!delta) continue
+    full += delta
+    // If the complete marker is already present, cut there. Otherwise hold
+    // back a tail that could be the start of the marker.
+    let cut = full.search(/\n?\s*POSITION:/i)
+    if (cut < 0) cut = Math.max(emitted, full.length - HOLDBACK)
+    if (cut > emitted) {
+      await onToken(full.slice(emitted, cut))
+      emitted = cut
+    }
+  }
+  // Final flush: emit whatever prose remains before the (now complete) marker.
+  const finalVis = visibleLen(full)
+  if (finalVis > emitted) {
+    await onToken(full.slice(emitted, finalVis))
+  }
+  return full
+}
+
+// Format the running transcript for an agent's prompt.
+function renderTranscript(transcript: DebateMessage[]): string {
+  if (transcript.length === 0) return '(you are the first to speak)'
+  return transcript
+    .map((m) => `${m.role}: ${m.text.replace(MARKER_RE, '').trim()}`)
+    .join('\n\n')
+}
+
+// ── role-agent debate persona (wraps the existing role prompt) ───────────
+function debateSystemPrompt(role: RoleName, marketTitle: string, impliedProbYes: number, evidenceContext: string): string {
+  const base = ROLE_PROMPTS[role]({ marketTitle, impliedProbYes, evidenceContext })
+  // Strip the JSON output rules from the base prompt — we want prose now.
+  const persona = base.split('Output ONE JSON object')[0].trim()
+  return `${persona}
+
+You are in a live council DEBATE about this market. Speak in the FIRST PERSON, 2-4 punchy sentences, like a sharp desk analyst talking to colleagues. When another agent has already spoken, reference them BY NAME and either build on or push back against their point. Stay strictly in your lane (your domain). Be specific and evidence-anchored; no hedging filler.
+
+After your spoken argument, on a NEW LINE output EXACTLY this marker (it will be hidden from readers):
+POSITION: YES|NO|NEUTRAL | CONFIDENCE: <0..1>
+
+Confidence: 0.5 = coin-flip, 0.65 = moderate edge, 0.80 = strong, 0.92 = rare conviction. Vote NEUTRAL only if your domain genuinely has no signal.`
+}
+
+// ── the debate ───────────────────────────────────────────────────────────
+export async function runDebate({
+  marketTitle,
+  impliedProbYes,
+  evidenceFor,
+  emit,
+}: {
+  marketTitle: string
+  impliedProbYes: number
+  evidenceFor: (role: RoleName) => string
+  emit: Emit
+}): Promise<{ roleVotes: AgentVote[]; skepticVote: AgentVote }> {
+  const transcript: DebateMessage[] = []
+  const impliedPct = (impliedProbYes * 100).toFixed(0)
+
+  // Run one role agent's turn: stream it, parse position, record it.
+  async function roleTurn(role: RoleName, round: number, roundInstruction: string): Promise<DebateMessage> {
+    await emit({ type: 'debate-turn-start', round, role })
+    const system = debateSystemPrompt(role, marketTitle, impliedProbYes, evidenceFor(role))
+    const user = [
+      `Market: "${marketTitle}"`,
+      `Market-implied P(YES): ${impliedPct}%`,
+      ``,
+      `Evidence for your role:`,
+      evidenceFor(role) || '(none — reason from your domain expertise)',
+      ``,
+      `Debate transcript so far:`,
+      renderTranscript(transcript),
+      ``,
+      roundInstruction,
+    ].join('\n')
+
+    const full = await streamTurn(system, user, (t) => emit({ type: 'debate-token', round, role, token: t }))
+    const { vote, confidence } = parsePosition(full)
+    const msg: DebateMessage = { role, round, text: full, vote, confidence }
+    transcript.push(msg)
+    await emit({ type: 'debate-turn-end', round, role, vote, confidence })
+    return msg
+  }
+
+  // ── Round 1 — Opening statements ───────────────────────────────────────
+  await emit({ type: 'debate-round', round: 1, title: 'Opening statements' })
+  for (const role of ROLES) {
+    await roleTurn(role, 1,
+      `Round 1 — your OPENING STATEMENT. State your read on whether this resolves YES, from your domain only. If colleagues spoke before you, react to them.`)
+  }
+
+  // ── Round 2 — Rebuttal & revision ──────────────────────────────────────
+  await emit({ type: 'debate-round', round: 2, title: 'Rebuttal & revision' })
+  for (const role of ROLES) {
+    await roleTurn(role, 2,
+      `Round 2 — REBUTTAL. You've now heard everyone's opening. Defend your position or revise it. Name at least one colleague and engage their argument directly. This is your FINAL position.`)
+  }
+
+  // Final role votes = each agent's round-2 position.
+  const roleVotes: AgentVote[] = ROLES.map((role) => {
+    const last = [...transcript].reverse().find((m) => m.role === role && m.round === 2)
+    return {
+      role,
+      vote: asVote(last?.vote),
+      confidence: clamp(num(last?.confidence, 0.5), 0, 1),
+      oneLiner: oneLineFrom(last?.text ?? ''),
+    }
+  })
+
+  // Provisional majority for the Skeptic to attack.
+  const yes = roleVotes.filter((v) => v.vote === 'YES').length
+  const no = roleVotes.filter((v) => v.vote === 'NO').length
+  const majoritySide: 'YES' | 'NO' = yes >= no ? 'YES' : 'NO'
+
+  // ── Round 3 — The Skeptic cross-examines ───────────────────────────────
+  await emit({ type: 'debate-round', round: 3, title: 'The Skeptic' })
+  await emit({ type: 'debate-turn-start', round: 3, role: 'Skeptic' })
+  const skepticSystem = `You are the Skeptic on a prediction-market council — the adversary in the room. The four role agents have just debated and lean ${majoritySide}.
+
+Your job: cross-examine. Make the STRONGEST possible case that the majority is WRONG. Name specific agents and attack their weakest assumption. You have no evidence of your own — you find the cracks in theirs. You VETO the call if your refutation reaches confidence ≥ 0.5.
+
+Speak in the first person, 2-4 sharp sentences. Then on a NEW LINE output EXACTLY (hidden from readers):
+POSITION: ${majoritySide} | CONFIDENCE: <0..1 — your confidence the majority is WRONG>
+
+Confidence: 0.0-0.3 = the council is right, you concede; 0.3-0.5 = real concerns but not a veto; 0.5+ = strong refutation, you VETO.`
+  const skepticUser = [
+    `Market: "${marketTitle}"`,
+    `Market-implied P(YES): ${impliedPct}%`,
+    `The council leans: ${majoritySide}`,
+    ``,
+    `Full debate transcript:`,
+    renderTranscript(transcript),
+    ``,
+    `Cross-examine the majority now.`,
+  ].join('\n')
+
+  const skepticFull = await streamTurn(skepticSystem, skepticUser,
+    (t) => emit({ type: 'debate-token', round: 3, role: 'Skeptic', token: t }), 0.6)
+  const skepticPos = parsePosition(skepticFull)
+  const skepticVote: AgentVote = {
+    role: 'Skeptic',
+    vote: majoritySide,
+    confidence: clamp(num(skepticPos.confidence, 0.2), 0, 1),
+    oneLiner: oneLineFrom(skepticFull),
+  }
+  await emit({ type: 'debate-turn-end', round: 3, role: 'Skeptic', vote: majoritySide, confidence: skepticVote.confidence })
+
+  return { roleVotes, skepticVote }
+}
+
+// Reduce a multi-sentence debate turn to a single public-facing one-liner:
+// take the first 1-2 sentences, strip the marker, cap length.
+function oneLineFrom(text: string): string {
+  const clean = text.replace(MARKER_RE, '').replace(/\s+/g, ' ').trim()
+  const sentences = clean.match(/[^.!?]+[.!?]+/g) ?? [clean]
+  const joined = sentences.slice(0, 2).join(' ').trim()
+  return (joined || clean).slice(0, 320)
+}

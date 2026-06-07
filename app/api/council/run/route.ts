@@ -16,7 +16,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  let body: { marketId?: string; stubEvidence?: boolean } = {}
+  let body: { marketId?: string; stubEvidence?: boolean; debate?: boolean } = {}
   try { body = await req.json() } catch { /* empty body */ }
 
   const marketId = body.marketId
@@ -27,6 +27,9 @@ export async function POST(req: NextRequest) {
   }
 
   const stubEvidence = body.stubEvidence === true
+  // Debate mode is the default for the UI — it's the show. Callers can opt
+  // out (the auto-cron) by passing debate:false.
+  const debate = body.debate !== false
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream<Uint8Array>({
@@ -42,6 +45,7 @@ export async function POST(req: NextRequest) {
       try {
         await runCouncil(marketId, {
           stubEvidence,
+          debate,
           persist: true,
           onEvent: (e: CouncilEvent) => { write(e) },
         })

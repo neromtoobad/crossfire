@@ -153,16 +153,20 @@ export function CallCard({ call }: { call: PublishedCall }) {
         const livePoints = Math.round((pcYes - pYes) * 100)
         const arrow = livePoints > 0 ? '▲' : livePoints < 0 ? '▼' : '·'
         const arrowColor = (livePoints > 0) === (call.side === 'YES') ? CF.bull : CF.bear
+        const url = `https://polymarket.com/event/${call.livePolymarket.slug}`
         return (
-          <a
-            href={`https://polymarket.com/event/${call.livePolymarket.slug}`}
-            target="_blank" rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
+          // Not an <a> — this card is already a <Link>, and nested anchors are
+          // invalid HTML (hydration error). Use a clickable span that opens
+          // Polymarket and stops the card navigation.
+          <span
+            role="link"
+            tabIndex={0}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(url, '_blank', 'noopener') }}
             style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: '8px 10px', marginBottom: 12,
               background: CF.surface2, border: `1px solid ${CF.line}`, borderRadius: CF.radius.sm,
-              fontFamily: CF.mono, fontSize: 11, color: CF.ink2,
+              fontFamily: CF.mono, fontSize: 11, color: CF.ink2, cursor: 'pointer',
             }}
           >
             <span>
@@ -173,7 +177,7 @@ export function CallCard({ call }: { call: PublishedCall }) {
             <span style={{ color: CF.ink3 }}>
               council <span className="tnum" style={{ color: arrowColor, fontWeight: 600 }}>{arrow} {Math.abs(livePoints)}pts</span>
             </span>
-          </a>
+          </span>
         )
       })() : null}
 

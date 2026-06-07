@@ -5,6 +5,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { CF } from '../lib/theme'
+import { DebateTranscript, type DebateMsg, type DebateRound } from './DebateTranscript'
 
 export type MarketChoice = { id: string; title: string }
 
@@ -22,12 +23,54 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
   const [marketId, setMarketId] = useState(markets[0]?.id ?? '')
   const [running, setRunning] = useState(false)
   const [lines, setLines] = useState<LogLine[]>([])
+  const [debateMsgs, setDebateMsgs] = useState<DebateMsg[]>([])
+  const [debateRounds, setDebateRounds] = useState<DebateRound[]>([])
   const [doneState, setDoneState] = useState<null | 'published' | 'refused' | 'error'>(null)
   const abortRef = useRef<AbortController | null>(null)
   const router = useRouter()
 
   function push(line: LogLine) {
     setLines((cur) => [...cur, line])
+  }
+
+  // Apply a debate-* event to the transcript state.
+  function applyDebateEvent(e: any) {
+    switch (e.type) {
+      case 'debate-round':
+        setDebateRounds((cur) => cur.some((r) => r.round === e.round) ? cur : [...cur, { round: e.round, title: e.title }])
+        return
+      case 'debate-turn-start':
+        setDebateMsgs((cur) => [...cur, {
+          id: `${e.round}-${e.role}-${cur.length}`,
+          round: e.round, role: e.role, text: '', streaming: true,
+        }])
+        return
+      case 'debate-token':
+        setDebateMsgs((cur) => {
+          // append to the last streaming message for this role+round
+          const next = [...cur]
+          for (let i = next.length - 1; i >= 0; i--) {
+            if (next[i].role === e.role && next[i].round === e.round && next[i].streaming) {
+              next[i] = { ...next[i], text: next[i].text + e.token }
+              break
+            }
+          }
+          return next
+        })
+        return
+      case 'debate-turn-end':
+        setDebateMsgs((cur) => {
+          const next = [...cur]
+          for (let i = next.length - 1; i >= 0; i--) {
+            if (next[i].role === e.role && next[i].round === e.round && next[i].streaming) {
+              next[i] = { ...next[i], streaming: false, vote: e.vote, confidence: e.confidence }
+              break
+            }
+          }
+          return next
+        })
+        return
+    }
   }
 
   function eventToLine(e: any): LogLine | null {
@@ -87,6 +130,8 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
   async function start() {
     if (!marketId || running) return
     setLines([])
+    setDebateMsgs([])
+    setDebateRounds([])
     setDoneState(null)
     setRunning(true)
     const ctrl = new AbortController()
@@ -119,8 +164,13 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
           if (evt.type === 'published') setDoneState('published')
           else if (evt.type === 'refused') setDoneState('refused')
           else if (evt.type === 'error') setDoneState((s) => s ?? 'error')
-          const ln = eventToLine(evt)
-          if (ln) push(ln)
+          // Debate events drive the transcript; everything else drives the log.
+          if (typeof evt.type === 'string' && evt.type.startsWith('debate-')) {
+            applyDebateEvent(evt)
+          } else {
+            const ln = eventToLine(evt)
+            if (ln) push(ln)
+          }
         }
       }
     } catch (e: any) {
@@ -165,9 +215,10 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
             marginTop: 8, marginBottom: 0, maxWidth: 560, lineHeight: 1.55,
           }}>
-            Pick a market and hit Run. The orchestrator redelegates to each
-            role agent, buys evidence via x402, runs Venice, and only posts an
-            on-chain USDC bond if the quality gate passes.
+            Pick a market and hit Run. Five Venice agents <em style={{ fontStyle: 'italic' }}>debate it live</em> —
+            opening statements, rebuttals, then the Skeptic cross-examines —
+            buy evidence via x402, and only post an on-chain USDC bond if the
+            quality gate survives.
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -197,6 +248,19 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
         </div>
       </div>
 
+      {/* ── live debate transcript ── */}
+      {debateMsgs.length > 0 ? (
+        <div style={{ marginBottom: lines.length > 0 ? 12 : 0 }}>
+          <div className="mono" style={{
+            fontSize: 10, letterSpacing: 1.8, color: CF.ink3, marginBottom: 8, fontWeight: 600,
+          }}>
+            ▸ THE DEBATE · 5 AGENTS · 3 ROUNDS
+          </div>
+          <DebateTranscript messages={debateMsgs} rounds={debateRounds} />
+        </div>
+      ) : null}
+
+      {/* ── on-chain / pipeline log ── */}
       {lines.length > 0 ? (
         <div style={{
           padding: '14px 16px',
@@ -204,7 +268,7 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
           border: `1px solid ${CF.line}`, borderRadius: CF.radius.md,
           fontFamily: CF.mono, fontSize: 12, color: CF.ink,
           lineHeight: 1.6,
-          maxHeight: 360, overflow: 'auto',
+          maxHeight: 280, overflow: 'auto',
           fontVariantNumeric: 'tabular-nums',
         }}>
           {lines.map((l, i) => (
@@ -235,11 +299,11 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
             <div style={{ color: CF.bear, marginTop: 6 }}>× stopped on error — see line above</div>
           ) : null}
         </div>
-      ) : (
+      ) : debateMsgs.length === 0 ? (
         <div className="mono" style={{ fontSize: 11.5, color: CF.ink3 }}>
-          A full run takes roughly 60–90s · evidence buys settle on Base Sepolia · ~2–9 USDC per published call.
+          A full debate takes roughly 60–120s · evidence buys settle on Base Sepolia · ~2–9 USDC per published call.
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
