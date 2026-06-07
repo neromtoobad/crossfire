@@ -68,9 +68,14 @@ async function streamTurn(
       { role: 'user', content: userPrompt },
     ],
     temperature,
+    // Cap length so no single turn runs long — 2-3 sentences + the marker
+    // fit comfortably in ~180 tokens. Keeps each wave snappy.
+    max_tokens: 200,
     stream: true,
+    // Web scraping adds latency per call; the role agents reason from the
+    // x402 evidence already handed to them, so keep the debate calls lean.
     // @ts-expect-error - Venice extension passed through the OpenAI SDK
-    venice_parameters: { enable_web_scraping: true },
+    venice_parameters: { enable_web_scraping: false },
   })
 
   // Hold back the trailing N chars while streaming so a partial "POSITION"
@@ -135,11 +140,15 @@ export async function runDebate({
   evidenceFor: (role: RoleName) => string
   emit: Emit
 }): Promise<{ roleVotes: AgentVote[]; skepticVote: AgentVote }> {
-  const transcript: DebateMessage[] = []
   const impliedPct = (impliedProbYes * 100).toFixed(0)
 
-  // Run one role agent's turn: stream it, parse position, record it.
-  async function roleTurn(role: RoleName, round: number, roundInstruction: string): Promise<DebateMessage> {
+  // Run one role agent's turn against an explicit context (no shared state),
+  // so a whole round's agents can stream CONCURRENTLY. Agents react ACROSS
+  // rounds (R2 rebuts all of R1) — that's the A2A — while each round's four
+  // calls run as one parallel wave. 9 sequential calls → 3 waves, ~3× faster.
+  async function roleTurn(
+    role: RoleName, round: number, context: DebateMessage[], roundInstruction: string,
+  ): Promise<DebateMessage> {
     await emit({ type: 'debate-turn-start', round, role })
     const system = debateSystemPrompt(role, marketTitle, impliedProbYes, evidenceFor(role))
     const user = [
@@ -149,8 +158,8 @@ export async function runDebate({
       `Evidence for your role:`,
       evidenceFor(role) || '(none — reason from your domain expertise)',
       ``,
-      `Debate transcript so far:`,
-      renderTranscript(transcript),
+      round === 1 ? `(This is the opening round — no transcript yet.)` : `Opening statements from the desk:`,
+      round === 1 ? '' : renderTranscript(context),
       ``,
       roundInstruction,
     ].join('\n')
@@ -158,28 +167,23 @@ export async function runDebate({
     const full = await streamTurn(system, user, (t) => emit({ type: 'debate-token', round, role, token: t }))
     const { vote, confidence } = parsePosition(full)
     const msg: DebateMessage = { role, round, text: full, vote, confidence }
-    transcript.push(msg)
     await emit({ type: 'debate-turn-end', round, role, vote, confidence })
     return msg
   }
 
-  // ── Round 1 — Opening statements ───────────────────────────────────────
+  // ── Round 1 — Opening statements (parallel; agents open cold) ──────────
   await emit({ type: 'debate-round', round: 1, title: 'Opening statements' })
-  for (const role of ROLES) {
-    await roleTurn(role, 1,
-      `Round 1 — your OPENING STATEMENT. State your read on whether this resolves YES, from your domain only. If colleagues spoke before you, react to them.`)
-  }
+  const r1 = await Promise.all(ROLES.map((role) => roleTurn(role, 1, [],
+    `Round 1 — your OPENING STATEMENT. In 2-3 sentences, state your read on whether this resolves YES, from your domain only.`)))
 
-  // ── Round 2 — Rebuttal & revision ──────────────────────────────────────
+  // ── Round 2 — Rebuttal (parallel; each rebuts the FULL set of R1) ──────
   await emit({ type: 'debate-round', round: 2, title: 'Rebuttal & revision' })
-  for (const role of ROLES) {
-    await roleTurn(role, 2,
-      `Round 2 — REBUTTAL. You've now heard everyone's opening. Defend your position or revise it. Name at least one colleague and engage their argument directly. This is your FINAL position.`)
-  }
+  const r2 = await Promise.all(ROLES.map((role) => roleTurn(role, 2, r1,
+    `Round 2 — REBUTTAL. You've read every opening above. In 2-3 sentences, name at least one colleague BY NAME and engage their argument directly — build on it or push back. State your FINAL position.`)))
 
   // Final role votes = each agent's round-2 position.
   const roleVotes: AgentVote[] = ROLES.map((role) => {
-    const last = [...transcript].reverse().find((m) => m.role === role && m.round === 2)
+    const last = r2.find((m) => m.role === role)
     return {
       role,
       vote: asVote(last?.vote),
@@ -210,9 +214,9 @@ Confidence: 0.0-0.3 = the council is right, you concede; 0.3-0.5 = real concerns
     `The council leans: ${majoritySide}`,
     ``,
     `Full debate transcript:`,
-    renderTranscript(transcript),
+    renderTranscript([...r1, ...r2]),
     ``,
-    `Cross-examine the majority now.`,
+    `Cross-examine the majority now in 2-3 sentences.`,
   ].join('\n')
 
   const skepticFull = await streamTurn(skepticSystem, skepticUser,
