@@ -7,7 +7,8 @@ import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
 import { CouncilFeedSection } from '../components/CouncilFeedSection'
 import { WatchListSection } from '../components/WatchListSection'
-import { Logo } from '../components/Logo'
+import { BrandLogo } from '../components/Logo'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { loadCallsWithPolymarket } from '../lib/calls-data'
 import { loadWatchSnapshot } from '../lib/polymarket-feed'
 import { loadMarketsMeta } from '../lib/markets-data'
@@ -41,7 +42,7 @@ export default async function Landing() {
           padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Logo size={28} mode="light" />
+            <BrandLogo size={28} />
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>
@@ -62,6 +63,7 @@ export default async function Landing() {
               GitHub <span style={{ color: CF.ink3 }}>↗</span>
             </a>
             <span style={{ width: 8 }} />
+            <ThemeToggle />
             <ConnectButton variant="primary" />
           </nav>
         </header>
@@ -134,7 +136,7 @@ export default async function Landing() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Logo size={20} mode="light" />
+            <BrandLogo size={20} />
             <span className="mono" style={{ fontSize: 11, color: CF.ink3, letterSpacing: 0.5 }}>
               accountable agent calls · the chain settles
             </span>

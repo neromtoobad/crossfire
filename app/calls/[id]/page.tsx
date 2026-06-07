@@ -6,8 +6,9 @@ import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { GrantCouncilMandate } from '../../../components/GrantCouncilMandate'
-import { Logo } from '../../../components/Logo'
-import { CF } from '../../../lib/theme'
+import { BrandLogo } from '../../../components/Logo'
+import { ThemeToggle } from '../../../components/ThemeToggle'
+import { CF, alpha } from '../../../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +53,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
           padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Logo size={26} mode="light" />
+            <BrandLogo size={26} />
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>
@@ -66,6 +67,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             }}>
               ← all calls
             </Link>
+            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>
@@ -197,7 +199,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         width: 22, height: 22, borderRadius: CF.radius.sm,
-                        background: vTint, color: vColor, border: `1px solid ${vColor}33`,
+                        background: vTint, color: vColor, border: `1px solid ${alpha(vColor, 20)}`,
                         fontFamily: CF.mono, fontSize: 11, fontWeight: 700,
                       }}>{AGENT_LETTER[v.role] ?? '?'}</span>
                       <span style={{
@@ -222,7 +224,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             <div className="mono" style={{
               marginTop: 12, padding: '10px 16px',
               background: call.skepticVerdict === 'APPROVED' ? CF.bullTint : CF.bearTint,
-              border: `1px solid ${call.skepticVerdict === 'APPROVED' ? CF.bull : CF.bear}40`,
+              border: `1px solid ${alpha(call.skepticVerdict === 'APPROVED' ? CF.bull : CF.bear, 25)}`,
               borderRadius: CF.radius.md,
               fontSize: 11.5, fontWeight: 600,
               color: call.skepticVerdict === 'APPROVED' ? CF.bullInk : CF.bearInk,

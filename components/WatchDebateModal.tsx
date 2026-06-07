@@ -4,7 +4,7 @@
 // streams the live debate + verdict.
 
 import { useEffect, useRef, useState } from 'react'
-import { CF } from '../lib/theme'
+import { CF, alpha } from '../lib/theme'
 import { DebateTranscript, type DebateMsg, type DebateRound } from './DebateTranscript'
 
 export type WatchTarget = {
@@ -172,7 +172,7 @@ export function WatchDebateModal({ target, onClose }: { target: WatchTarget; onC
               padding: '4px 11px', borderRadius: 999, fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
               background: CF.bg,
               color: verdict.side === 'YES' ? CF.bull : CF.bear,
-              border: `1px solid ${(verdict.side === 'YES' ? CF.bull : CF.bear)}55`,
+              border: `1px solid ${alpha(verdict.side === 'YES' ? CF.bull : CF.bear, 33)}`,
             }}>
               {verdict.passed ? `BUY ${verdict.side}` : `LEAN ${verdict.side} · NO CALL`}
             </span>

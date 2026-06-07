@@ -8,7 +8,7 @@
 import Link from 'next/link'
 import type { PublishedCall } from '../lib/calls-data'
 import { relativeTime } from '../lib/calls-data'
-import { CF } from '../lib/theme'
+import { CF, alpha } from '../lib/theme'
 
 const AGENT_LETTER: Record<string, string> = {
   MacroScout: 'M',
@@ -128,7 +128,7 @@ export function CallCard({ call }: { call: PublishedCall }) {
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 width: 22, height: 22, borderRadius: CF.radius.sm,
                 background: vTint, color: vColor,
-                border: `1px solid ${vColor}33`,
+                border: `1px solid ${alpha(vColor, 20)}`,
                 fontFamily: CF.mono, fontSize: 11, fontWeight: 700,
               }}
             >

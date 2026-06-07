@@ -5,8 +5,9 @@ import { loadCalls } from '../../lib/calls-data'
 import { computeAgentStats, rankAgents, councilBrier } from '../../lib/leaderboard'
 import { getResolution } from '../../lib/resolutions'
 import { ConnectButton } from '../../components/ConnectButton'
-import { Logo } from '../../components/Logo'
-import { CF } from '../../lib/theme'
+import { BrandLogo } from '../../components/Logo'
+import { ThemeToggle } from '../../components/ThemeToggle'
+import { CF, alpha } from '../../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +49,7 @@ export default function Leaderboard() {
           padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Logo size={26} mode="light" />
+            <BrandLogo size={26} />
             <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink }}>
               CROSSFIRE
             </span>
@@ -60,6 +61,7 @@ export default function Leaderboard() {
             }}>
               ← all calls
             </Link>
+            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>
@@ -165,7 +167,7 @@ export default function Leaderboard() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: 32, height: 32, borderRadius: CF.radius.md,
                     background: badge.bg, color: badge.color,
-                    border: `1px solid ${badge.color}33`,
+                    border: `1px solid ${alpha(badge.color, 20)}`,
                     fontFamily: CF.mono, fontSize: 13, fontWeight: 700,
                   }}>{AGENT_LETTER[s.role] ?? '?'}</span>
                   <div style={{ minWidth: 0 }}>
@@ -213,7 +215,7 @@ export default function Leaderboard() {
                   <span className="mono" style={{
                     display: 'inline-block', padding: '4px 10px', borderRadius: 999,
                     background: badge.bg, color: badge.color,
-                    border: `1px solid ${badge.color}33`,
+                    border: `1px solid ${alpha(badge.color, 20)}`,
                     fontSize: 10.5, fontWeight: 600, letterSpacing: 0.6, textTransform: 'uppercase',
                   }}>{badge.label}</span>
                 </div>

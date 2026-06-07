@@ -5,7 +5,7 @@
 
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { useEffect, useState } from 'react'
-import { CF } from '../lib/theme'
+import { CF, alpha } from '../lib/theme'
 
 export function ConnectButton({ variant = 'primary' }: { variant?: 'primary' | 'ghost' }) {
   const [mounted, setMounted] = useState(false)
@@ -73,7 +73,7 @@ export function ConnectButton({ variant = 'primary' }: { variant?: 'primary' | '
             className="mono"
             style={{
               padding: '5px 10px', borderRadius: 999,
-              border: `1px solid ${CF.bear}40`,
+              border: `1px solid ${alpha(CF.bear, 25)}`,
               background: CF.bearTint,
               color: CF.bearInk,
               fontSize: 11, fontWeight: 600,

@@ -17,7 +17,7 @@ import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
 import { erc7715ProviderActions } from '@metamask/smart-accounts-kit/actions'
 import { ConnectButton } from './ConnectButton'
 import { PUBLIC } from '../lib/public-config'
-import { CF } from '../lib/theme'
+import { CF, alpha } from '../lib/theme'
 
 type Granted = {
   context: `0x${string}`
@@ -165,7 +165,7 @@ export function GrantCouncilMandate() {
     const g = state.data
     const mins = Math.max(0, Math.round((g.expiry * 1000 - Date.now()) / 60000))
     return (
-      <div style={{ ...card, borderColor: `${CF.bull}55` }}>
+      <div style={{ ...card, borderColor: `${alpha(CF.bull, 33)}` }}>
         <div className="mono" style={{ fontSize: 10.5, color: CF.bull, letterSpacing: 1.8, marginBottom: 12 }}>
           ✓ MANDATE GRANTED · ERC-7715 ADVANCED PERMISSION
         </div>
@@ -215,7 +215,7 @@ export function GrantCouncilMandate() {
         <ConnectButton variant="primary" />
       ) : wrongChain ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <span className="mono" style={{ fontSize: 12, color: CF.bearInk, background: CF.bearTint, border: `1px solid ${CF.bear}40`, borderRadius: CF.radius.md, padding: '8px 12px' }}>
+          <span className="mono" style={{ fontSize: 12, color: CF.bearInk, background: CF.bearTint, border: `1px solid ${alpha(CF.bear, 25)}`, borderRadius: CF.radius.md, padding: '8px 12px' }}>
             wallet on chainId {chainId} — needs Base Sepolia (84532)
           </span>
           <button onClick={handleSwitch} disabled={switching} style={{ padding: '10px 16px', borderRadius: CF.radius.md, border: 'none', background: CF.ink, color: CF.bg, fontFamily: CF.body, fontSize: 13, fontWeight: 600, cursor: switching ? 'wait' : 'pointer' }}>

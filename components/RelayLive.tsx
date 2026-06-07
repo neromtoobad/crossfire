@@ -3,7 +3,7 @@
 // RelayLive — editorial-light treatment.
 
 import { useEffect, useRef, useState } from 'react'
-import { CF } from '../lib/theme'
+import { CF, alpha } from '../lib/theme'
 
 type LogLine = { kind: 'info' | 'good' | 'bad'; text: string; tx?: string; status?: string }
 type WebhookConfig = { url: string; source: string } | null
@@ -186,7 +186,7 @@ export function RelayLive() {
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '4px 10px', borderRadius: 999,
               background: CF.bullTint, color: CF.bullInk,
-              border: `1px solid ${CF.bull}33`,
+              border: `1px solid ${alpha(CF.bull, 20)}`,
               fontSize: 10.5, letterSpacing: 0.3, fontWeight: 600,
             }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: CF.bull }} />

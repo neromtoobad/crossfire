@@ -1,45 +1,46 @@
-// CROSSFIRE design tokens — Phase 8.11.
+// CROSSFIRE design tokens — Phase 8.11, dark-mode-enabled Phase 9.5.
 //
-// Editorial-light system: warm off-white "newsroom paper" background,
-// near-black ink, refined royal-blue Bull / crimson Bear semantic accents,
-// editorial gold for on-chain moments. One subtle shadow, hairline borders,
-// 8pt spacing, tabular figures everywhere numbers live.
+// Editorial system, now theme-switchable. Every color token resolves to a CSS
+// variable whose value is defined in app/layout.tsx for :root (light) and
+// :root[data-theme="dark"] (dark). Because all components import CF.*, flipping
+// these to var() re-themes the entire site without touching a single component.
 //
-// Typography pairing: Fraunces (variable display serif, editorial voice)
-// + Inter (precision grotesque, UI body) + JetBrains Mono (tx hashes,
-// status codes, data only — NOT body).
+// Non-color tokens (fonts, radius, spacing) are theme-independent and stay raw.
+//
+// Typography pairing: Fraunces (variable display serif) + Inter (UI body)
+// + JetBrains Mono (tx hashes, status codes, data only — NOT body).
 
 export const CF = {
   // ── surfaces ──────────────────────────────────────────────────────────
-  bg:        '#FAFAF7',  // page — warm off-white, newsroom paper
-  surface:   '#FFFFFF',  // cards / panels
-  surface2:  '#F4F4EE',  // inset / log backgrounds
-  surface3:  '#EDEBE3',  // section bands
+  bg:        'var(--cf-bg)',        // page
+  surface:   'var(--cf-surface)',   // cards / panels
+  surface2:  'var(--cf-surface-2)', // inset / log backgrounds
+  surface3:  'var(--cf-surface-3)', // section bands
 
   // ── ink (text) ────────────────────────────────────────────────────────
-  ink:       '#0B0C0F',  // primary text, near-black
-  ink2:      '#52525B',  // secondary text
-  ink3:      '#8B8B92',  // tertiary / captions
-  ink4:      '#A1A1AA',  // labels at rest
+  ink:       'var(--cf-ink)',
+  ink2:      'var(--cf-ink-2)',
+  ink3:      'var(--cf-ink-3)',
+  ink4:      'var(--cf-ink-4)',
 
   // ── lines ─────────────────────────────────────────────────────────────
-  line:      '#E7E5E0',  // warm hairline (default border)
-  line2:     '#D4D4CE',  // emphasized divider
-  lineDark:  '#0B0C0F',  // editorial 4px section rule
+  line:      'var(--cf-line)',
+  line2:     'var(--cf-line-2)',
+  lineDark:  'var(--cf-line-dark)',
 
-  // ── semantic accents (refined, NOT neon) ──────────────────────────────
-  bull:        '#1D4ED8',  // royal blue
-  bullTint:    '#EFF4FF',  // pill / chip background
-  bullInk:     '#1E3A8A',  // text on bull tint
-  bear:        '#B91C1C',  // crimson
-  bearTint:    '#FEF2F2',
-  bearInk:     '#7F1D1D',
-  amber:       '#B45309',  // neutral-warning
-  amberTint:   '#FEF3C7',
-  gold:        '#A16207',  // editorial gold — "on-chain ✓"
-  goldTint:    '#FEF7E0',
-  positive:    '#15803D',  // success green (alt)
-  positiveTint:'#ECFDF5',
+  // ── semantic accents ──────────────────────────────────────────────────
+  bull:        'var(--cf-bull)',
+  bullTint:    'var(--cf-bull-tint)',
+  bullInk:     'var(--cf-bull-ink)',
+  bear:        'var(--cf-bear)',
+  bearTint:    'var(--cf-bear-tint)',
+  bearInk:     'var(--cf-bear-ink)',
+  amber:       'var(--cf-amber)',
+  amberTint:   'var(--cf-amber-tint)',
+  gold:        'var(--cf-gold)',
+  goldTint:    'var(--cf-gold-tint)',
+  positive:    'var(--cf-positive)',
+  positiveTint:'var(--cf-positive-tint)',
 
   // ── fonts ─────────────────────────────────────────────────────────────
   display: "'Fraunces', 'Source Serif 4', Georgia, serif",
@@ -49,14 +50,20 @@ export const CF = {
   // ── radius / shadow ───────────────────────────────────────────────────
   radius: { sm: 4, md: 6, lg: 8, xl: 10 },
   shadow: {
-    card:    '0 1px 2px rgba(11,12,15,0.04)',
-    hover:   '0 4px 12px rgba(11,12,15,0.06)',
-    pop:     '0 6px 24px rgba(11,12,15,0.08)',
+    card:    'var(--cf-shadow-card)',
+    hover:   'var(--cf-shadow-hover)',
+    pop:     'var(--cf-shadow-pop)',
   },
 
   // ── spacing scale (8pt) ───────────────────────────────────────────────
   s: { xxs: 4, xs: 8, sm: 12, md: 16, lg: 24, xl: 32, '2xl': 48, '3xl': 64, '4xl': 96 },
 } as const
+
+// Translucent version of any color (hex, var(), named). Use instead of the old
+// `${color}33` hex-alpha concatenation, which breaks once colors are var()s.
+// percent is the OPACITY of the color over transparent (e.g. 20 ≈ old "33").
+export const alpha = (color: string, percent: number): string =>
+  `color-mix(in srgb, ${color} ${percent}%, transparent)`
 
 // Helpers
 export const pill = (color: string, tint: string): React.CSSProperties => ({

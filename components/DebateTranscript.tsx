@@ -4,7 +4,7 @@
 // chat thread, streaming token-by-token. Phase 9.1.
 
 import { useEffect, useRef } from 'react'
-import { CF } from '../lib/theme'
+import { CF, alpha } from '../lib/theme'
 
 export type DebateMsg = {
   id: string
@@ -41,7 +41,7 @@ function voteChip(vote?: 'YES' | 'NO' | 'NEUTRAL', confidence?: number, isSkepti
   return (
     <span className="mono" style={{
       padding: '2px 8px', borderRadius: 999, background: tint, color,
-      border: `1px solid ${color}33`, fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+      border: `1px solid ${alpha(color, 20)}`, fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
       whiteSpace: 'nowrap',
     }}>
       {label}
@@ -113,7 +113,7 @@ export function DebateTranscript({
             <span style={{
               flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 30, height: 30, borderRadius: 8,
-              background: a.tint, color: a.color, border: `1px solid ${a.color}33`,
+              background: a.tint, color: a.color, border: `1px solid ${alpha(a.color, 20)}`,
               fontFamily: CF.mono, fontSize: 13, fontWeight: 700, marginTop: 1,
             }}>
               {a.letter}

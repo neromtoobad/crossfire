@@ -17,6 +17,23 @@ let __cfLogoSeq = 0
 
 export type LogoMode = 'light' | 'dark'
 
+// Theme-aware header mark. Renders BOTH variants and lets CSS show the right
+// one per data-theme (rules live in app/layout.tsx) — no client JS, no
+// hydration flash. Use this in headers; use <Logo mode=…> when you need a
+// fixed variant (e.g. on a known-dark canvas).
+export function BrandLogo({ size = 28 }: { size?: number }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', lineHeight: 0 }}>
+      <span className="cf-logo-light" style={{ display: 'inline-flex', lineHeight: 0 }}>
+        <Logo size={size} mode="light" />
+      </span>
+      <span className="cf-logo-dark" style={{ display: 'none', lineHeight: 0 }}>
+        <Logo size={size} mode="dark" />
+      </span>
+    </span>
+  )
+}
+
 export function Logo({
   size = 26,
   mode = 'light',

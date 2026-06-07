@@ -4,7 +4,7 @@
 // click now SENDS THE MARKET TO THE COUNCIL (live debate); a small secondary
 // link opens it on Polymarket.
 
-import { CF } from '../lib/theme'
+import { CF, alpha } from '../lib/theme'
 import type { WatchMarket } from '../lib/polymarket-feed'
 
 function fmtUsd(n: number): string {
@@ -71,7 +71,7 @@ export function WatchCard({ m, onScout }: { m: WatchMarket; onScout?: (m: WatchM
         <div style={{
           flexShrink: 0, textAlign: 'right',
           padding: '4px 10px', borderRadius: CF.radius.sm,
-          background: sideTint, border: `1px solid ${sideColor}33`,
+          background: sideTint, border: `1px solid ${alpha(sideColor, 20)}`,
         }}>
           <div className="mono tnum" style={{
             fontSize: 16, fontWeight: 600, color: sideColor, lineHeight: 1.1,

@@ -15,7 +15,8 @@ import { ConnectButton } from '../../components/ConnectButton'
 import { RunCouncilLive } from '../../components/RunCouncilLive'
 import { RelayLive } from '../../components/RelayLive'
 import { RevertProof } from '../../components/RevertProof'
-import { Logo } from '../../components/Logo'
+import { BrandLogo } from '../../components/Logo'
+import { ThemeToggle } from '../../components/ThemeToggle'
 import { loadMarketsMeta } from '../../lib/markets-data'
 import { CF } from '../../lib/theme'
 
@@ -57,7 +58,7 @@ export default async function Lab() {
           padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Logo size={28} mode="light" />
+            <BrandLogo size={28} />
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>
@@ -75,6 +76,7 @@ export default async function Lab() {
             <Link href="/" style={navLinkStyle}>← Feed</Link>
             <Link href="/leaderboard" style={navLinkStyle}>Leaderboard</Link>
             <span style={{ width: 8 }} />
+            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>
