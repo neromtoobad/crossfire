@@ -57,3 +57,11 @@ export function getUnlock(user: string, callId: string): Unlock | undefined {
 export function listUserUnlocks(user: string): Unlock[] {
   return load().unlocks.filter((u) => norm(u.user) === norm(user))
 }
+
+/**
+ * Has this settlement tx hash already been used for any unlock? Prevents a
+ * single direct-transfer tx from unlocking multiple calls (replay guard).
+ */
+export function isTxUsed(txHash: string): boolean {
+  return load().unlocks.some((u) => norm(u.settlementTxHash) === norm(txHash))
+}

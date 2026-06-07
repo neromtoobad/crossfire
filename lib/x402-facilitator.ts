@@ -13,7 +13,7 @@
 // and as the msg.sender of the redeemDelegations tx.
 
 import type { Hex } from 'viem'
-import { encodeFunctionData, erc20Abi, parseAbi } from 'viem'
+import { decodeFunctionData, encodeFunctionData, erc20Abi, getAddress, parseAbi, type Hex } from 'viem'
 import { createExecution, ExecutionMode } from '@metamask/smart-accounts-kit'
 import { encodeSingleExecution } from '@metamask/smart-accounts-kit/utils'
 import {
@@ -173,4 +173,70 @@ export async function settlePayment(
   }
 
   return { txHash, usdcSettled: amount }
+}
+
+/**
+ * Verify a DIRECT USDC transfer as an x402 "exact"-scheme settlement.
+ *
+ * This is the robust unlock path: the buyer's wallet sends a plain
+ * USDC.transfer(payTo, amount) — MetaMask signs it as a normal ERC-20 tx
+ * with no smart-account / delegation friction. The seller verifies the
+ * on-chain transfer landed and matches the requirement.
+ *
+ * Checks, in order:
+ *   1. tx exists + confirmed + status success
+ *   2. tx.to === the USDC asset contract
+ *   3. calldata decodes as transfer(payTo, amount) with payTo === seller and
+ *      amount >= required
+ *   4. tx.from === the claimed buyer (so they can't replay someone else's tx)
+ *
+ * Replay across calls is prevented by the unlock-store (one tx → one unlock).
+ */
+export async function verifyDirectTransfer(params: {
+  txHash: Hex
+  expectedFrom: Hex
+  payTo: Hex
+  asset: Hex
+  minAmount: bigint
+}): Promise<{ ok: true; amount: bigint } | { ok: false; reason: string }> {
+  const { txHash, expectedFrom, payTo, asset, minAmount } = params
+
+  let tx
+  try {
+    tx = await sepoliaPublicClient.getTransaction({ hash: txHash })
+  } catch {
+    return { ok: false, reason: `transaction ${txHash} not found on Base Sepolia` }
+  }
+
+  const receipt = await sepoliaPublicClient.waitForTransactionReceipt({ hash: txHash })
+  if (receipt.status !== 'success') {
+    return { ok: false, reason: `transfer tx ${txHash} reverted on-chain` }
+  }
+
+  if (!tx.to || getAddress(tx.to) !== getAddress(asset)) {
+    return { ok: false, reason: `tx.to (${tx.to}) is not the USDC asset (${asset})` }
+  }
+
+  if (getAddress(tx.from) !== getAddress(expectedFrom)) {
+    return { ok: false, reason: `tx sender (${tx.from}) ≠ connected wallet (${expectedFrom})` }
+  }
+
+  let decoded
+  try {
+    decoded = decodeFunctionData({ abi: erc20Abi, data: tx.input })
+  } catch {
+    return { ok: false, reason: `tx is not a decodable ERC-20 call` }
+  }
+  if (decoded.functionName !== 'transfer') {
+    return { ok: false, reason: `tx is ${decoded.functionName}, expected transfer` }
+  }
+  const [to, amount] = decoded.args as [Hex, bigint]
+  if (getAddress(to) !== getAddress(payTo)) {
+    return { ok: false, reason: `transfer recipient (${to}) ≠ payTo (${payTo})` }
+  }
+  if (amount < minAmount) {
+    return { ok: false, reason: `transfer amount (${amount}) < required (${minAmount})` }
+  }
+
+  return { ok: true, amount }
 }

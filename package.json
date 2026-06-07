@@ -22,6 +22,7 @@
     "council:auto": "tsx scripts/auto-council.ts",
     "sync:polymarket": "tsx scripts/sync-polymarket.ts",
     "test:unlock": "tsx scripts/test-unlock.ts",
+    "test:unlock:direct": "tsx scripts/test-unlock-direct.ts",
     "dev": "next dev"
   },
   "license": "MIT",

@@ -12,22 +12,9 @@
 //
 // Renders nothing if already unlocked (parent will render the thesis).
 
-import { useEffect, useRef, useState } from 'react'
-import { useAccount, useChainId, useSignTypedData, useSwitchChain, useWalletClient } from 'wagmi'
-import { parseUnits } from 'viem'
-import {
-  createOpenDelegation,
-  ScopeType,
-  getSmartAccountsEnvironment,
-} from '@metamask/smart-accounts-kit'
-import { erc7715ProviderActions } from '@metamask/smart-accounts-kit/actions'
-import {
-  createCaveatBuilder,
-  encodeDelegations,
-  generateSalt,
-  SIGNABLE_DELEGATION_TYPED_DATA,
-  toDelegationStruct,
-} from '@metamask/smart-accounts-kit/utils'
+import { useEffect, useState } from 'react'
+import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
+import { erc20Abi } from 'viem'
 import { ConnectButton } from './ConnectButton'
 import { PUBLIC } from '../lib/public-config'
 import type { PublishedCall } from '../lib/calls-data'
@@ -109,10 +96,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   const { address, status: accountStatus } = useAccount()
   const wagmiChainId = useChainId() // wagmi's view — can be stale vs the actual provider
   const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain()
-  const { signTypedDataAsync } = useSignTypedData()
   const { data: walletClient } = useWalletClient()
-  // Captured for diagnostics when signing fails.
-  const lastTypedData = useRef<any>(null)
 
   // ── Live provider chain (ground truth) ────────────────────────────────
   // Track the wallet provider's chainId directly. wagmi can be cookie-hydrated
@@ -213,9 +197,12 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       })
       return
     }
-    setState({ kind: 'signing' })
+    if (!walletClient) {
+      setState({ kind: 'error', cause: 'unknown', message: 'Wallet client not ready. Give it a second and try again.' })
+      return
+    }
     try {
-      // (1) hit the endpoint to get PAYMENT-REQUIRED
+      // (1) hit the endpoint to get PAYMENT-REQUIRED (price, asset, payTo)
       const first = await fetch(`/api/unlock/${call.id}`, { method: 'POST' })
       if (first.status !== 402) {
         const text = await first.text()
@@ -223,202 +210,73 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       }
       const reqHeader = first.headers.get('PAYMENT-REQUIRED') ?? first.headers.get('payment-required')
       if (!reqHeader) throw new Error('missing PAYMENT-REQUIRED header')
-      const accepted = JSON.parse(atob(reqHeader)) as any
-      const env = getSmartAccountsEnvironment(PUBLIC.chainId)
+      const accepted = JSON.parse(atob(reqHeader)) as {
+        amount: string; asset: `0x${string}`; payTo: `0x${string}`
+      }
 
-      // (2) build the user's open delegation: pay up to `accepted.amount` USDC,
-      //     restricted to the facilitator listed in accepted.extra.facilitators.
-      const caveats = createCaveatBuilder(env)
-        .addCaveat('redeemer', { redeemers: accepted.extra.facilitators })
-        .build()
-
-      const delegation = createOpenDelegation({
-        from: address,
-        scope: {
-          type: ScopeType.Erc20TransferAmount,
-          tokenAddress: accepted.asset as `0x${string}`,
-          maxAmount: BigInt(accepted.amount),
-        },
-        caveats,
-        salt: generateSalt(),
-        environment: env,
-      })
-
-      // (3a) Pre-flight: verify the wallet PROVIDER agrees we're on
-      // Base Sepolia. wagmi can lag the connector during fast switches.
+      // (2) Pre-flight: confirm the wallet provider is really on Base Sepolia.
       const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
-      const providerChainHex: string | undefined = eth?.chainId
-      const providerChainNum = providerChainHex ? parseInt(providerChainHex, 16) : null
+      const providerChainNum = eth?.chainId ? parseInt(eth.chainId, 16) : null
       if (providerChainNum != null && providerChainNum !== PUBLIC.chainId) {
         throw Object.assign(new Error(`provider chainId ${providerChainNum} ≠ expected ${PUBLIC.chainId}`), { code: 'PROVIDER_CHAIN_MISMATCH' })
       }
 
-      // (3b) THE RIGHT PATH for MetaMask: ERC-7715 wallet_requestExecutionPermissions.
-      // MetaMask's Smart Accounts Snap intercepts external signTypedData of
-      // primaryType:'Delegation' on internal accounts (anything you added via
-      // MetaMask's "Add account" → "Smart account"). The Snap returns
-      //   "External signature requests cannot sign delegations for internal accounts."
-      // The kit's erc7715ProviderActions wraps wallet_requestExecutionPermissions,
-      // which the Snap accepts and surfaces its native permission UI.
-      const facilitator = (accepted.extra.facilitators?.[0] ?? '') as `0x${string}`
-      if (!facilitator || !/^0x[a-f0-9]{40}$/i.test(facilitator)) {
-        throw new Error(`missing/invalid facilitator address in PAYMENT-REQUIRED`)
-      }
+      // (3) x402 "exact" scheme: a plain USDC.transfer(payTo, amount). MetaMask
+      //     signs this as a normal ERC-20 tx — no smart-account / delegation
+      //     friction. The ERC-7710 story is already proven by the council.
+      setState({ kind: 'signing' })
+      const txHash = await walletClient.writeContract({
+        account: address,
+        chain: walletClient.chain,
+        address: accepted.asset,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [accepted.payTo, BigInt(accepted.amount)],
+      })
 
-      let permissionContext: `0x${string}` | undefined
-      let resolvedDelegationManager: `0x${string}` | undefined
-      // ERC-7715 dependencies (factory + factoryData) for counterfactual
-      // smart account deployment. When the user's MetaMask Smart Account
-      // isn't yet deployed, the server must deploy it via these before
-      // redeeming the delegation.
-      let dependencies: Array<{ factory: `0x${string}`; factoryData: `0x${string}` }> = []
-
-      // Try ERC-7715 first when we have a wallet client (MetaMask + extension wallets that support it).
-      if (walletClient) {
-        try {
-          const erc7715 = walletClient.extend(erc7715ProviderActions())
-          const granted = await erc7715.requestExecutionPermissions([{
-            chainId: PUBLIC.chainId,
-            to: facilitator,
-            permission: {
-              type: 'erc20-token-allowance',
-              data: {
-                tokenAddress: accepted.asset as `0x${string}`,
-                allowanceAmount: BigInt(accepted.amount),
-              },
-              isAdjustmentAllowed: false,
-            },
-            from: address as `0x${string}`,
-            expiry: Math.floor(Date.now() / 1000) + 3600, // 1 hour
-            redeemer: [facilitator],
-          }])
-          if (granted && granted.length > 0 && granted[0].context) {
-            permissionContext = granted[0].context as `0x${string}`
-            resolvedDelegationManager = (granted[0].delegationManager ?? env.DelegationManager) as `0x${string}`
-            // Capture deps: when the user's SCA hasn't been deployed yet,
-            // these factory + factoryData pairs are how we deploy it before
-            // redeeming the delegation.
-            const rawDeps = (granted[0] as any).dependencies as Array<{ factory: `0x${string}`; factoryData: `0x${string}` }> | undefined
-            if (Array.isArray(rawDeps)) dependencies = rawDeps
-          } else {
-            throw new Error('wallet returned empty permissions response')
-          }
-        } catch (erc7715Err: any) {
-          const msg = String(erc7715Err?.message ?? '')
-          // If the wallet doesn't support ERC-7715 (method not found), fall
-          // through to the manual signTypedData path. Otherwise re-throw —
-          // we want errors like "user rejected" to be visible.
-          const methodMissing = /not (supported|found)|unsupported method|unknown method|wallet_requestExecutionPermissions/i.test(msg)
-          if (!methodMissing) throw erc7715Err
-          // eslint-disable-next-line no-console
-          console.warn('[UnlockThesis] ERC-7715 unavailable, falling back to signTypedData:', msg)
-        }
-      }
-
-      // (3c) Fallback: manual signTypedData of the Delegation. Used for wallets
-      // that don't expose ERC-7715. MetaMask Snap accounts will still reject
-      // this path; the user has to switch to a non-internal account.
-      if (!permissionContext) {
-        const struct = toDelegationStruct(delegation)
-        const typedData = {
-          account: address,
-          domain: {
-            name: 'DelegationManager' as const,
-            version: '1' as const,
-            chainId: PUBLIC.chainId,
-            verifyingContract: env.DelegationManager as `0x${string}`,
-          },
-          types: SIGNABLE_DELEGATION_TYPED_DATA as any,
-          primaryType: 'Delegation' as const,
-          message: {
-            delegate: struct.delegate as `0x${string}`,
-            delegator: struct.delegator as `0x${string}`,
-            authority: struct.authority as `0x${string}`,
-            caveats: struct.caveats.map((c: any) => ({
-              enforcer: c.enforcer as `0x${string}`,
-              terms: c.terms as `0x${string}`,
-            })),
-            salt: BigInt(struct.salt),
-          },
-        }
-        lastTypedData.current = typedData
-        const signature = await signTypedDataAsync(typedData)
-        const signedDelegation = { ...delegation, signature }
-        permissionContext = encodeDelegations([signedDelegation as any]) as `0x${string}`
-        resolvedDelegationManager = env.DelegationManager as `0x${string}`
-      }
-
+      // (4) Hand the tx hash to the server. It waits for the receipt, verifies
+      //     the transfer matches (to, amount, sender), and returns the thesis.
       setState({ kind: 'settling' })
-
-      // (4) retry with PAYMENT-SIGNATURE; server settles + returns thesis
-      const paymentPayload = {
-        x402Version: 2,
-        accepted,
-        payload: {
-          delegationManager: resolvedDelegationManager,
-          permissionContext,
-          delegator: address,
-          // ERC-7715 dependencies so the server can deploy the user's SCA
-          // via factory + factoryData before redeeming the delegation.
-          dependencies,
-        },
-      }
-      const paymentHeader = btoa(JSON.stringify(paymentPayload))
       const second = await fetch(`/api/unlock/${call.id}`, {
         method: 'POST',
-        headers: { 'PAYMENT-SIGNATURE': paymentHeader },
+        headers: {
+          'PAYMENT-TXHASH': txHash,
+          'PAYMENT-FROM': address,
+        },
       })
       const json = await second.json()
       if (!second.ok || !json.unlocked) {
-        // Surface server-side detail so the error block tells the user
-        // exactly what went wrong on-chain instead of a generic label.
         const baseMessage = json.error ?? `unlock failed: ${second.status}`
         const fullMessage = json.detail ? `${baseMessage}: ${json.detail}` : baseMessage
         const err: any = new Error(fullMessage)
         err.serverDetail = json.detail
-        err.serverError = json.error
+        err.txHash = txHash
         throw err
       }
-      setState({ kind: 'unlocked', data: json.locked, tx: json.unlock?.settlementTxHash })
+      setState({ kind: 'unlocked', data: json.locked, tx: json.unlock?.settlementTxHash ?? txHash })
     } catch (e) {
-      // Log the raw error + the typed data we tried to sign so we (and the
-      // user) can read the full structure in DevTools and the UI.
       // eslint-disable-next-line no-console
-      console.error('[UnlockThesis] sign/settle failed:', e, { lastTypedData: lastTypedData.current })
-
-      // Build a verbose diagnostic dump for the UI expander.
+      console.error('[UnlockThesis] unlock failed:', e)
       const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
       const dump = {
         wagmi: { address, chainId },
         provider: {
           chainIdHex: eth?.chainId ?? null,
           chainIdNum: eth?.chainId ? parseInt(eth.chainId, 16) : null,
-          selectedAddress: eth?.selectedAddress ?? null,
           isMetaMask: eth?.isMetaMask ?? false,
         },
         target: { expectedChainId: PUBLIC.chainId },
-        typedDataDomain: lastTypedData.current?.domain ?? null,
-        typedDataMessage: lastTypedData.current?.message ? {
-          ...lastTypedData.current.message,
-          salt: lastTypedData.current.message.salt?.toString(),
-        } : null,
+        txHash: (e as any)?.txHash ?? null,
         error: {
           message: (e as any)?.message ?? String(e),
           code: (e as any)?.code ?? null,
           shortMessage: (e as any)?.shortMessage ?? null,
-          details: (e as any)?.details ?? null,
-          name: (e as any)?.name ?? null,
-          cause: (e as any)?.cause ? {
-            message: (e as any).cause?.message,
-            code: (e as any).cause?.code,
-            name: (e as any).cause?.name,
-          } : null,
+          serverDetail: (e as any)?.serverDetail ?? null,
         },
       }
       const { cause, message } = classifyError(e)
       let detail: string
-      try { detail = JSON.stringify(dump, null, 2) }
-      catch { detail = String(e) }
+      try { detail = JSON.stringify(dump, null, 2) } catch { detail = String(e) }
       setState({ kind: 'error', cause, message, detail })
     }
   }
@@ -515,7 +373,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
             }} />
             <div>
               <div style={{ fontWeight: 700, color: CF.amber }}>CHECK YOUR WALLET</div>
-              <div style={{ color: CF.ink2, marginTop: 2 }}>MetaMask should be asking you to sign a typed-data delegation. If you don't see a popup, click your MetaMask extension icon — it may be hidden.</div>
+              <div style={{ color: CF.ink2, marginTop: 2 }}>MetaMask should be asking you to approve a {call.unlockUsdc.toFixed(2)} USDC transfer. If you don't see a popup, click your MetaMask extension icon — it may be hidden.</div>
             </div>
           </div>
         ) : null}
@@ -528,7 +386,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
             fontFamily: CF.mono, fontSize: 12, lineHeight: 1.5,
           }}>
             <div style={{ fontWeight: 700 }}>SETTLING ON-CHAIN</div>
-            <div style={{ color: CF.ink2, marginTop: 2 }}>The facilitator is redeeming your signed delegation and moving {call.unlockUsdc.toFixed(2)} USDC. This usually takes 5–15 seconds.</div>
+            <div style={{ color: CF.ink2, marginTop: 2 }}>Confirming your {call.unlockUsdc.toFixed(2)} USDC transfer on Base Sepolia. This usually takes 5–15 seconds.</div>
           </div>
         ) : null}
 

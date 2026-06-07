@@ -8,15 +8,18 @@
 // otherwise 402 (same as POST without payment).
 
 import { NextResponse, type NextRequest } from 'next/server'
-import { parseUnits } from 'viem'
+import { parseUnits, type Hex } from 'viem'
 import { getCallById } from '../../../../lib/calls-data.js'
 import {
   decodePaymentSignatureHeader,
   encodePaymentRequiredHeader,
   paymentRequired,
   settlePayment,
+  verifyDirectTransfer,
+  SELLER_PAY_TO,
 } from '../../../../lib/x402-facilitator.js'
-import { addUnlock, getUnlock, hasUnlocked } from '../../../../lib/unlock-store.js'
+import { addUnlock, getUnlock, hasUnlocked, isTxUsed } from '../../../../lib/unlock-store.js'
+import { USDC_SEPOLIA } from '../../../../lib/config.js'
 
 function buildRequirement(call: ReturnType<typeof getCallById>) {
   const base = paymentRequired()
@@ -66,13 +69,62 @@ export async function POST(
   const call = getCallById(callId)
   if (!call) return NextResponse.json({ error: 'unknown call' }, { status: 404 })
 
+  const requirement = buildRequirement(call)
+
+  // ── PATH A: direct USDC transfer (x402 "exact" scheme) ───────────────────
+  // Robust path: the buyer's wallet sent a plain USDC.transfer(payTo, amount).
+  // Headers carry the tx hash + the connected address. We verify on-chain.
+  const txHash = (req.headers.get('PAYMENT-TXHASH') ?? req.headers.get('payment-txhash')) as Hex | null
+  const fromHeader = (req.headers.get('PAYMENT-FROM') ?? req.headers.get('payment-from')) as Hex | null
+  if (txHash) {
+    if (!fromHeader) {
+      return NextResponse.json({ error: 'missing PAYMENT-FROM header' }, { status: 400 })
+    }
+    // Idempotent: already unlocked by this wallet?
+    if (hasUnlocked(fromHeader, callId)) {
+      return NextResponse.json({
+        unlocked: true, locked: call.locked,
+        unlock: getUnlock(fromHeader, callId) ?? null, alreadyUnlocked: true,
+      })
+    }
+    // Replay guard: a given transfer tx can unlock exactly one call.
+    if (isTxUsed(txHash)) {
+      return NextResponse.json({ error: 'this transfer was already used for an unlock' }, { status: 409 })
+    }
+    const verdict = await verifyDirectTransfer({
+      txHash,
+      expectedFrom: fromHeader,
+      payTo: SELLER_PAY_TO,
+      asset: USDC_SEPOLIA,
+      minAmount: BigInt(requirement.amount),
+    })
+    if (!verdict.ok) {
+      return NextResponse.json({ error: 'transfer verification failed', detail: verdict.reason }, { status: 402 })
+    }
+    addUnlock({
+      user: fromHeader, callId,
+      amountUsdc: Number(requirement.amount) / 1e6,
+      settlementTxHash: txHash,
+      unlockedAt: Date.now(),
+    })
+    return NextResponse.json({
+      unlocked: true, locked: call.locked,
+      unlock: {
+        user: fromHeader, callId,
+        amountUsdc: Number(requirement.amount) / 1e6,
+        settlementTxHash: txHash, unlockedAt: Date.now(),
+      },
+    })
+  }
+
+  // ── PATH B: ERC-7710 delegation (PAYMENT-SIGNATURE) ──────────────────────
   const sig = req.headers.get('PAYMENT-SIGNATURE') ?? req.headers.get('payment-signature')
 
   if (!sig) {
     return new NextResponse(JSON.stringify({ error: 'payment required' }), {
       status: 402,
       headers: {
-        'PAYMENT-REQUIRED': encodePaymentRequiredHeader(buildRequirement(call)),
+        'PAYMENT-REQUIRED': encodePaymentRequiredHeader(requirement),
         'Content-Type': 'application/json',
       },
     })
