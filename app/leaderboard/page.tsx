@@ -138,7 +138,7 @@ export default function Leaderboard() {
           borderRadius: CF.radius.lg, boxShadow: CF.shadow.card, overflow: 'hidden',
         }}>
           <div className="mono" style={{
-            display: 'grid', gridTemplateColumns: '40px 1.5fr 80px 80px 90px 100px 120px',
+            display: 'grid', gridTemplateColumns: '36px 1.5fr 64px 64px 80px 84px 110px',
             gap: 12, alignItems: 'center',
             padding: '12px 20px',
             background: CF.surface2,
@@ -149,8 +149,8 @@ export default function Leaderboard() {
             <div>AGENT</div>
             <div style={{ textAlign: 'right' }}>CALLS</div>
             <div style={{ textAlign: 'right' }}>WIN %</div>
-            <div style={{ textAlign: 'right' }}>AVG CONF</div>
             <div style={{ textAlign: 'right' }}>BRIER</div>
+            <div style={{ textAlign: 'right' }} title="Reputation → budget: bond share scales with calibration">BUDGET ×</div>
             <div style={{ textAlign: 'right' }}>RATING</div>
           </div>
 
@@ -159,8 +159,8 @@ export default function Leaderboard() {
             const winColor = s.winRate >= 0.66 ? CF.bull : s.winRate >= 0.34 ? CF.amber : CF.bear
             return (
               <div key={s.role} style={{
-                display: 'grid', gridTemplateColumns: '40px 1.5fr 80px 80px 90px 100px 120px',
-                gap: 12, alignItems: 'center', padding: '20px',
+                display: 'grid', gridTemplateColumns: '36px 1.5fr 64px 64px 80px 84px 110px',
+                gap: 12, alignItems: 'center', padding: '18px 20px',
                 borderBottom: i < ranked.length - 1 ? `1px solid ${CF.line}` : 'none',
               }}>
                 <div className="mono tnum" style={{
@@ -181,8 +181,23 @@ export default function Leaderboard() {
                     <div style={{ fontFamily: CF.body, fontWeight: 600, fontSize: 14, color: CF.ink }}>
                       {s.role}
                     </div>
-                    <div className="mono" style={{ fontSize: 11, color: CF.ink3, marginTop: 2 }}>
-                      {ROLE_TAGLINE[s.role]} · {(s.agreementRate * 100).toFixed(0)}% with council
+                    {/* per-category calibration chips */}
+                    <div className="mono" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
+                      {Object.entries(s.byCategory).length === 0 ? (
+                        <span style={{ fontSize: 10.5, color: CF.ink4 }}>{ROLE_TAGLINE[s.role]}</span>
+                      ) : (
+                        Object.entries(s.byCategory)
+                          .sort((a, b) => a[1].brier - b[1].brier)
+                          .map(([cat, c]) => {
+                            const col = c.brier < 0.15 ? CF.bull : c.brier < 0.25 ? CF.amber : CF.bear
+                            return (
+                              <span key={cat} title={`${cat}: ${c.won}/${c.resolved} right · Brier ${c.brier.toFixed(2)}`}
+                                style={{ fontSize: 10, color: CF.ink3 }}>
+                                {cat} <span className="tnum" style={{ color: col, fontWeight: 600 }}>{c.brier.toFixed(2)}</span>
+                              </span>
+                            )
+                          })
+                      )}
                     </div>
                   </div>
                 </div>
@@ -192,13 +207,16 @@ export default function Leaderboard() {
                 <div className="mono tnum" style={{ fontSize: 13, fontWeight: 600, color: winColor, textAlign: 'right' }}>
                   {s.callsResolved > 0 ? `${(s.winRate * 100).toFixed(0)}%` : '—'}
                 </div>
-                <div className="mono tnum" style={{ fontSize: 13, color: CF.ink2, textAlign: 'right' }}>
-                  {(s.avgConfidence * 100).toFixed(0)}%
-                </div>
                 <div className="mono tnum" style={{
                   fontSize: 15, fontWeight: 600, color: badge.color, textAlign: 'right',
                 }}>
                   {s.callsResolved > 0 ? s.brierScore.toFixed(3) : '—'}
+                </div>
+                <div className="mono tnum" style={{
+                  fontSize: 14, fontWeight: 600, textAlign: 'right',
+                  color: s.budgetMultiplier > 1 ? CF.bull : s.budgetMultiplier < 1 ? CF.bear : CF.ink2,
+                }}>
+                  {s.budgetMultiplier.toFixed(2)}×
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span className="mono" style={{
@@ -222,19 +240,23 @@ export default function Leaderboard() {
           <div className="mono" style={{
             fontSize: 10.5, color: CF.ink3, letterSpacing: 1.5, marginBottom: 8,
           }}>
-            METHODOLOGY
+            THE ACCOUNTABILITY LOOP
           </div>
           <p style={{ margin: '0 0 8px' }}>
-            For each call we read the agent's predicted probability of YES —
-            equal to confidence when they vote YES, <span style={{ color: CF.ink, fontWeight: 600 }}>1 − confidence</span> when they
-            vote NO, and 0.5 on abstain. Squared error against the actual
-            outcome gives the call's Brier; the agent's score is the mean over
-            their resolved calls.
+            Brier is the mean squared error of an agent's probability forecasts —
+            confidence when it votes YES, <span style={{ color: CF.ink, fontWeight: 600 }}>1 − confidence</span> when it votes NO,
+            squared against the actual outcome. Lower is better (0 perfect,
+            0.25 a coin flip). The chips under each agent show its calibration
+            per domain, so you can see who's sharp on macro vs sports.
           </p>
           <p style={{ margin: 0 }}>
-            Win rate counts how often the agent's literal vote matched the
-            resolved outcome — a blunter but easier-to-read measure. Both
-            metrics ignore pending markets.
+            <span style={{ color: CF.ink, fontWeight: 600 }}>That track record feeds back into the stake.</span> Each agent's Brier
+            sets a <span className="mono">budget ×</span> multiplier (sharp 1.5× → calibrated 1.2× →
+            fair 1.0× → miscalibrated 0.7×). When the council publishes a call,
+            the on-chain bond is scaled by the multipliers of the agents who
+            backed it — agents that have been right literally stake more, and
+            ones that have been wrong stake less. Being calibrated earns
+            conviction; being wrong costs it.
           </p>
         </section>
       </div>

@@ -22,6 +22,7 @@ import { env as envVars } from '../env.js'
 import { marketAbi } from '../market.js'
 import { getMarketMeta, type MarketMeta } from '../markets-data.js'
 import type { AgentVote, EvidenceItem, PublishedCall } from '../calls-data.js'
+import { councilTrustForRoles } from '../leaderboard.js'
 import { runRoleAgent, runSkeptic, generateThesis } from './agents.js'
 import { runDebate, type DebateEvent } from './debate.js'
 import { POST as evidenceHandler } from '../../app/api/evidence/route.js'
@@ -305,7 +306,13 @@ export async function runCouncil(
   }
 
   // ── 7. Build the PublishedCall ───────────────────────────────────────
-  const bondUsdc = opts.bondUsdc ?? suggestBondUsdc(avgConfidence, edge)
+  // THE ACCOUNTABILITY LOOP: scale the bond by how well the agreeing agents
+  // have actually been calibrated. A council of sharp agents stakes more; a
+  // council that's been wrong stakes less. Being right → bigger bonds.
+  const agreeingRoleNames = agreeingVotes.map((v) => v.role)
+  const trust = councilTrustForRoles(agreeingRoleNames)
+  const baseBond = suggestBondUsdc(avgConfidence, edge)
+  const bondUsdc = opts.bondUsdc ?? Math.round(Math.min(10, Math.max(1, baseBond * trust)) * 100) / 100
   const id = `call-${marketId}-${Date.now().toString(36)}`
 
   // Build the evidenceUrls array from the real x402 purchases
@@ -387,7 +394,7 @@ export async function runCouncil(
     locked: {
       thesis,
       evidenceUrls,
-      sizingRationale: `Bond ${bondUsdc.toFixed(2)} USDC posted on-chain via Bull's sub-budget chain ${bondTxHash ? `(tx ${bondTxHash.slice(0, 10)}…)` : '(off-chain)'}. ${evidenceTxs.length} x402 evidence settlement(s) on-chain. Sized by avg council confidence ${(avgConfidence * 100).toFixed(0)}% × edge ${(edge * 100).toFixed(0)}pts.`,
+      sizingRationale: `Bond ${bondUsdc.toFixed(2)} USDC posted on-chain via Bull's sub-budget chain ${bondTxHash ? `(tx ${bondTxHash.slice(0, 10)}…)` : '(off-chain)'}. ${evidenceTxs.length} x402 evidence settlement(s) on-chain. Sized by avg council confidence ${(avgConfidence * 100).toFixed(0)}% × edge ${(edge * 100).toFixed(0)}pts × track-record multiplier ${trust.toFixed(2)} (agents who've been calibrated stake more).`,
       counterarguments,
     },
   }

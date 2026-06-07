@@ -16,13 +16,19 @@ export type Resolution = 'YES' | 'NO' | 'PENDING'
 // These are illustrative resolutions matching the sample feed —
 // good enough to show the leaderboard mechanism working.
 export const RESOLUTIONS: Record<string, Resolution> = {
-  // Closed (for demo scoring)
-  'trump-sbf-pardon': 'NO',     // no pardon happened
-  'fed-rate-cut': 'NO',         // Fed held at most-recent FOMC
-  'openai-gpt6-2026': 'YES',    // assume GPT-6 announced in window
+  // ── Resolved (illustrative, for demo scoring) ─────────────────────────
+  'trump-sbf-pardon':   'NO',   // politics — no pardon happened
+  'fed-rate-cut':       'NO',   // macro    — Fed held at most-recent FOMC
+  'openai-gpt6-2026':   'YES',  // tech     — GPT-6 announced in window
+  'wc-final-penalties': 'NO',   // sports   — final decided in regulation
+  'sol-flip-eth-2026':  'NO',   // crypto   — SOL did not flip ETH
+  'apple-fold-2026':    'NO',   // tech     — no foldable iPhone shipped
+  'us-10y-above-5':     'NO',   // macro    — 10y stayed below 5%
 
-  // Still open — these don't count toward score, shown as PENDING
-  'btc-200k-2026': 'PENDING',
+  // ── Still open — don't count toward score, shown as PENDING ───────────
+  'btc-200k-2026':      'PENDING',
+  'wc-argentina-2026':  'PENDING',
+  'wc-messi-scores':    'PENDING',
 }
 
 export function getResolution(marketId: string): Resolution {

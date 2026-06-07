@@ -17,6 +17,10 @@ export const ALL_ROLES: AgentRole[] = [
   'Skeptic',
 ]
 
+export type Category = 'sports' | 'crypto' | 'tech' | 'macro' | 'politics' | 'other'
+
+export type CategoryStat = { resolved: number; won: number; brier: number }
+
 export type AgentStats = {
   role: AgentRole
   callsTotal: number       // total calls this role voted on
@@ -27,6 +31,29 @@ export type AgentStats = {
   brierScore: number       // 0-1, lower is better; 0 if no resolved calls
   avgConfidence: number    // mean of vote.confidence across all calls (0-1)
   agreementRate: number    // fraction of calls where role voted the council's side
+  budgetMultiplier: number // reputation → budget: derived from brierScore (0.7..1.5)
+  byCategory: Partial<Record<Category, CategoryStat>> // per-domain calibration
+}
+
+// Derive a market's category from its id (same buckets as the home feed).
+export function categoryOf(marketId: string): Category {
+  if (marketId.startsWith('wc-')) return 'sports'
+  if (/btc|eth|sol|crypto/.test(marketId)) return 'crypto'
+  if (/gpt|openai|apple/.test(marketId)) return 'tech'
+  if (/fed|10y|cpi|rate/.test(marketId)) return 'macro'
+  if (/trump|election|pardon/.test(marketId)) return 'politics'
+  return 'other'
+}
+
+// THE ACCOUNTABILITY LOOP: an agent's Brier becomes its budget multiplier.
+// Well-calibrated agents earn a bigger share of the bond; miscalibrated ones
+// shrink. Unscored agents sit at neutral 1.0×.
+export function budgetMultiplier(brierScore: number, callsResolved: number): number {
+  if (callsResolved === 0) return 1.0
+  if (brierScore < 0.10) return 1.5   // sharp
+  if (brierScore < 0.20) return 1.2   // calibrated
+  if (brierScore < 0.25) return 1.0   // fair (≈ coin flip)
+  return 0.7                          // miscalibrated — staked smaller
 }
 
 function predictedYesProb(v: AgentVote): number {
@@ -61,6 +88,9 @@ export function computeAgentStats(calls: PublishedCall[]): AgentStats[] {
     let confSum = 0
     let agreeCount = 0
 
+    // Per-category accumulators.
+    const catAcc: Partial<Record<Category, { resolved: number; won: number; brierSum: number }>> = {}
+
     for (const { vote, call } of myVotes) {
       confSum += vote.confidence
       if (vote.vote === call.side) agreeCount += 1
@@ -71,17 +101,29 @@ export function computeAgentStats(calls: PublishedCall[]): AgentStats[] {
         continue
       }
       callsResolved += 1
-      if (votedOutcome(vote, res)) callsWon += 1
+      const won = votedOutcome(vote, res)
+      if (won) callsWon += 1
 
       const pYes = predictedYesProb(vote)
       const aYes = res === 'YES' ? 1 : 0
-      brierSum += (pYes - aYes) ** 2
+      const brierCall = (pYes - aYes) ** 2
+      brierSum += brierCall
+
+      const cat = categoryOf(call.marketId)
+      const c = catAcc[cat] ?? { resolved: 0, won: 0, brierSum: 0 }
+      c.resolved += 1; if (won) c.won += 1; c.brierSum += brierCall
+      catAcc[cat] = c
     }
 
     const brierScore = callsResolved > 0 ? brierSum / callsResolved : 0
     const winRate = callsResolved > 0 ? callsWon / callsResolved : 0
     const avgConfidence = callsTotal > 0 ? confSum / callsTotal : 0
     const agreementRate = callsTotal > 0 ? agreeCount / callsTotal : 0
+
+    const byCategory: Partial<Record<Category, CategoryStat>> = {}
+    for (const [cat, c] of Object.entries(catAcc)) {
+      byCategory[cat as Category] = { resolved: c.resolved, won: c.won, brier: c.brierSum / c.resolved }
+    }
 
     return {
       role,
@@ -93,8 +135,35 @@ export function computeAgentStats(calls: PublishedCall[]): AgentStats[] {
       brierScore,
       avgConfidence,
       agreementRate,
+      budgetMultiplier: budgetMultiplier(brierScore, callsResolved),
+      byCategory,
     }
   })
+}
+
+// THE LOOP, realized: the council's bond is scaled by how well the agreeing
+// agents have actually been calibrated. Given the agents who voted the call's
+// side, return the average of their budget multipliers (neutral 1.0 if no data).
+export function councilTrustFromStats(stats: AgentStats[], agreeingRoles: AgentRole[]): number {
+  const mults = agreeingRoles
+    .map((r) => stats.find((s) => s.role === r)?.budgetMultiplier ?? 1.0)
+  if (mults.length === 0) return 1.0
+  return mults.reduce((s, x) => s + x, 0) / mults.length
+}
+
+// Server-side convenience: load the historical calls, compute stats, and
+// return the council trust multiplier for a set of agreeing roles. Used by the
+// orchestrator to size the bond. Falls back to 1.0 on any failure.
+export function councilTrustForRoles(agreeingRoles: AgentRole[]): number {
+  if (typeof window !== 'undefined') return 1.0
+  try {
+    // Lazy require so the client bundle isn't dragged into fs reads.
+    const { loadCalls } = require('./calls-data.js') as typeof import('./calls-data.js')
+    const stats = computeAgentStats(loadCalls())
+    return councilTrustFromStats(stats, agreeingRoles)
+  } catch {
+    return 1.0
+  }
 }
 
 // Rank: lowest Brier first; ties broken by win rate desc, then volume.
