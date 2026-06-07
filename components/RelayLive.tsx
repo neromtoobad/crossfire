@@ -10,7 +10,7 @@ type WebhookConfig = { url: string; source: string } | null
 
 const BASESCAN_MAINNET = (h: string) => `https://basescan.org/tx/${h}`
 
-export function RelayLive() {
+export function RelayLive({ onDone }: { onDone?: () => void } = {}) {
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [webhookConfig, setWebhookConfig] = useState<WebhookConfig>(null)
   const [webhookHits, setWebhookHits] = useState<number>(0)
@@ -21,6 +21,12 @@ export function RelayLive() {
   const [done, setDone] = useState<null | 'confirmed' | 'reverted' | 'rejected' | 'error'>(null)
   const [resultTx, setResultTx] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+
+  // Spine hook: notify a parent once the mainnet relay confirms.
+  useEffect(() => {
+    if (done === 'confirmed') onDone?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done])
 
   useEffect(() => {
     fetch('/api/relay/run')

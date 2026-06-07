@@ -2,7 +2,7 @@
 
 // RunCouncilLive — editorial-light treatment.
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CF } from '../lib/theme'
 import { DebateTranscript, type DebateMsg, type DebateRound } from './DebateTranscript'
@@ -19,7 +19,7 @@ type LogLine = {
 
 const BASESCAN_TX = (h: string) => `https://sepolia.basescan.org/tx/${h}`
 
-export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
+export function RunCouncilLive({ markets, onDone }: { markets: MarketChoice[]; onDone?: (status: 'published' | 'refused') => void }) {
   const [marketId, setMarketId] = useState(markets[0]?.id ?? '')
   const [running, setRunning] = useState(false)
   const [lines, setLines] = useState<LogLine[]>([])
@@ -28,6 +28,12 @@ export function RunCouncilLive({ markets }: { markets: MarketChoice[] }) {
   const [doneState, setDoneState] = useState<null | 'published' | 'refused' | 'error'>(null)
   const abortRef = useRef<AbortController | null>(null)
   const router = useRouter()
+
+  // Spine hook: notify a parent when the council reaches a terminal verdict.
+  useEffect(() => {
+    if (doneState === 'published' || doneState === 'refused') onDone?.(doneState)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doneState])
 
   function push(line: LogLine) {
     setLines((cur) => [...cur, line])

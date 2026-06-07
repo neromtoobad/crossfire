@@ -10,7 +10,7 @@
 // This is the hero moment for the x402 + ERC-7710 track: the chain — not the
 // code — refuses the over-cap mandate, and the user sees it happen.
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { CF } from '../lib/theme'
 
 const BASESCAN = (h: string) => `https://sepolia.basescan.org/tx/${h}`
@@ -24,12 +24,18 @@ type Phase =
 
 type LogLine = { kind: 'info' | 'good' | 'bad'; text: string; tx?: string }
 
-export function RevertProof() {
+export function RevertProof({ onDone }: { onDone?: () => void } = {}) {
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
   const [lines, setLines] = useState<LogLine[]>([])
   const [inCapTx, setInCapTx] = useState<string | null>(null)
   const [overCapReason, setOverCapReason] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+
+  // Spine hook: notify a parent once the over-cap attempt has reverted.
+  useEffect(() => {
+    if (phase.kind === 'overcap-reverted') onDone?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase.kind])
 
   function push(line: LogLine) { setLines((cur) => [...cur, line]) }
 

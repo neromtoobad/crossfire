@@ -13,8 +13,6 @@
 
 import { CF } from '../lib/theme'
 
-let __cfLogoSeq = 0
-
 export type LogoMode = 'light' | 'dark'
 
 // Theme-aware header mark. Renders BOTH variants and lets CSS show the right
@@ -43,7 +41,10 @@ export function Logo({
   mode?: LogoMode
   title?: string
 }) {
-  const uid = `cf${(__cfLogoSeq = (__cfLogoSeq + 1) % 1_000_000)}`
+  // Deterministic id (must match between SSR and client to avoid hydration
+  // mismatch). Two marks of the same mode+size share identical gradient defs,
+  // so a duplicate id resolves to an identical gradient — visually harmless.
+  const uid = `cf-${mode}-${Math.round(size)}`
   const isDark = mode === 'dark'
 
   // ── beam geometry (viewBox 0 0 64 64, center 32,32) ──────────────────────

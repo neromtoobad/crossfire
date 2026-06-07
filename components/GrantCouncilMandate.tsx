@@ -56,7 +56,7 @@ function classify(e: unknown): { message: string; detail?: string } {
   return { message: msg.slice(0, 240), detail }
 }
 
-export function GrantCouncilMandate() {
+export function GrantCouncilMandate({ onDone }: { onDone?: () => void } = {}) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
@@ -82,6 +82,12 @@ export function GrantCouncilMandate() {
   const wrongChain = isConnected && chainId !== PUBLIC.chainId
 
   const [state, setState] = useState<State>({ kind: 'idle' })
+
+  // Spine hook: notify a parent once the mandate is granted.
+  useEffect(() => {
+    if (state.kind === 'granted') onDone?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.kind])
 
   async function handleSwitch() {
     const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)

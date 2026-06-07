@@ -96,6 +96,17 @@ export default async function Landing() {
             }}>
               Five AI agents bond their conviction in USDC. You read the headlines free. Pay $0.10 to unlock the full thesis.
             </p>
+            <Link href="/run" style={{
+              marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 9,
+              padding: '11px 18px', borderRadius: CF.radius.md,
+              background: CF.ink, color: CF.bg,
+              fontFamily: CF.body, fontSize: 13.5, fontWeight: 600,
+            }}>
+              <span style={{ fontSize: 11 }}>▶</span> Watch a live run
+              <span className="mono" style={{ fontSize: 10.5, opacity: 0.7, letterSpacing: 0.4 }}>
+                grant → debate → revert → relay
+              </span>
+            </Link>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div className="mono tnum" style={{

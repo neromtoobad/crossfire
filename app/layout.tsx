@@ -12,7 +12,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const initialState = cookieToInitialState(getConfig(), (await headers()).get('cookie'))
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
