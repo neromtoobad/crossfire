@@ -5,6 +5,7 @@ import { loadCalls } from '../../lib/calls-data'
 import { computeAgentStats, rankAgents, councilBrier } from '../../lib/leaderboard'
 import { getResolution } from '../../lib/resolutions'
 import { ConnectButton } from '../../components/ConnectButton'
+import { Logo } from '../../components/Logo'
 import { CF } from '../../lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -18,16 +19,6 @@ const ROLE_TAGLINE: Record<string, string> = {
   CrowdPulse: 'sentiment & positioning',
   BookWatcher: 'price action & book depth',
   Skeptic: 'adversarial refutation',
-}
-
-function LogoMark({ size = 24 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }} aria-hidden>
-      <line x1="18" y1="18" x2="82" y2="82" stroke={CF.bull} strokeWidth="7" strokeLinecap="round" />
-      <line x1="82" y1="18" x2="18" y2="82" stroke={CF.bear} strokeWidth="7" strokeLinecap="round" />
-      <circle cx="50" cy="50" r="5" fill={CF.ink} />
-    </svg>
-  )
 }
 
 function brierBadge(brier: number, resolved: number) {
@@ -57,7 +48,7 @@ export default function Leaderboard() {
           padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <LogoMark size={24} />
+            <Logo size={26} mode="light" />
             <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink }}>
               CROSSFIRE
             </span>

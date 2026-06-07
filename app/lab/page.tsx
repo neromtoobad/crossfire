@@ -15,20 +15,11 @@ import { ConnectButton } from '../../components/ConnectButton'
 import { RunCouncilLive } from '../../components/RunCouncilLive'
 import { RelayLive } from '../../components/RelayLive'
 import { RevertProof } from '../../components/RevertProof'
+import { Logo } from '../../components/Logo'
 import { loadMarketsMeta } from '../../lib/markets-data'
 import { CF } from '../../lib/theme'
 
 export const dynamic = 'force-dynamic'
-
-function LogoMark({ size = 26 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }} aria-hidden>
-      <line x1="18" y1="18" x2="82" y2="82" stroke={CF.bull} strokeWidth="7" strokeLinecap="round" />
-      <line x1="82" y1="18" x2="18" y2="82" stroke={CF.bear} strokeWidth="7" strokeLinecap="round" />
-      <circle cx="50" cy="50" r="5" fill={CF.ink} />
-    </svg>
-  )
-}
 
 function Tx({ hash, label, network = 'sepolia' }: { hash: string; label?: string; network?: 'sepolia' | 'mainnet' }) {
   const url = network === 'mainnet'
@@ -66,7 +57,7 @@ export default async function Lab() {
           padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <LogoMark size={26} />
+            <Logo size={28} mode="light" />
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>

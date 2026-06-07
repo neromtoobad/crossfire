@@ -6,22 +6,13 @@ import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { GrantCouncilMandate } from '../../../components/GrantCouncilMandate'
+import { Logo } from '../../../components/Logo'
 import { CF } from '../../../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
 const AGENT_LETTER: Record<string, string> = {
   MacroScout: 'M', NewsHawk: 'N', CrowdPulse: 'C', BookWatcher: 'B', Skeptic: 'S',
-}
-
-function LogoMark({ size = 26 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }} aria-hidden>
-      <line x1="18" y1="18" x2="82" y2="82" stroke={CF.bull} strokeWidth="7" strokeLinecap="round" />
-      <line x1="82" y1="18" x2="18" y2="82" stroke={CF.bear} strokeWidth="7" strokeLinecap="round" />
-      <circle cx="50" cy="50" r="5" fill={CF.ink} />
-    </svg>
-  )
 }
 
 export default async function CallDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -61,7 +52,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
           padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <LogoMark size={24} />
+            <Logo size={26} mode="light" />
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>

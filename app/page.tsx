@@ -7,22 +7,13 @@ import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
 import { CouncilFeedSection } from '../components/CouncilFeedSection'
 import { WatchListSection } from '../components/WatchListSection'
+import { Logo } from '../components/Logo'
 import { loadCallsWithPolymarket } from '../lib/calls-data'
 import { loadWatchSnapshot } from '../lib/polymarket-feed'
 import { loadMarketsMeta } from '../lib/markets-data'
 import { CF } from '../lib/theme'
 
 export const dynamic = 'force-dynamic'
-
-function LogoMark({ size = 26 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }} aria-hidden>
-      <line x1="18" y1="18" x2="82" y2="82" stroke={CF.bull} strokeWidth="7" strokeLinecap="round" />
-      <line x1="82" y1="18" x2="18" y2="82" stroke={CF.bear} strokeWidth="7" strokeLinecap="round" />
-      <circle cx="50" cy="50" r="5" fill={CF.ink} />
-    </svg>
-  )
-}
 
 export default async function Landing() {
   const calls = await loadCallsWithPolymarket()
@@ -50,7 +41,7 @@ export default async function Landing() {
           padding: '20px 0 18px', borderBottom: `1px solid ${CF.line}`,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <LogoMark size={26} />
+            <Logo size={28} mode="light" />
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>
@@ -143,7 +134,7 @@ export default async function Landing() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <LogoMark size={18} />
+            <Logo size={20} mode="light" />
             <span className="mono" style={{ fontSize: 11, color: CF.ink3, letterSpacing: 0.5 }}>
               accountable agent calls · the chain settles
             </span>
