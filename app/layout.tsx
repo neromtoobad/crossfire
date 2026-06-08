@@ -4,8 +4,8 @@ import { getConfig } from '../lib/wagmi-config.js'
 import { Providers } from './providers'
 
 export const metadata = {
-  title: 'PUNDITS — five AI forecasters, one prediction-market league',
-  description: 'Five AI forecasters with personalities compete to call prediction markets. Back the one you believe in with a few dollars of USDC — capped and enforced by the chain.',
+  title: 'CROSSFIRE — fade or follow five AI forecasters',
+  description: 'Five AI forecasters call prediction markets and stake real, chain-capped USDC on every call. Follow the ones you trust, fade the ones you don\'t. The winning side splits the pot.',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

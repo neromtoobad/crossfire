@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data'
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
-import { GrantCouncilMandate } from '../../../components/GrantCouncilMandate'
+import { FadeFollow } from '../../../components/FadeFollow'
 import { BrandLogo } from '../../../components/Logo'
 import { ThemeToggle } from '../../../components/ThemeToggle'
 import { CF, alpha } from '../../../lib/theme'
@@ -57,7 +57,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>
-              PUNDITS
+              CROSSFIRE
             </span>
           </Link>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -235,9 +235,9 @@ BACKED WITH
           ) : null}
         </section>
 
-        {/* ── back the council: MetaMask Advanced Permissions (ERC-7715) ── */}
+        {/* ── fade or follow: the staked call + your capped bet (ERC-7715) ── */}
         <section style={{ padding: '12px 0' }}>
-          <GrantCouncilMandate />
+          <FadeFollow call={call} />
         </section>
 
         {/* ── unlock ── */}
