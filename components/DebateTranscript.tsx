@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import { CF, alpha } from '../lib/theme'
+import { PUNDITS } from '../lib/pundits'
 
 export type DebateMsg = {
   id: string
@@ -18,14 +19,15 @@ export type DebateMsg = {
 
 export type DebateRound = { round: number; title: string }
 
-// Per-agent identity: letter + colour. Distinct hues that read on light.
-const AGENT: Record<string, { letter: string; color: string; tint: string; desk: string }> = {
-  MacroScout:  { letter: 'M', color: '#1D4ED8', tint: '#EFF4FF', desk: 'macro & regulation' },
-  NewsHawk:    { letter: 'N', color: '#B45309', tint: '#FEF6E7', desk: 'news & catalysts' },
-  CrowdPulse:  { letter: 'C', color: '#7C3AED', tint: '#F5F0FF', desk: 'sentiment & positioning' },
-  BookWatcher: { letter: 'B', color: '#15803D', tint: '#ECFDF3', desk: 'price action & book' },
-  Skeptic:     { letter: 'S', color: '#B91C1C', tint: '#FEF2F2', desk: 'adversarial refutation' },
-}
+// Per-pundit identity (avatar + handle + colour), derived from the character
+// layer so the transcript reads as a panel of forecasters, not role keys.
+const AGENT: Record<string, { letter: string; name: string; color: string; tint: string; desk: string }> =
+  Object.fromEntries(
+    Object.values(PUNDITS).map((p) => [
+      p.role,
+      { letter: p.avatar, name: p.handle, color: p.color, tint: p.tint, desk: p.archetype },
+    ]),
+  )
 
 function voteChip(vote?: 'YES' | 'NO' | 'NEUTRAL', confidence?: number, isSkeptic?: boolean) {
   if (!vote) return null
@@ -105,7 +107,7 @@ export function DebateTranscript({
           )
         }
         const m = it.msg
-        const a = AGENT[m.role] ?? { letter: '?', color: CF.ink3, tint: CF.surface, desk: '' }
+        const a = AGENT[m.role] ?? { letter: '?', name: m.role, color: CF.ink3, tint: CF.surface, desk: '' }
         const isSkeptic = m.role === 'Skeptic'
         return (
           <div key={m.id} style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'flex-start' }}>
@@ -121,8 +123,8 @@ export function DebateTranscript({
             {/* bubble */}
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: CF.body, fontWeight: 600, fontSize: 13.5, color: CF.ink }}>
-                  {m.role}
+                <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 13.5, color: a.color, letterSpacing: 0.3 }}>
+                  {a.name}
                 </span>
                 <span className="mono" style={{ fontSize: 10, color: CF.ink4, letterSpacing: 0.3 }}>
                   {a.desk}

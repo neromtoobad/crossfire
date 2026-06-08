@@ -15,6 +15,7 @@
 import { venice } from '../venice.js'
 import type { AgentRole, AgentVote } from '../calls-data.js'
 import { ROLE_PROMPTS } from './prompts.js'
+import { PUNDITS, handleOf } from '../pundits.js'
 
 const COUNCIL_MODEL = 'qwen3-235b-a22b-instruct-2507'
 
@@ -109,7 +110,7 @@ async function streamTurn(
 function renderTranscript(transcript: DebateMessage[]): string {
   if (transcript.length === 0) return '(you are the first to speak)'
   return transcript
-    .map((m) => `${m.role}: ${m.text.replace(MARKER_RE, '').trim()}`)
+    .map((m) => `${handleOf(m.role)}: ${m.text.replace(MARKER_RE, '').trim()}`)
     .join('\n\n')
 }
 
@@ -118,10 +119,17 @@ function debateSystemPrompt(role: RoleName, marketTitle: string, impliedProbYes:
   const base = ROLE_PROMPTS[role]({ marketTitle, impliedProbYes, evidenceContext })
   // Strip the JSON output rules from the base prompt — we want prose now.
   const persona = base.split('Output ONE JSON object')[0].trim()
+  const me = PUNDITS[role]
+  const others = (Object.values(PUNDITS) as typeof me[])
+    .filter((p) => p.role !== role)
+    .map((p) => `${p.handle} (${p.archetype})`)
+    .join(', ')
   const impliedPct = (impliedProbYes * 100).toFixed(0)
   return `${persona}
 
-You are in a live council DEBATE about this market. Speak in the FIRST PERSON, 2-4 punchy sentences, like a sharp desk analyst talking to colleagues. When another agent has already spoken, reference them BY NAME and either build on or push back against their point. Stay strictly in your lane (your domain). Be specific and evidence-anchored; no hedging filler.
+YOUR CHARACTER: you are ${me.handle}, "${me.archetype}". ${me.voice}
+
+You are on a live panel of forecasters: ${others}. You are in a DEBATE about this market. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, 2-4 punchy sentences, like a sharp pundit on a live panel. When another forecaster has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and either build on or push back against their point. Stay strictly in your lane (your domain). Be specific and evidence-anchored; no hedging filler.
 
 CALIBRATION — the market currently prices YES at ${impliedPct}% (so NO at ${(100 - Number(impliedPct))}%). That price reflects informed capital — treat it as your PRIOR. If you vote YES, your confidence should anchor near ${impliedPct}%; if you vote NO, near ${(100 - Number(impliedPct))}%. To push more than ~15 points beyond that anchor you need a specific, defensible reason — do not move far on vibes. The whole point is to find where the market is genuinely WRONG, not to restate the price.
 

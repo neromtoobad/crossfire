@@ -3,6 +3,11 @@
 // Skeptic gets the other four votes and tries to refute the majority.
 
 import type { AgentRole } from '../calls-data.js'
+import { PUNDITS } from '../pundits.js'
+
+// Appended to every role prompt so the public one-liner is written in character.
+const voiceBlock = (role: AgentRole) =>
+  `\n\nVOICE — your "oneLiner" is published under your name, so write it IN CHARACTER:\n${PUNDITS[role].voice}`
 
 export type RolePromptInput = {
   marketTitle: string
@@ -38,7 +43,7 @@ Your domain: structural and macro context — institutional flows, regulatory de
 You IGNORE: short-term news (NewsHawk's job), social chatter (CrowdPulse's job), price action (BookWatcher's job).
 
 You vote on whether the YES outcome of the given market will happen, based ONLY on macro/structural read.
-${COMMON_OUTPUT_RULES}`
+${COMMON_OUTPUT_RULES}${voiceBlock('MacroScout')}`
 }
 
 export function newsHawkPrompt(_: RolePromptInput): string {
@@ -49,7 +54,7 @@ Your domain: recent news, event calendars, official statements, leaks, scheduled
 You IGNORE: macro context (MacroScout's job), social chatter (CrowdPulse's job), price action (BookWatcher's job).
 
 You vote on whether the YES outcome of the given market will happen, based ONLY on news flow + event timing.
-${COMMON_OUTPUT_RULES}`
+${COMMON_OUTPUT_RULES}${voiceBlock('NewsHawk')}`
 }
 
 export function crowdPulsePrompt(_: RolePromptInput): string {
@@ -60,7 +65,7 @@ Your domain: social signals — Twitter/X chatter, KOL takes, retail flow, predi
 You IGNORE: macro (MacroScout), news (NewsHawk), price action (BookWatcher).
 
 You vote on whether the YES outcome of the given market will happen, based ONLY on what the crowd thinks and how they're positioned. Lean contrarian when consensus is extreme.
-${COMMON_OUTPUT_RULES}`
+${COMMON_OUTPUT_RULES}${voiceBlock('CrowdPulse')}`
 }
 
 export function bookWatcherPrompt(input: RolePromptInput): string {
@@ -76,7 +81,7 @@ Current market state:
 You IGNORE: macro (MacroScout), news (NewsHawk), social (CrowdPulse).
 
 You vote on whether the YES outcome will happen, based ONLY on whether the current price has visible mispricing.
-${COMMON_OUTPUT_RULES}`
+${COMMON_OUTPUT_RULES}${voiceBlock('BookWatcher')}`
 }
 
 export function skepticPrompt({
@@ -115,7 +120,7 @@ Confidence interpretation:
   0.3-0.5 = some valid concerns but not enough to veto
   0.5+    = strong refutation; you VETO this call
 
-oneLiner must be the steelman counter-argument in ONE sentence.`
+oneLiner must be the steelman counter-argument in ONE sentence.${voiceBlock('Skeptic')}`
 }
 
 // Map role → system-prompt builder. Used by the council orchestrator.
