@@ -1,12 +1,10 @@
-// CROSSFIRE landing — feed first, tabbed.
-//
-// Phase 8.16: both feeds are tabbed so the page doesn't choke on 100+
-// cards. Defaults are tight, drill-down is one click.
+// PUNDITS landing — the league: five forecasters, their calls, the standings.
 
 import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
 import { CouncilFeedSection } from '../components/CouncilFeedSection'
 import { WatchListSection } from '../components/WatchListSection'
+import { PunditsRoster } from '../components/PunditsRoster'
 import { BrandLogo } from '../components/Logo'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { loadCallsWithPolymarket } from '../lib/calls-data'
@@ -107,6 +105,9 @@ export default async function Landing() {
             ))}
           </div>
         </section>
+
+        {/* ── the league roster ── */}
+        <PunditsRoster calls={calls} />
 
         {/* ── masthead ── */}
         <section style={{
