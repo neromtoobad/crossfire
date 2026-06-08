@@ -100,6 +100,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             opacity: var(--cf-noise-opacity);
           }
           main { position: relative; z-index: 1; }
+          /* feed cards lift on hover — a little life for the betting feed */
+          .cf-card:hover { transform: translateY(-2px); box-shadow: var(--cf-shadow-hover); border-color: var(--cf-line-2); }
           /* logo variant swap — BrandLogo renders both, CSS shows one */
           .cf-logo-dark { display: none !important; }
           :root[data-theme="dark"] .cf-logo-light { display: none !important; }

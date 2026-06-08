@@ -1,208 +1,154 @@
 'use client'
 
-// CallCard — single published-call card for the public feed.
-// Editorial-light treatment: serif headline, hairline borders, tabular figures,
-// refined Bull/Bear semantic accents. Client component because the Polymarket
-// pill is a nested link that needs onClick to stop card-link propagation.
+// CallCard — a matchup card for the feed. Leads with the forecaster who made
+// the call (the character), shows the pot (the forecasters' own disagreement),
+// the desk lineup, and a Fade-or-Follow CTA. The personality is the hook; the
+// staked pot is the tension.
 
 import Link from 'next/link'
 import type { PublishedCall } from '../lib/calls-data'
 import { relativeTime } from '../lib/calls-data'
+import { PUNDITS, punditOf } from '../lib/pundits'
 import { CF, alpha } from '../lib/theme'
 
-const AGENT_LETTER: Record<string, string> = {
-  MacroScout: 'M',
-  NewsHawk: 'N',
-  CrowdPulse: 'C',
-  BookWatcher: 'B',
-  Skeptic: 'S',
+function leadPundit(call: PublishedCall) {
+  const onSide = call.votes.filter((v) => v.role !== 'Skeptic' && v.vote === call.side)
+  const lead = (onSide.length ? onSide : call.votes.filter((v) => v.role !== 'Skeptic'))
+    .slice().sort((a, b) => b.confidence - a.confidence)[0]
+  return lead ? { p: punditOf(lead.role), conf: lead.confidence } : undefined
+}
+
+function pools(call: PublishedCall): { YES: number; NO: number } {
+  const f = call.votes.filter((v) => v.role !== 'Skeptic' && (v.vote === 'YES' || v.vote === 'NO'))
+  const totalConf = f.reduce((s, v) => s + v.confidence, 0) || 1
+  const pot = call.bondUsdc || f.length
+  let YES = 0, NO = 0
+  for (const v of f) {
+    const stake = pot * (v.confidence / totalConf)
+    if (v.vote === 'YES') YES += stake; else NO += stake
+  }
+  return { YES, NO }
 }
 
 export function CallCard({ call }: { call: PublishedCall }) {
   const isYes = call.side === 'YES'
   const sideColor = isYes ? CF.bull : CF.bear
-  const sideTint = isYes ? CF.bullTint : CF.bearTint
-  const sideInk = isYes ? CF.bullInk : CF.bearInk
-  const selectedPct = Math.round(call.selectedSideProb * 100)
-  const edgePts = Math.round(call.edge * 100)
+
+  const lead = leadPundit(call)
+  const leadColor = lead?.p?.color ?? sideColor
+  const pot = pools(call)
+  const total = pot.YES + pot.NO || 1
+  const yesPct = Math.round((pot.YES / total) * 100)
 
   const nonSkeptic = call.votes.filter((v) => v.role !== 'Skeptic')
   const skepticOk = call.skepticVerdict === 'APPROVED'
   const agreed = nonSkeptic.filter((v) => v.vote === call.side).length
-  const total = nonSkeptic.length
 
   return (
     <Link
       href={`/calls/${call.id}`}
+      className="cf-card"
       style={{
-        display: 'block',
-        background: CF.surface,
-        border: `1px solid ${CF.line}`,
-        borderRadius: CF.radius.lg,
-        boxShadow: CF.shadow.card,
-        padding: '22px 22px 18px',
-        color: CF.ink,
-        position: 'relative',
-        overflow: 'hidden',
+        display: 'block', background: CF.surface,
+        border: `1px solid ${CF.line}`, borderTop: `3px solid ${leadColor}`,
+        borderRadius: CF.radius.lg, boxShadow: CF.shadow.card,
+        padding: '16px 20px 16px', color: CF.ink, position: 'relative', overflow: 'hidden',
         transition: 'box-shadow 180ms ease, transform 180ms ease, border-color 180ms ease',
       }}
     >
-      {/* ── eyebrow ── */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        marginBottom: 14,
-      }}>
-        <div className="mono" style={{
-          fontSize: 10.5, letterSpacing: 1.6, color: CF.ink3,
-        }}>
-          {call.publishedBy.toUpperCase()} · {relativeTime(call.publishedAt).toUpperCase()}
+      {/* ── lead forecaster + time ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 32, height: 32, borderRadius: 999, flexShrink: 0,
+            background: lead?.p?.tint ?? CF.surface2, border: `1px solid ${alpha(leadColor, 25)}`,
+            fontSize: 17, lineHeight: 1,
+          }}>{lead?.p?.avatar ?? '🎙'}</span>
+          <span style={{ fontFamily: CF.body, fontSize: 13.5, color: CF.ink, fontWeight: 600, whiteSpace: 'nowrap' }}>
+            <span style={{ color: leadColor, fontWeight: 700 }}>{lead?.p?.handle ?? 'The desk'}</span>
+            {' '}calls{' '}
+            <span style={{ color: sideColor, fontWeight: 700 }}>{call.side}</span>
+          </span>
+          {lead ? (
+            <span className="mono tnum" style={{ fontSize: 11, color: CF.ink3 }}>
+              {(lead.conf * 100).toFixed(0)}%
+            </span>
+          ) : null}
         </div>
-        <span style={{
-          padding: '3px 9px', borderRadius: CF.radius.sm,
-          background: sideTint, color: sideInk,
-          fontFamily: CF.mono, fontSize: 10.5, fontWeight: 600, letterSpacing: 1,
-        }}>
-          BUY {call.side}
+        <span className="mono" style={{ fontSize: 10, color: CF.ink4, letterSpacing: 0.4, whiteSpace: 'nowrap' }}>
+          {relativeTime(call.publishedAt).toUpperCase()}
         </span>
       </div>
 
       {/* ── headline ── */}
       <div style={{
-        fontFamily: CF.display, fontSize: 20, fontWeight: 500,
-        lineHeight: 1.22, letterSpacing: -0.4, color: CF.ink,
-        marginBottom: 18,
+        fontFamily: CF.display, fontSize: 19, fontWeight: 500,
+        lineHeight: 1.22, letterSpacing: -0.4, color: CF.ink, marginBottom: 16,
         fontVariationSettings: '"opsz" 60',
       }}>
         {call.marketTitle}
       </div>
 
-      {/* ── numbers row ── */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0,
-        padding: '14px 0', borderTop: `1px solid ${CF.line}`,
-        borderBottom: `1px solid ${CF.line}`,
-        marginBottom: 14,
-      }}>
-        <div>
-          <div className="mono" style={{
-            fontSize: 9.5, letterSpacing: 1.4, color: CF.ink4, marginBottom: 4,
-          }}>
-            P({call.side})
-          </div>
-          <div className="mono tnum" style={{
-            fontSize: 26, fontWeight: 600, color: sideColor,
-            letterSpacing: -0.5, lineHeight: 1,
-          }}>
-            {selectedPct}<span style={{ fontSize: 14, color: CF.ink3, fontWeight: 400 }}>%</span>
-          </div>
+      {/* ── the pot (matchup bar) ── */}
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: CF.mono, fontSize: 10, marginBottom: 5 }}>
+          <span style={{ color: CF.bull, fontWeight: 700 }}>YES {pot.YES.toFixed(1)}</span>
+          <span style={{ color: CF.ink4 }}>POT {total.toFixed(1)} USDC</span>
+          <span style={{ color: CF.bear, fontWeight: 700 }}>{pot.NO.toFixed(1)} NO</span>
         </div>
-        <div style={{ borderLeft: `1px solid ${CF.line}`, paddingLeft: 14 }}>
-          <div className="mono" style={{
-            fontSize: 9.5, letterSpacing: 1.4, color: CF.ink4, marginBottom: 4,
-          }}>
-            VS MARKET
-          </div>
-          <div className="mono tnum" style={{
-            fontSize: 22, fontWeight: 600, color: edgePts > 0 ? sideColor : CF.ink3,
-            letterSpacing: -0.3, lineHeight: 1,
-          }}>
-            {edgePts > 0 ? '+' : ''}{edgePts}<span style={{ fontSize: 13, color: CF.ink3, fontWeight: 400 }}>pts</span>
-          </div>
+        <div style={{ display: 'flex', height: 7, borderRadius: 999, overflow: 'hidden', background: CF.surface2 }}>
+          <div style={{ width: `${yesPct}%`, background: CF.bull }} />
+          <div style={{ width: `${100 - yesPct}%`, background: CF.bear }} />
         </div>
       </div>
 
-      {/* ── council pills ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginBottom: 14,
-      }}>
+      {/* ── the desk lineup (avatars by vote) ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 14 }}>
         {call.votes.map((v) => {
+          const p = PUNDITS[v.role]
           const isAgree = v.vote === call.side
-          const isAbstain = v.vote === 'ABSTAIN' || v.vote === 'NEUTRAL'
-          const vColor = isAgree ? sideColor : isAbstain ? CF.amber : CF.ink3
-          const vTint = isAgree ? sideTint : isAbstain ? CF.amberTint : CF.surface2
+          const isSkeptic = v.role === 'Skeptic'
+          const dim = !isAgree && !isSkeptic
           return (
             <span
               key={v.role}
-              title={`${v.role}: ${v.vote} (${(v.confidence * 100).toFixed(0)}%)`}
+              title={`${p?.handle ?? v.role}: ${v.vote} (${(v.confidence * 100).toFixed(0)}%)`}
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 22, height: 22, borderRadius: CF.radius.sm,
-                background: vTint, color: vColor,
-                border: `1px solid ${alpha(vColor, 20)}`,
-                fontFamily: CF.mono, fontSize: 11, fontWeight: 700,
+                width: 24, height: 24, borderRadius: 999, fontSize: 13, lineHeight: 1,
+                background: p?.tint ?? CF.surface2,
+                border: `1.5px solid ${isSkeptic ? alpha(skepticOk ? CF.bull : CF.bear, 40) : alpha(p?.color ?? CF.ink3, isAgree ? 45 : 12)}`,
+                opacity: dim ? 0.45 : 1,
               }}
-            >
-              {AGENT_LETTER[v.role] ?? '?'}
-            </span>
+            >{p?.avatar ?? '·'}</span>
           )
         })}
-        <span className="mono" style={{
-          fontSize: 11, color: CF.ink3, marginLeft: 8,
-        }}>
-          {agreed}/{total} agreed · Skeptic{' '}
-          <span style={{ color: skepticOk ? CF.bull : CF.bear, fontWeight: 700 }}>
-            {skepticOk ? '✓' : '✗'}
-          </span>
+        <span className="mono" style={{ fontSize: 10.5, color: CF.ink3, marginLeft: 4 }}>
+          {agreed} back {call.side} · Skeptic{' '}
+          <span style={{ color: skepticOk ? CF.bull : CF.bear, fontWeight: 700 }}>{skepticOk ? '✓' : '✗'}</span>
         </span>
       </div>
 
-      {/* ── live Polymarket overlay (when slug is mapped) ── */}
-      {call.livePolymarket ? (() => {
-        const pYes = call.livePolymarket.yes
-        const pcYes = call.side === 'YES' ? call.selectedSideProb : 1 - call.selectedSideProb
-        const livePoints = Math.round((pcYes - pYes) * 100)
-        const arrow = livePoints > 0 ? '▲' : livePoints < 0 ? '▼' : '·'
-        const arrowColor = (livePoints > 0) === (call.side === 'YES') ? CF.bull : CF.bear
-        const url = `https://polymarket.com/event/${call.livePolymarket.slug}`
-        return (
-          // Not an <a> — this card is already a <Link>, and nested anchors are
-          // invalid HTML (hydration error). Use a clickable span that opens
-          // Polymarket and stops the card navigation.
-          <span
-            role="link"
-            tabIndex={0}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(url, '_blank', 'noopener') }}
-            style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '8px 10px', marginBottom: 12,
-              background: CF.surface2, border: `1px solid ${CF.line}`, borderRadius: CF.radius.sm,
-              fontFamily: CF.mono, fontSize: 11, color: CF.ink2, cursor: 'pointer',
-            }}
-          >
-            <span>
-              <span style={{ color: CF.ink3, letterSpacing: 1 }}>POLYMARKET LIVE</span>
-              <span className="tnum" style={{ marginLeft: 8, color: CF.ink, fontWeight: 600 }}>{(pYes * 100).toFixed(0)}%</span>
-              <span style={{ marginLeft: 4, color: CF.ink3 }}>YES</span>
-            </span>
-            <span style={{ color: CF.ink3 }}>
-              council <span className="tnum" style={{ color: arrowColor, fontWeight: 600 }}>{arrow} {Math.abs(livePoints)}pts</span>
-            </span>
-          </span>
-        )
-      })() : null}
-
-      {/* ── footer ── */}
+      {/* ── footer: pot + Fade or Follow CTA ── */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         paddingTop: 12, borderTop: `1px dashed ${CF.line2}`,
       }}>
-        <div className="mono" style={{ fontSize: 11.5, color: CF.ink3 }}>
-          bond <span className="tnum" style={{ color: CF.ink, fontWeight: 600 }}>{call.bondUsdc.toFixed(2)} USDC</span>
-          {call.bondTxHash ? (
-            <span style={{ color: CF.gold, marginLeft: 6, fontWeight: 600 }} title={`on-chain bond ${call.bondTxHash}`}>· on-chain ✓</span>
-          ) : null}
+        <div className="mono" style={{ fontSize: 11, color: CF.ink3 }}>
+          {call.bondTxHash
+            ? <span style={{ color: CF.gold, fontWeight: 600 }} title={`on-chain ${call.bondTxHash}`}>staked on-chain ✓</span>
+            : <>staked <span className="tnum" style={{ color: CF.ink2, fontWeight: 600 }}>{call.bondUsdc.toFixed(2)}</span></>}
         </div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          fontFamily: CF.body, fontWeight: 600, fontSize: 13,
-          color: CF.ink,
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '6px 12px', borderRadius: 999,
+          background: alpha(leadColor, 10), border: `1px solid ${alpha(leadColor, 30)}`,
+          fontFamily: CF.body, fontWeight: 700, fontSize: 12.5, color: leadColor,
         }}>
-          Unlock thesis
-          <span className="mono tnum" style={{ color: CF.ink3, fontSize: 11.5, fontWeight: 500 }}>
-            ${call.unlockUsdc.toFixed(2)}
-          </span>
-          <span style={{ color: sideColor }}>→</span>
-        </div>
+          Fade or Follow
+          <span style={{ fontSize: 13 }}>→</span>
+        </span>
       </div>
     </Link>
   )
