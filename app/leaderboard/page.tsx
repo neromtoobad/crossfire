@@ -51,7 +51,7 @@ export default function Leaderboard() {
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <BrandLogo size={26} />
             <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink }}>
-              CROSSFIRE
+              PUNDITS
             </span>
           </Link>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

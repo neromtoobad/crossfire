@@ -46,7 +46,7 @@ export default async function Landing() {
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>
-              CROSSFIRE
+              PUNDITS
             </span>
             <span style={{
               marginLeft: 4, padding: '2px 7px', borderRadius: 999,
@@ -80,17 +80,17 @@ export default async function Landing() {
           <p style={{
             fontFamily: CF.display, fontWeight: 400,
             fontSize: 'clamp(20px, 2.6vw, 27px)', lineHeight: 1.32, letterSpacing: -0.4,
-            color: CF.ink, margin: '0 0 18px', maxWidth: 760,
+            color: CF.ink, margin: '0 0 18px', maxWidth: 780,
             fontVariationSettings: '"opsz" 40',
           }}>
-            Five AI analysts read prediction markets, bet real money on their answers,
-            and the blockchain caps what they can spend.
+            Five AI forecasters — each with a personality — compete to call prediction
+            markets. Back the one you believe in. The chain caps every bet.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[
-              ['1', 'The agents debate a real market'],
-              ['2', 'They bet real money — the chain caps it'],
-              ['3', 'Browse free · pay 10¢ to read the why'],
+              ['1', 'Five pundits call each market, live'],
+              ['2', 'Back the one you trust — chain-capped USDC'],
+              ['3', 'The sharpest climbs the leaderboard'],
             ].map(([n, label]) => (
               <div key={n} style={{
                 display: 'flex', alignItems: 'center', gap: 10,

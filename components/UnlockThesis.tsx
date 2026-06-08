@@ -341,7 +341,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
           }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>WRONG CHAIN</div>
-              {chainLabel(chainId)}. CROSSFIRE settles on <span style={{ color: CF.ink }}>Base Sepolia (84532)</span>.
+              {chainLabel(chainId)}. PUNDITS settles on <span style={{ color: CF.ink }}>Base Sepolia (84532)</span>.
             </div>
             <button
               onClick={handleSwitchChain}

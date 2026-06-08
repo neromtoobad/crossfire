@@ -57,7 +57,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             <span style={{
               fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink,
             }}>
-              CROSSFIRE
+              PUNDITS
             </span>
           </Link>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

@@ -31,7 +31,7 @@ export default function RunPage() {
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <BrandLogo size={28} />
             <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink }}>
-              CROSSFIRE
+              PUNDITS
             </span>
             <span style={{
               marginLeft: 4, padding: '2px 7px', borderRadius: 999,

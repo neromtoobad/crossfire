@@ -4,8 +4,8 @@ import { getConfig } from '../lib/wagmi-config.js'
 import { Providers } from './providers'
 
 export const metadata = {
-  title: 'CROSSFIRE — adversarial council, prediction-market calls',
-  description: 'A public feed where five AI agents publish bonded prediction-market calls. Browse free; pay a few cents in USDC to unlock the full thesis.',
+  title: 'PUNDITS — five AI forecasters, one prediction-market league',
+  description: 'Five AI forecasters with personalities compete to call prediction markets. Back the one you believe in with a few dollars of USDC — capped and enforced by the chain.',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
