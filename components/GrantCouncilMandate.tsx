@@ -56,7 +56,14 @@ function classify(e: unknown): { message: string; detail?: string } {
   return { message: msg.slice(0, 240), detail }
 }
 
-export function GrantCouncilMandate({ onDone }: { onDone?: () => void } = {}) {
+export type GrantContext = {
+  kicker?: string | null    // null hides the kicker (e.g. when embedded)
+  title?: string
+  blurb?: React.ReactNode
+  cta?: string
+}
+
+export function GrantCouncilMandate({ onDone, context }: { onDone?: () => void; context?: GrantContext } = {}) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
@@ -207,14 +214,18 @@ export function GrantCouncilMandate({ onDone }: { onDone?: () => void } = {}) {
 
   return (
     <div style={card}>
-      <div className="mono" style={{ fontSize: 10.5, color: CF.gold, letterSpacing: 1.8, marginBottom: 10 }}>
-        ▸ BACK THE COUNCIL · METAMASK SMART ACCOUNTS KIT
-      </div>
+      {context?.kicker !== null && (
+        <div className="mono" style={{ fontSize: 10.5, color: CF.gold, letterSpacing: 1.8, marginBottom: 10 }}>
+          {context?.kicker ?? '▸ BACK THE COUNCIL · METAMASK SMART ACCOUNTS KIT'}
+        </div>
+      )}
       <div style={{ fontFamily: CF.display, fontSize: 22, fontWeight: 500, letterSpacing: -0.4, color: CF.ink, marginBottom: 8, fontVariationSettings: '"opsz" 40' }}>
-        Set the council’s budget
+        {context?.title ?? 'Set the council’s budget'}
       </div>
       <p style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink2, lineHeight: 1.55, margin: '0 0 16px', maxWidth: 560 }}>
-        Let the council spend up to <strong style={{ color: CF.ink, fontWeight: 600 }}>${CAP_USDC}</strong> for the next {EXPIRY_HOURS} hour — and only the council can use it. It’s capped, expires on its own, and you can cancel anytime from your wallet. The blockchain enforces the limit, not our code.
+        {context?.blurb ?? (
+          <>Let the council spend up to <strong style={{ color: CF.ink, fontWeight: 600 }}>${CAP_USDC}</strong> for the next {EXPIRY_HOURS} hour — and only the council can use it. It’s capped, expires on its own, and you can cancel anytime from your wallet. The blockchain enforces the limit, not our code.</>
+        )}
       </p>
 
       {!isConnected || !address ? (
@@ -234,7 +245,7 @@ export function GrantCouncilMandate({ onDone }: { onDone?: () => void } = {}) {
           disabled={busy}
           style={{ padding: '12px 20px', borderRadius: CF.radius.md, border: 'none', background: busy ? CF.ink2 : CF.ink, color: CF.bg, fontFamily: CF.body, fontSize: 13.5, fontWeight: 600, cursor: busy ? 'wait' : 'pointer' }}
         >
-          {busy ? 'Look at your wallet…' : `Grant mandate · ${CAP_USDC} USDC / ${EXPIRY_HOURS}h`}
+          {busy ? 'Look at your wallet…' : (context?.cta ?? `Grant mandate · ${CAP_USDC} USDC / ${EXPIRY_HOURS}h`)}
         </button>
       )}
 

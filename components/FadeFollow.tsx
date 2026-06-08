@@ -2,19 +2,21 @@
 
 // FADE OR FOLLOW — the core mechanic.
 //
-// A forecaster (the lead pundit on this call) has staked real, chain-capped
-// USDC on a side. You FOLLOW (bet the same side) or FADE (bet the opposite).
-// When the market resolves, the winning side splits the pot. The on-chain bet
-// is placed via the ERC-7715 capped mandate (the kit moment) — reused as-is.
+// The forecasters disagree, and each stakes real, chain-capped USDC by how sure
+// it is. That disagreement IS the pot: the YES-voters' stakes vs the NO-voters'.
+// You FOLLOW the lead forecaster (bet its side) or FADE it (bet the opposite),
+// and the winning side splits the pot, pro-rata. Your bet is placed via the
+// ERC-7715 capped mandate (the kit moment) — the chain won't let it overspend.
 
 import { useState } from 'react'
-import { PUNDITS, punditOf } from '../lib/pundits'
+import { punditOf } from '../lib/pundits'
 import type { PublishedCall } from '../lib/calls-data'
 import { GrantCouncilMandate } from './GrantCouncilMandate'
 import { CF, alpha } from '../lib/theme'
 
+const STAKE_OPTIONS = [1, 2, 5] // USDC
+
 function leadPundit(call: PublishedCall) {
-  // the highest-conviction forecaster who's ON the call's side
   const onSide = call.votes.filter((v) => v.vote === call.side)
   const lead = (onSide.length ? onSide : call.votes)
     .slice()
@@ -22,16 +24,42 @@ function leadPundit(call: PublishedCall) {
   return lead ? punditOf(lead.role) : undefined
 }
 
+// The pot = the four forecasters' own stakes, sized by conviction. (The Skeptic
+// cross-examines, it doesn't take a side, so it's excluded from the pool.)
+function computePools(call: PublishedCall): { YES: number; NO: number } {
+  const forecasters = call.votes.filter(
+    (v) => v.role !== 'Skeptic' && (v.vote === 'YES' || v.vote === 'NO'),
+  )
+  const totalConf = forecasters.reduce((s, v) => s + v.confidence, 0) || 1
+  const pot = call.bondUsdc || forecasters.length // total staked
+  let YES = 0, NO = 0
+  for (const v of forecasters) {
+    const stake = pot * (v.confidence / totalConf)
+    if (v.vote === 'YES') YES += stake
+    else NO += stake
+  }
+  return { YES, NO }
+}
+
 export function FadeFollow({ call }: { call: PublishedCall }) {
   const [choice, setChoice] = useState<null | 'follow' | 'fade'>(null)
+  const [amount, setAmount] = useState(2)
 
   const lead = leadPundit(call)
-  const deskSide = call.side                       // the side the desk staked
+  const deskSide = call.side
   const fadeSide = deskSide === 'YES' ? 'NO' : 'YES'
   const betSide = choice === 'fade' ? fadeSide : deskSide
   const deskColor = deskSide === 'YES' ? CF.bull : CF.bear
   const fadeColor = fadeSide === 'YES' ? CF.bull : CF.bear
-  const stake = call.bondUsdc
+  const betColor = betSide === 'YES' ? CF.bull : CF.bear
+
+  const pools = computePools(call)
+  const total = pools.YES + pools.NO || 1
+
+  // parimutuel: if betSide wins, your share of the whole pot, pro-rata to stake
+  const sidePool = (betSide === 'YES' ? pools.YES : pools.NO)
+  const payout = amount * (total + amount) / (sidePool + amount)
+  const profit = payout - amount
 
   return (
     <div style={{
@@ -53,19 +81,18 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: CF.body, fontSize: 15, color: CF.ink, lineHeight: 1.4 }}>
             <strong style={{ color: lead?.color ?? CF.ink, fontWeight: 700 }}>{lead?.handle ?? 'The desk'}</strong>
-            {' '}and the desk staked{' '}
-            <strong style={{ color: deskColor, fontWeight: 700 }}>{stake.toFixed(2)} USDC on {deskSide}</strong>.
+            {' '}leads the desk on{' '}
+            <strong style={{ color: deskColor, fontWeight: 700 }}>{deskSide}</strong>.
           </div>
           <div className="mono" style={{ fontSize: 11, color: CF.ink3, marginTop: 2 }}>
-            {lead?.archetype ?? 'consensus call'} · chain-capped, can’t bluff
+            {lead?.archetype ?? 'consensus call'} · staked, chain-capped, can’t bluff
           </div>
         </div>
       </div>
 
-      {/* the pot */}
-      <PoolBar deskSide={deskSide} fadeSide={fadeSide} deskStake={stake} deskColor={deskColor} fadeColor={fadeColor} />
+      {/* the pot — the forecasters' own disagreement */}
+      <PoolBar pools={pools} />
 
-      {/* the choice */}
       {choice === null ? (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
@@ -84,14 +111,11 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
         </>
       ) : (
         <div style={{ marginTop: 16 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-            marginBottom: 12,
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
             <div style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink }}>
-              You’re <strong style={{ color: choice === 'fade' ? fadeColor : deskColor, fontWeight: 700 }}>
+              You’re <strong style={{ color: betColor, fontWeight: 700 }}>
                 {choice === 'fade' ? `fading ${lead?.handle ?? 'the desk'}` : `following ${lead?.handle ?? 'the desk'}`}
-              </strong>{' '}— betting <strong style={{ color: betSide === 'YES' ? CF.bull : CF.bear }}>{betSide}</strong>.
+              </strong>{' '}— betting <strong style={{ color: betColor }}>{betSide}</strong>.
             </div>
             <button onClick={() => setChoice(null)} className="mono" style={{
               background: 'none', border: 'none', cursor: 'pointer',
@@ -99,41 +123,69 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
             }}>← change</button>
           </div>
 
-          {/* the on-chain bet = the capped ERC-7715 mandate */}
-          <GrantCouncilMandate />
+          {/* stake size */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span className="mono" style={{ fontSize: 11, color: CF.ink3, letterSpacing: 0.5 }}>STAKE</span>
+            {STAKE_OPTIONS.map((a) => (
+              <button key={a} onClick={() => setAmount(a)} className="mono" style={{
+                padding: '6px 12px', borderRadius: CF.radius.md, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                background: amount === a ? CF.ink : CF.surface,
+                color: amount === a ? CF.bg : CF.ink2,
+                border: `1px solid ${amount === a ? CF.ink : CF.line}`,
+              }}>${a}</button>
+            ))}
+          </div>
 
-          <p style={{ fontFamily: CF.body, fontSize: 12, color: CF.ink3, lineHeight: 1.5, margin: '12px 0 0' }}>
-            Your bet is capped by the mandate above — the chain won’t let it exceed your limit.
-            If <strong style={{ color: betSide === 'YES' ? CF.bull : CF.bear }}>{betSide}</strong> wins,
-            you split the pot with everyone else on the {betSide} side.
-          </p>
+          {/* payout preview */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+            padding: '12px 14px', marginBottom: 14, flexWrap: 'wrap',
+            background: alpha(betColor, 8), border: `1px solid ${alpha(betColor, 25)}`, borderRadius: CF.radius.md,
+          }}>
+            <span style={{ fontFamily: CF.body, fontSize: 13, color: CF.ink2 }}>
+              If <strong style={{ color: betColor }}>{betSide}</strong> wins, your ${amount.toFixed(0)} returns
+            </span>
+            <span className="mono tnum" style={{ fontSize: 18, fontWeight: 700, color: betColor }}>
+              ${payout.toFixed(2)}
+              <span style={{ fontSize: 12, color: profit >= 0 ? CF.positive : CF.bear, marginLeft: 6 }}>
+                {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
+              </span>
+            </span>
+          </div>
+
+          {/* the on-chain bet = the capped ERC-7715 mandate, reframed */}
+          <GrantCouncilMandate context={{
+            kicker: null,
+            title: `Place your ${betSide} bet`,
+            cta: `Bet ${betSide} · up to $5`,
+            blurb: (
+              <>Authorize up to <strong style={{ color: CF.ink, fontWeight: 600 }}>$5</strong> in MetaMask to place this bet.
+              It’s a capped, expiring permission (ERC-7715) — the chain won’t let your bet exceed the limit, and you can
+              revoke anytime. Try to bet past the cap and the transaction reverts on-chain.</>
+            ),
+          }} />
         </div>
       )}
     </div>
   )
 }
 
-function PoolBar({
-  deskSide, fadeSide, deskStake, deskColor, fadeColor,
-}: {
-  deskSide: string; fadeSide: string; deskStake: number; deskColor: string; fadeColor: string
-}) {
-  // The desk anchors its side; the fade side is open until faders join.
-  const fadeStake = 0
-  const total = deskStake + fadeStake || 1
-  const followPct = Math.round((deskStake / total) * 100)
+function PoolBar({ pools }: { pools: { YES: number; NO: number } }) {
+  const total = pools.YES + pools.NO || 1
+  const yesPct = Math.round((pools.YES / total) * 100)
   return (
     <div>
       <div style={{
         display: 'flex', justifyContent: 'space-between',
-        fontFamily: CF.mono, fontSize: 10.5, color: CF.ink3, marginBottom: 5,
+        fontFamily: CF.mono, fontSize: 10.5, marginBottom: 5,
       }}>
-        <span style={{ color: deskColor, fontWeight: 600 }}>{deskSide} · {deskStake.toFixed(2)} staked</span>
-        <span style={{ color: fadeColor, fontWeight: 600 }}>{fadeSide} · open</span>
+        <span style={{ color: CF.bull, fontWeight: 600 }}>YES pool · {pools.YES.toFixed(2)}</span>
+        <span style={{ color: CF.ink4 }}>the pot · {total.toFixed(2)} USDC</span>
+        <span style={{ color: CF.bear, fontWeight: 600 }}>{pools.NO.toFixed(2)} · NO pool</span>
       </div>
       <div style={{ display: 'flex', height: 8, borderRadius: 999, overflow: 'hidden', background: CF.surface2 }}>
-        <div style={{ width: `${followPct}%`, background: deskColor }} />
-        <div style={{ width: `${100 - followPct}%`, background: alpha(fadeColor, 30) }} />
+        <div style={{ width: `${yesPct}%`, background: CF.bull }} />
+        <div style={{ width: `${100 - yesPct}%`, background: CF.bear }} />
       </div>
     </div>
   )
