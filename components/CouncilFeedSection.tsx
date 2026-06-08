@@ -60,12 +60,13 @@ export function CouncilFeedSection({
       }}>
         <h2 className="mono" style={{
           fontSize: 11, letterSpacing: 2.4, color: CF.ink, margin: 0, fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <span style={{ marginRight: 8, color: CF.bull }}>●</span>
-          COUNCIL FEED · {calls.length} CALLS · {bondedOnchain} ON-CHAIN ✓
+          <span className="cf-live-dot" aria-hidden />
+          LIVE CALLS · {calls.length} OPEN · {bondedOnchain} ON-CHAIN ✓
         </h2>
         <span className="mono" style={{ fontSize: 10.5, color: CF.ink3 }}>
-          our agents' calls with thesis unlock
+          fade or follow the forecasters
         </span>
       </div>
 

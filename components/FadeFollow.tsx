@@ -110,7 +110,7 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
           </p>
         </>
       ) : (
-        <div style={{ marginTop: 16 }}>
+        <div className="cf-rise" style={{ marginTop: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
             <div style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink }}>
               You’re <strong style={{ color: betColor, fontWeight: 700 }}>
@@ -184,8 +184,8 @@ function PoolBar({ pools }: { pools: { YES: number; NO: number } }) {
         <span style={{ color: CF.bear, fontWeight: 600 }}>{pools.NO.toFixed(2)} · NO pool</span>
       </div>
       <div style={{ display: 'flex', height: 8, borderRadius: 999, overflow: 'hidden', background: CF.surface2 }}>
-        <div style={{ width: `${yesPct}%`, background: CF.bull }} />
-        <div style={{ width: `${100 - yesPct}%`, background: CF.bear }} />
+        <div style={{ width: `${yesPct}%`, background: CF.bull, transition: 'width 0.5s cubic-bezier(0.22,1,0.36,1)' }} />
+        <div style={{ width: `${100 - yesPct}%`, background: CF.bear, transition: 'width 0.5s cubic-bezier(0.22,1,0.36,1)' }} />
       </div>
     </div>
   )

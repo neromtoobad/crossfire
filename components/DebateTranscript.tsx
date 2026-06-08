@@ -137,7 +137,13 @@ export function DebateTranscript({
                 borderLeft: `2.5px solid ${a.color}`,
                 padding: '9px 12px',
               }}>
-                {m.text || (m.streaming ? <span style={{ color: CF.ink3 }}>thinking…</span> : null)}
+                {m.text || (m.streaming ? (
+                  <span className="cf-think" style={{ display: 'inline-flex', gap: 4, alignItems: 'center', color: a.color }} aria-label="thinking">
+                    <span style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor', display: 'inline-block' }} />
+                    <span style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor', display: 'inline-block' }} />
+                    <span style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor', display: 'inline-block' }} />
+                  </span>
+                ) : null)}
                 {m.streaming && m.text ? (
                   <span style={{
                     display: 'inline-block', width: 7, height: 14, marginLeft: 2,

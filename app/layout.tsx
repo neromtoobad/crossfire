@@ -102,6 +102,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           main { position: relative; z-index: 1; }
           /* feed cards lift on hover — a little life for the betting feed */
           .cf-card:hover { transform: translateY(-2px); box-shadow: var(--cf-shadow-hover); border-color: var(--cf-line-2); }
+          /* ── motion toolkit ── */
+          @keyframes cf-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.82); } }
+          @keyframes cf-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes cf-blink { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
+          .cf-live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 999px; background: #DC2626; animation: cf-pulse 1.5s ease-in-out infinite; }
+          .cf-rise { animation: cf-rise 0.34s cubic-bezier(0.22,1,0.36,1) both; }
+          .cf-think span { animation: cf-blink 1.1s infinite; }
+          .cf-think span:nth-child(2) { animation-delay: 0.18s; }
+          .cf-think span:nth-child(3) { animation-delay: 0.36s; }
           /* logo variant swap — BrandLogo renders both, CSS shows one */
           .cf-logo-dark { display: none !important; }
           :root[data-theme="dark"] .cf-logo-light { display: none !important; }
