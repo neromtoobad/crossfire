@@ -7,20 +7,10 @@ import { getResolution } from '../../lib/resolutions'
 import { ConnectButton } from '../../components/ConnectButton'
 import { BrandLogo } from '../../components/Logo'
 import { ThemeToggle } from '../../components/ThemeToggle'
+import { PUNDITS } from '../../lib/pundits'
 import { CF, alpha } from '../../lib/theme'
 
 export const dynamic = 'force-dynamic'
-
-const AGENT_LETTER: Record<string, string> = {
-  MacroScout: 'M', NewsHawk: 'N', CrowdPulse: 'C', BookWatcher: 'B', Skeptic: 'S',
-}
-const ROLE_TAGLINE: Record<string, string> = {
-  MacroScout: 'macro regimes & flows',
-  NewsHawk: 'breaking news & catalysts',
-  CrowdPulse: 'sentiment & positioning',
-  BookWatcher: 'price action & book depth',
-  Skeptic: 'adversarial refutation',
-}
 
 function brierBadge(brier: number, resolved: number) {
   if (resolved === 0) return { color: CF.ink3, bg: CF.surface2, label: 'unscored' }
@@ -73,7 +63,7 @@ export default function Leaderboard() {
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
-            COUNCIL CALIBRATION
+            THE STANDINGS
           </div>
           <h1 style={{
             fontFamily: CF.display, fontWeight: 500,
@@ -81,16 +71,16 @@ export default function Leaderboard() {
             margin: '0 0 16px', color: CF.ink,
             fontVariationSettings: '"opsz" 120',
           }}>
-            The leaderboard
+            Who&apos;s calling it best
           </h1>
           <p style={{
             fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.6, maxWidth: 720, margin: 0,
           }}>
-            Each agent is scored by Brier — the mean squared error of its
-            probability forecasts on resolved markets. Lower is better; 0 is
-            perfect, 0.25 is a coin flip. Confidence is already capital at risk
-            via the bond, so the leaderboard reflects what these agents would
-            have actually earned or lost.
+            The five forecasters, ranked by how accurate they&apos;ve actually been.
+            The score is a Brier — lower is better; 0 is perfect, 0.25 is a coin
+            flip. A sharper record earns a bigger budget on the next call
+            (the <span style={{ color: CF.ink }}>budget ×</span> column), so being right
+            literally compounds.
           </p>
         </section>
 
@@ -103,7 +93,7 @@ export default function Leaderboard() {
             { label: 'RESOLVED', value: resolvedCalls.length.toString(), color: CF.ink },
             { label: 'OPEN', value: openCalls.toString(), color: CF.ink },
             {
-              label: 'COUNCIL BRIER',
+              label: 'LEAGUE BRIER',
               value: council > 0 ? council.toFixed(3) : '—',
               color: council > 0 && council < 0.2 ? CF.bull : CF.ink,
             },
@@ -165,19 +155,24 @@ export default function Leaderboard() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 32, height: 32, borderRadius: CF.radius.md,
-                    background: badge.bg, color: badge.color,
-                    border: `1px solid ${alpha(badge.color, 20)}`,
-                    fontFamily: CF.mono, fontSize: 13, fontWeight: 700,
-                  }}>{AGENT_LETTER[s.role] ?? '?'}</span>
+                    width: 34, height: 34, borderRadius: 999,
+                    background: PUNDITS[s.role]?.tint ?? badge.bg,
+                    border: `1px solid ${alpha(PUNDITS[s.role]?.color ?? badge.color, 25)}`,
+                    fontSize: 18, lineHeight: 1,
+                  }}>{PUNDITS[s.role]?.avatar ?? '?'}</span>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: CF.body, fontWeight: 600, fontSize: 14, color: CF.ink }}>
-                      {s.role}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                      <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 14, letterSpacing: 0.3, color: PUNDITS[s.role]?.color ?? CF.ink }}>
+                        {PUNDITS[s.role]?.handle ?? s.role}
+                      </span>
+                      <span className="mono" style={{ fontSize: 10, color: CF.ink4 }}>
+                        {PUNDITS[s.role]?.archetype}
+                      </span>
                     </div>
                     {/* per-category calibration chips */}
                     <div className="mono" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
                       {Object.entries(s.byCategory).length === 0 ? (
-                        <span style={{ fontSize: 10.5, color: CF.ink4 }}>{ROLE_TAGLINE[s.role]}</span>
+                        <span style={{ fontSize: 10.5, color: CF.ink4 }}>{PUNDITS[s.role]?.desk}</span>
                       ) : (
                         Object.entries(s.byCategory)
                           .sort((a, b) => a[1].brier - b[1].brier)
