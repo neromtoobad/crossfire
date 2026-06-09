@@ -24,7 +24,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
   const stats = computeAgentStats(calls)
   const me = stats.find((s) => s.role === role)!
   const rank = [...stats].sort((a, b) => b.winRate - a.winRate).findIndex((s) => s.role === role) + 1
-  const roi = Math.round((me.winRate - 0.5) * 640 + me.callsResolved * 0.5)
+  const winPct = me.callsResolved ? Math.round(me.winRate * 100) : null
 
   // this agent's track record: its vote + reasoning per call, with outcome
   const record = calls
@@ -78,9 +78,9 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div className="mono" style={{ fontSize: 10.5, letterSpacing: 1.4, color: CF.ink4, marginBottom: 4 }}>RETURN ON STAKE</div>
-            <div className="mono tnum" style={{ fontSize: 44, fontWeight: 700, letterSpacing: -1.5, color: roi >= 0 ? CF.positive : CF.bear }}>
-              {roi >= 0 ? '+' : ''}{roi}%
+            <div className="mono" style={{ fontSize: 10.5, letterSpacing: 1.4, color: CF.ink4, marginBottom: 4 }}>WIN RATE</div>
+            <div className="mono tnum" style={{ fontSize: 44, fontWeight: 700, letterSpacing: -1.5, color: winPct === null ? CF.ink3 : winPct >= 60 ? CF.positive : winPct >= 40 ? CF.amber : CF.bear }}>
+              {winPct === null ? '—' : `${winPct}%`}
             </div>
           </div>
         </section>

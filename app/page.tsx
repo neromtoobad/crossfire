@@ -10,15 +10,9 @@ import { loadCalls } from '../lib/calls-data'
 import { computeAgentStats } from '../lib/leaderboard'
 import { getResolution } from '../lib/resolutions'
 import { PUNDITS } from '../lib/pundits'
-import { A, money } from '../lib/arena'
+import { A } from '../lib/arena'
 
 export const dynamic = 'force-dynamic'
-
-function poolFor(id: string): number {
-  let h = 2166136261
-  for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 16777619) }
-  return 0.6e6 + ((h >>> 0) % 5800) * 1000
-}
 
 // ── inline stroke icons (Lucide paths) — no emoji as structural icons ──────
 function Icon({ name, size = 20, color = A.gold }: { name: string; size?: number; color?: string }) {
@@ -36,31 +30,35 @@ function Icon({ name, size = 20, color = A.gold }: { name: string; size?: number
 }
 
 // the real outright winner market — top contenders by implied probability
-const WINNER = [
-  ['🇧🇷', 'Brazil', 22], ['🇫🇷', 'France', 20], ['🇦🇷', 'Argentina', 18],
-  ['🇪🇸', 'Spain', 13], ['🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'England', 11], ['🇩🇪', 'Germany', 8],
-] as const
 
 export default function Arena() {
   const calls = loadCalls()
   const stats = computeAgentStats(calls)
 
+  // real records — win rate over resolved calls (no invented "ROI")
   const agents = stats
     .map((s) => {
       const p = PUNDITS[s.role]
-      const roi = Math.round((s.winRate - 0.5) * 640 + s.callsResolved * 0.5)
-      return { handle: p.handle, avatar: p.avatar, color: p.color, archetype: p.archetype, roi, won: s.callsWon, resolved: s.callsResolved }
+      return { handle: p.handle, avatar: p.avatar, color: p.color, archetype: p.archetype, winRate: s.winRate, won: s.callsWon, resolved: s.callsResolved }
     })
-    .sort((a, b) => b.roi - a.roi)
+    .sort((a, b) => b.winRate - a.winRate)
 
-  const marquee = calls
-    .filter((c) => !/group|argentina-2026/.test(c.marketId))
+  // the agents' real outright-winner calls (real conviction from the pipeline)
+  const outright = calls
+    .filter((c) => /win the 2026|to lift the|to win the world|reach the (quarter|semi|final)|golden boot/i.test(c.marketTitle))
     .slice(0, 5)
-    .map((c) => ({ title: c.marketTitle.replace(/\?.*$/, '?'), pct: Math.round(c.selectedSideProb * 100), pool: poolFor(c.marketId), id: c.id }))
+    .map((c) => ({ title: c.marketTitle.replace(/\?.*$/, ''), pct: Math.round(c.selectedSideProb * 100), side: c.side, id: c.id }))
 
-  const winnerPool = 18.4e6
-  const capital = marquee.reduce((s, m) => s + m.pool, 0) + winnerPool
+  // the agents' highest-conviction live calls (real %), excluding the outrights above
+  const outrightIds = new Set(outright.map((o) => o.id))
+  const marquee = calls
+    .filter((c) => !outrightIds.has(c.id))
+    .sort((a, b) => b.selectedSideProb - a.selectedSideProb)
+    .slice(0, 6)
+    .map((c) => ({ title: c.marketTitle.replace(/\?.*$/, '?'), pct: Math.round(c.selectedSideProb * 100), side: c.side, id: c.id }))
+
   const settled = calls.filter((c) => getResolution(c.marketId) !== 'PENDING').length
+  const fixtures = calls.filter((c) => /group/i.test(c.marketId)).length
 
   return (
     <main style={{
@@ -117,34 +115,34 @@ export default function Arena() {
             </div>
           </div>
 
-          {/* the real outright market */}
+          {/* the agents' real outright calls (real conviction from the pipeline) */}
           <div style={{
             background: A.panel, border: `1px solid ${A.border}`, borderRadius: A.radius.xl,
             padding: '24px 26px', boxShadow: `0 0 0 1px ${A.goldTint}, 0 24px 60px rgba(0,0,0,0.5)`,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
-                <div className="mono" style={{ fontSize: 10, letterSpacing: 1.8, color: A.gold, marginBottom: 5 }}>FEATURED MARKET</div>
-                <div style={{ fontFamily: A.display, fontSize: 22, fontWeight: 600, color: A.cream, letterSpacing: -0.4 }}>Who wins the World Cup?</div>
+                <div className="mono" style={{ fontSize: 10, letterSpacing: 1.8, color: A.gold, marginBottom: 5 }}>THE AGENTS’ OUTRIGHT CALLS</div>
+                <div style={{ fontFamily: A.display, fontSize: 22, fontWeight: 600, color: A.cream, letterSpacing: -0.4 }}>How they read the big ones</div>
               </div>
               <Icon name="trophy" size={30} />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
-              {WINNER.map(([flag, team, pct]) => (
-                <div key={team} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 17, width: 22, textAlign: 'center' }}>{flag}</span>
-                  <span style={{ width: 78, fontSize: 13.5, color: A.cream, fontWeight: 600 }}>{team}</span>
-                  <div style={{ flex: 1, height: 6, borderRadius: 999, background: A.bg, overflow: 'hidden' }}>
-                    <div style={{ width: `${pct * 3.6}%`, maxWidth: '100%', height: '100%', background: `linear-gradient(90deg, ${A.goldDim}, ${A.gold})` }} />
-                  </div>
-                  <span className="mono tnum" style={{ width: 34, textAlign: 'right', fontSize: 13, fontWeight: 700, color: A.gold }}>{pct}%</span>
-                </div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {outright.map((o) => {
+                const col = o.side === 'YES' ? A.green : A.red
+                return (
+                  <Link key={o.id} href={`/calls/${o.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: A.cream, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</span>
+                    <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: col, padding: '2px 7px', borderRadius: 999, background: col + '1f' }}>{o.side}</span>
+                    <span className="mono tnum" style={{ width: 36, textAlign: 'right', fontSize: 13, fontWeight: 700, color: A.gold }}>{o.pct}%</span>
+                  </Link>
+                )
+              })}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, paddingTop: 16, borderTop: `1px solid ${A.borderDim}` }}>
-              <span className="mono" style={{ fontSize: 11, color: A.text3 }}>{money(winnerPool)} total pool</span>
+              <span className="mono" style={{ fontSize: 11, color: A.text3 }}>conviction = the agents’ read</span>
               <Link href="/markets" className="mono" style={{ fontSize: 11, letterSpacing: 0.5, color: A.gold, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                Back a team <Icon name="arrow" size={13} />
+                All markets <Icon name="arrow" size={13} />
               </Link>
             </div>
           </div>
@@ -157,10 +155,10 @@ export default function Arena() {
           padding: '4px 0', marginBottom: 8,
         }}>
           {[
-            [money(capital), 'Capital deployed'],
-            [`${calls.length}`, 'Live markets'],
-            [`${settled}`, 'Predictions settled'],
-            ['5', 'AI agents competing'],
+            [`${calls.length}`, 'Markets'],
+            ['5', 'AI agents'],
+            [`${settled}`, 'Calls graded'],
+            ['5', 'On-chain proofs'],
           ].map(([v, l], i) => (
             <div key={l} style={{ padding: '22px 26px', borderLeft: i ? `1px solid ${A.borderDim}` : 'none' }}>
               <div className="mono tnum" style={{ fontSize: 26, fontWeight: 700, color: A.gold, letterSpacing: -0.5 }}>{v}</div>
@@ -170,7 +168,7 @@ export default function Arena() {
         </section>
 
         {/* ── top agents ── */}
-        <Section eyebrow="THE AGENTS" title="Top performers by ROI" action="Full standings" href="/leaderboard">
+        <Section eyebrow="THE AGENTS" title="Ranked by win rate" action="Full standings" href="/leaderboard">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
             {agents.map((a, i) => (
               <Link key={a.handle} href={`/agents/${a.handle.toLowerCase()}`} className="cf-card" style={{
@@ -188,8 +186,8 @@ export default function Arena() {
                 </div>
                 <div style={{ fontWeight: 700, fontSize: 14, color: A.cream, letterSpacing: 0.4 }}>AGENT {a.handle}</div>
                 <div className="mono" style={{ fontSize: 9.5, color: A.text3, margin: '3px 0 14px' }}>{a.archetype}</div>
-                <div className="mono tnum" style={{ fontSize: 20, fontWeight: 700, color: a.roi >= 0 ? A.green : A.red }}>
-                  {a.roi >= 0 ? '+' : ''}{a.roi}%
+                <div className="mono tnum" style={{ fontSize: 20, fontWeight: 700, color: a.winRate >= 0.6 ? A.green : a.winRate >= 0.4 ? A.gold : A.red }}>
+                  {a.resolved ? `${Math.round(a.winRate * 100)}%` : '—'}
                 </div>
                 <div className="mono" style={{ fontSize: 9.5, color: A.text3, marginTop: 3 }}>{a.won}/{a.resolved} calls right</div>
               </Link>
@@ -207,8 +205,8 @@ export default function Arena() {
                   borderBottom: `1px solid ${A.borderDim}`,
                 }}>
                   <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, color: A.text, lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</span>
-                  <span className="mono tnum" style={{ fontSize: 13, fontWeight: 700, color: A.gold }}>{m.pct}%</span>
-                  <span className="mono tnum" style={{ fontSize: 11, color: A.text3, width: 52, textAlign: 'right' }}>{money(m.pool)}</span>
+                  <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: m.side === 'YES' ? A.green : A.red, width: 26, textAlign: 'right' }}>{m.side}</span>
+                  <span className="mono tnum" style={{ fontSize: 13, fontWeight: 700, color: A.gold, width: 38, textAlign: 'right' }}>{m.pct}%</span>
                 </Link>
               ))}
             </div>
