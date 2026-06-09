@@ -50,10 +50,15 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const url = new URL(req.url)
   const user = url.searchParams.get('user')
   const marketId = url.searchParams.get('marketId')
-  if (!user || !marketId) {
-    return NextResponse.json({ ok: false, error: 'user + marketId query params required' }, { status: 400 })
+  if (!user) {
+    return NextResponse.json({ ok: false, error: 'user query param required' }, { status: 400 })
   }
-  const { getActiveMandate } = await import('../../../lib/mandate-store.js')
-  const m = getActiveMandate(user, marketId)
-  return NextResponse.json({ ok: true, active: m ?? null })
+  // marketId present → single active mandate; omitted → list all for the user
+  if (marketId) {
+    const { getActiveMandate } = await import('../../../lib/mandate-store.js')
+    const m = getActiveMandate(user, marketId)
+    return NextResponse.json({ ok: true, active: m ?? null })
+  }
+  const { listMandatesForUser } = await import('../../../lib/mandate-store.js')
+  return NextResponse.json({ ok: true, mandates: listMandatesForUser(user) })
 }
