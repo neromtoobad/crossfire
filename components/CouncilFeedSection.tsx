@@ -6,12 +6,15 @@
 import { useMemo, useState } from 'react'
 import { CF } from '../lib/theme'
 import { CallCard } from './CallCard'
+import { getResolution } from '../lib/resolutions'
 import type { PublishedCall } from '../lib/calls-data'
 
-type Tab = 'all' | 'outright' | 'knockouts' | 'goals' | 'group' | 'other'
+type Tab = 'all' | 'live' | 'results' | 'outright' | 'knockouts' | 'goals' | 'group' | 'other'
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'all',       label: 'All' },
+  { id: 'live',      label: 'Live' },
+  { id: 'results',   label: 'Results' },
   { id: 'outright',  label: 'Outright' },
   { id: 'knockouts', label: 'Knockouts' },
   { id: 'goals',     label: 'Goals' },
@@ -44,11 +47,16 @@ export function CouncilFeedSection({
     return m
   }, [calls])
 
+  const liveCount = useMemo(() => calls.filter((c) => getResolution(c.marketId) === 'PENDING').length, [calls])
+  const resolvedCount = calls.length - liveCount
+
   // "All" shows the marquee calls (calls are pre-sorted newest-first, so the
   // hand-authored picks lead); a specific tab shows that bucket in full.
   const ALL_CAP = 18
   const visible = useMemo(() => {
     if (tab === 'all') return calls.slice(0, ALL_CAP)
+    if (tab === 'live') return calls.filter((c) => getResolution(c.marketId) === 'PENDING')
+    if (tab === 'results') return calls.filter((c) => getResolution(c.marketId) !== 'PENDING')
     return calls.filter((c) => bucketFor(c.marketId) === tab)
   }, [calls, tab])
   const hiddenInAll = tab === 'all' ? Math.max(0, calls.length - ALL_CAP) : 0
@@ -78,7 +86,10 @@ export function CouncilFeedSection({
       }}>
         {TABS.map((t) => {
           const active = tab === t.id
-          const count = t.id === 'all' ? calls.length : (bucketCounts.get(t.id) ?? 0)
+          const count = t.id === 'all' ? calls.length
+            : t.id === 'live' ? liveCount
+            : t.id === 'results' ? resolvedCount
+            : (bucketCounts.get(t.id) ?? 0)
           if (t.id !== 'all' && count === 0) return null
           return (
             <button

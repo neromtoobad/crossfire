@@ -104,7 +104,14 @@ function makeFixtureCall(group: string, a: [string, number], b: [string, number]
     const isOutfield = role !== 'Skeptic'
     const dissent = isOutfield && i >= 4 - dissenters
     if (role === 'Skeptic') {
-      return { role, vote: 'YES', confidence: Math.round((0.18 + r() * 0.22) * 100) / 100, oneLiner: line(F, D) }
+      // THE PUNDIT is a genuine contrarian — he fades the favourite ~45% of the
+      // time (and pays for it on the chalk that holds). That's why he ends up
+      // miscalibrated and on the smallest budget — the accountability loop biting.
+      if (r() < 0.45) {
+        return { role, vote: 'NO', confidence: Math.round((0.55 + r() * 0.15) * 100) / 100,
+          oneLiner: `Everyone's piled on ${F} — that's exactly when they bottle it. I'll take ${D}.` }
+      }
+      return { role, vote: 'YES', confidence: Math.round((0.18 + r() * 0.18) * 100) / 100, oneLiner: line(F, D) }
     }
     if (dissent) {
       // an upset shout for the dog
@@ -144,6 +151,14 @@ function makeFixtureCall(group: string, a: [string, number], b: [string, number]
   }
 }
 
+// Resolutions for the fixtures that have already been played (matchdays 1-2 of
+// 3). Favourites win more often than not, scaled by the strength gap, with
+// genuine upsets — so the agents who back chalk score well, the contrarian and
+// the dissenters have mixed records, and the standings have real depth. The
+// last third of fixtures stay PENDING (live matches still to come).
+export const FIXTURE_RESOLUTIONS: Record<string, 'YES' | 'NO'> = {}
+const RESOLVED_THROUGH = 48 // of 72 — leaves 24 live
+
 export const FIXTURE_CALLS: PublishedCall[] = (() => {
   const out: PublishedCall[] = []
   let idx = 0
@@ -151,7 +166,16 @@ export const FIXTURE_CALLS: PublishedCall[] = (() => {
     // round-robin: 6 matches per group of 4
     for (let i = 0; i < teams.length; i++) {
       for (let j = i + 1; j < teams.length; j++) {
-        out.push(makeFixtureCall(group, teams[i], teams[j], idx++))
+        const call = makeFixtureCall(group, teams[i], teams[j], idx)
+        out.push(call)
+        if (idx < RESOLVED_THROUGH) {
+          const [fa, fb] = teams[i][1] >= teams[j][1] ? [teams[i], teams[j]] : [teams[j], teams[i]]
+          const gap = fa[1] - fb[1]
+          const favWinP = Math.min(0.85, 0.58 + gap / 60)
+          const draw = rng(hashStr(`res-${call.marketId}`))()
+          FIXTURE_RESOLUTIONS[call.marketId] = draw < favWinP ? 'YES' : 'NO'
+        }
+        idx++
       }
     }
   }

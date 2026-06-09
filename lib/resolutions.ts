@@ -7,6 +7,8 @@
 // 'PENDING' means the market is still open — those calls don't contribute
 // to the score (they show in the "open" tally on the leaderboard).
 
+import { FIXTURE_RESOLUTIONS } from './wc-fixtures.js'
+
 export type Resolution = 'YES' | 'NO' | 'PENDING'
 
 // Keyed by marketId (NOT callId) so this survives council re-runs.
@@ -32,5 +34,5 @@ export const RESOLUTIONS: Record<string, Resolution> = {
 }
 
 export function getResolution(marketId: string): Resolution {
-  return RESOLUTIONS[marketId] ?? 'PENDING'
+  return RESOLUTIONS[marketId] ?? FIXTURE_RESOLUTIONS[marketId] ?? 'PENDING'
 }

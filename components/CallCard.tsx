@@ -9,6 +9,7 @@ import Link from 'next/link'
 import type { PublishedCall } from '../lib/calls-data'
 import { relativeTime } from '../lib/calls-data'
 import { PUNDITS, punditOf } from '../lib/pundits'
+import { getResolution } from '../lib/resolutions'
 import { CF, alpha } from '../lib/theme'
 
 function leadPundit(call: PublishedCall) {
@@ -44,6 +45,11 @@ export function CallCard({ call }: { call: PublishedCall }) {
   const skepticOk = call.skepticVerdict === 'APPROVED'
   const agreed = nonSkeptic.filter((v) => v.vote === call.side).length
 
+  // resolved matches: did the panel's call (side) hit?
+  const resolution = getResolution(call.marketId)
+  const resolved = resolution !== 'PENDING'
+  const hit = resolution === call.side
+
   return (
     <Link
       href={`/calls/${call.id}`}
@@ -76,9 +82,20 @@ export function CallCard({ call }: { call: PublishedCall }) {
             </span>
           ) : null}
         </div>
-        <span className="mono" style={{ fontSize: 10, color: CF.ink4, letterSpacing: 0.4, whiteSpace: 'nowrap' }}>
-          {relativeTime(call.publishedAt).toUpperCase()}
-        </span>
+        {resolved ? (
+          <span className="mono" style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: 0.4, whiteSpace: 'nowrap',
+            padding: '3px 8px', borderRadius: 999,
+            background: hit ? CF.positiveTint : CF.bearTint,
+            color: hit ? CF.positive : CF.bear,
+          }}>
+            {hit ? '✓ HIT' : '✗ MISS'}
+          </span>
+        ) : (
+          <span className="mono" style={{ fontSize: 10, color: CF.ink4, letterSpacing: 0.4, whiteSpace: 'nowrap' }}>
+            {relativeTime(call.publishedAt).toUpperCase()}
+          </span>
+        )}
       </div>
 
       {/* ── headline ── */}
@@ -140,15 +157,27 @@ export function CallCard({ call }: { call: PublishedCall }) {
             ? <span style={{ color: CF.gold, fontWeight: 600 }} title={`on-chain ${call.bondTxHash}`}>staked on-chain ✓</span>
             : <>staked <span className="tnum" style={{ color: CF.ink2, fontWeight: 600 }}>{call.bondUsdc.toFixed(2)}</span></>}
         </div>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '6px 12px', borderRadius: 999,
-          background: alpha(leadColor, 10), border: `1px solid ${alpha(leadColor, 30)}`,
-          fontFamily: CF.body, fontWeight: 700, fontSize: 12.5, color: leadColor,
-        }}>
-          Fade or Follow
-          <span style={{ fontSize: 13 }}>→</span>
-        </span>
+        {resolved ? (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', borderRadius: 999,
+            background: hit ? CF.positiveTint : CF.bearTint,
+            border: `1px solid ${alpha(hit ? CF.positive : CF.bear, 30)}`,
+            fontFamily: CF.body, fontWeight: 700, fontSize: 12, color: hit ? CF.positive : CF.bear,
+          }}>
+            {resolution} · {hit ? 'followers paid' : 'faders paid'}
+          </span>
+        ) : (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', borderRadius: 999,
+            background: alpha(leadColor, 10), border: `1px solid ${alpha(leadColor, 30)}`,
+            fontFamily: CF.body, fontWeight: 700, fontSize: 12.5, color: leadColor,
+          }}>
+            Fade or Follow
+            <span style={{ fontSize: 13 }}>→</span>
+          </span>
+        )}
       </div>
     </Link>
   )
