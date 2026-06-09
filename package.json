@@ -5,6 +5,10 @@
   "type": "module",
   "description": "CROSSFIRE — adversarial agents on a chain-enforced mandate. MetaMask Smart Accounts Kit x 1Shot x Venice.",
   "scripts": {
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "check:accounts": "tsx scripts/check-accounts.ts",
     "deploy:orchestrator": "tsx scripts/deploy-orchestrator.ts",
     "proof": "tsx scripts/proof.ts",

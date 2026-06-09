@@ -19,9 +19,9 @@ export async function GET(req: NextRequest) {
   }
   const results = await Promise.all(slugs.map((s) => getPolymarketPrice(s)))
   const out: Record<string, ReturnType<typeof shape>> = {}
-  for (let i = 0; i < slugs.length; i++) {
-    out[slugs[i]] = shape(results[i])
-  }
+  slugs.forEach((slug, i) => {
+    out[slug] = shape(results[i] ?? null)
+  })
   return Response.json(out, {
     headers: { 'Cache-Control': 's-maxage=30, stale-while-revalidate=60' },
   })
