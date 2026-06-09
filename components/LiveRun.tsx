@@ -28,7 +28,7 @@ const STAGES: StageMeta[] = [
     title: 'Approve a spending limit',
     tags: ['MetaMask Kit', 'ERC-7715'],
     caption:
-      'You sign once in MetaMask to let the council spend a few dollars — and not a cent more. It expires on its own, and you can cancel anytime. The limit lives on the blockchain, so no bug in our code can get past it.',
+      'You sign once in MetaMask to let the agents spend a few dollars — and not a cent more. It expires on its own, and you can cancel anytime. The limit lives on the blockchain, so no bug in our code can get past it.',
   },
   {
     title: 'The agents debate — and bet',

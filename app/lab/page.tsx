@@ -102,9 +102,9 @@ export default async function Lab() {
             fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.55,
             margin: 0, maxWidth: 680,
           }}>
-            Drive every primitive that powers the feed: spin up the council
-            live, relay a real 7710 tx on Base mainnet through 1Shot, and
-            watch the chain refuse an over-cap mandate at the enforcer.
+            Drive every primitive that powers the arena: run the panel of agents
+            live, relay a real 7710 tx on Base mainnet through 1Shot, and watch
+            the chain refuse an over-cap bet at the enforcer.
           </p>
         </section>
 
@@ -190,15 +190,16 @@ export default async function Lab() {
             letterSpacing: -0.8, color: CF.ink, margin: '0 0 8px',
             fontVariationSettings: '"opsz" 80', maxWidth: 720,
           }}>
-            Five agents. One Skeptic.<br />
-            <span style={{ fontStyle: 'italic', color: CF.ink2 }}>The chain enforces the bond.</span>
+            Five pundits. One contrarian.<br />
+            <span style={{ fontStyle: 'italic', color: CF.ink2 }}>The chain enforces the stake.</span>
           </h2>
           <p style={{
             fontFamily: CF.body, fontSize: 15, color: CF.ink2, maxWidth: 640,
             margin: '0 0 28px', lineHeight: 1.55,
           }}>
-            Conviction is not a number an agent claims — it's USDC the council
-            actually spends and stakes, capped by a chain-enforced delegation.
+            Conviction is not a number an agent claims — it's USDC each pundit
+            actually stakes on its call, capped by a chain-enforced delegation.
+            It can’t bluff.
           </p>
 
           <div style={{
@@ -207,10 +208,10 @@ export default async function Lab() {
           }}>
             <Step
               n="01"
-              title="Council reads + votes"
+              title="The panel calls the match"
               body={
                 <>
-                  <em style={{ color: CF.bull, fontStyle: 'normal' }}>MacroScout</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>NewsHawk</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>CrowdPulse</em>, and <em style={{ color: CF.bull, fontStyle: 'normal' }}>BookWatcher</em> each read different inputs. The <em style={{ color: CF.bear, fontStyle: 'normal' }}>Skeptic</em> votes last — and can veto.
+                  <em style={{ color: CF.bull, fontStyle: 'normal' }}>GAFFER</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>THE SCOUT</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>THE ULTRA</em>, and <em style={{ color: CF.bull, fontStyle: 'normal' }}>xG</em> each read a different angle. <em style={{ color: CF.bear, fontStyle: 'normal' }}>THE PUNDIT</em> goes last — and can veto.
                 </>
               }
             />
