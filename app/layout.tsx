@@ -28,7 +28,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             or the OS preference, so dark never flashes light on load. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('cf-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('cf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`,
           }}
         />
         <style>{`
@@ -51,20 +51,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             color-scheme: light;
           }
           :root[data-theme="dark"] {
-            --cf-bg: #0B0C0F; --cf-surface: #161820; --cf-surface-2: #1C1F28; --cf-surface-3: #23262F;
-            --cf-ink: #F3F3F0; --cf-ink-2: #ADADB6; --cf-ink-3: #80818A; --cf-ink-4: #5C5D66;
-            --cf-line: #292A31; --cf-line-2: #3A3B43; --cf-line-dark: #F3F3F0;
-            --cf-bull: #6AA0FF; --cf-bull-tint: #16233C; --cf-bull-ink: #BBD4FF;
-            --cf-bear: #F4727A; --cf-bear-tint: #2E1619; --cf-bear-ink: #FECDD3;
-            --cf-amber: #FBBF24; --cf-amber-tint: #2A2210; --cf-gold: #E3B341; --cf-gold-tint: #2A2410;
-            --cf-positive: #4ADE80; --cf-positive-tint: #112A1B;
-            --cf-shadow-card: 0 1px 2px rgba(0,0,0,0.55);
-            --cf-shadow-hover: 0 6px 16px rgba(0,0,0,0.6);
-            --cf-shadow-pop: 0 10px 30px rgba(0,0,0,0.66);
-            --cf-noise: rgba(255,255,255,0.022);
+            /* arena broadcast-gold — matches lib/arena.ts so the whole app reads
+               like the Live World Cup Arena landing */
+            --cf-bg: #03070C; --cf-surface: #0B121B; --cf-surface-2: #0F1822; --cf-surface-3: #141E2A;
+            --cf-ink: #F0E9D7; --cf-ink-2: #CFC9BB; --cf-ink-3: #8E8979; --cf-ink-4: #5F5B4E;
+            --cf-line: #1A2430; --cf-line-2: #2A3645; --cf-line-dark: #E8C254;
+            --cf-bull: #5B8DEF; --cf-bull-tint: #16233C; --cf-bull-ink: #BBD4FF;
+            --cf-bear: #F05A5A; --cf-bear-tint: #2E1619; --cf-bear-ink: #FECDD3;
+            --cf-amber: #E8C254; --cf-amber-tint: #2A2210; --cf-gold: #E8C254; --cf-gold-tint: #2A2410;
+            --cf-positive: #2BD46E; --cf-positive-tint: #0C2A1E;
+            --cf-shadow-card: 0 1px 2px rgba(0,0,0,0.6);
+            --cf-shadow-hover: 0 8px 22px rgba(0,0,0,0.65);
+            --cf-shadow-pop: 0 12px 34px rgba(0,0,0,0.7);
+            --cf-noise: rgba(232,194,84,0.018);
             --cf-noise-opacity: 0.5;
-            --cf-selection-bg: #F3F3F0; --cf-selection-fg: #0B0C0F;
-            --cf-underline: rgba(243,243,240,0.3);
+            --cf-selection-bg: #E8C254; --cf-selection-fg: #03070C;
+            --cf-underline: rgba(232,194,84,0.35);
             color-scheme: dark;
           }
 

@@ -34,7 +34,7 @@ function LogoMark({ size = 30 }: { size?: number }) {
   )
 }
 
-function Panel({ title, action, children, glow }: { title: string; action?: string; children: React.ReactNode; glow?: boolean }) {
+function Panel({ title, action, href, children, glow }: { title: string; action?: string; href?: string; children: React.ReactNode; glow?: boolean }) {
   return (
     <section style={{
       background: A.panel, border: `1px solid ${glow ? A.border : A.borderDim}`,
@@ -43,7 +43,11 @@ function Panel({ title, action, children, glow }: { title: string; action?: stri
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2, color: A.gold, fontWeight: 600 }}>{title}</div>
-        {action ? <span className="mono" style={{ fontSize: 9.5, letterSpacing: 1, color: A.text3 }}>{action}</span> : null}
+        {action ? (
+          href
+            ? <Link href={href} className="mono" style={{ fontSize: 9.5, letterSpacing: 1, color: A.gold }}>{action}</Link>
+            : <span className="mono" style={{ fontSize: 9.5, letterSpacing: 1, color: A.text3 }}>{action}</span>
+        ) : null}
       </div>
       {children}
     </section>
@@ -191,7 +195,7 @@ export default function Arena() {
           </div>
 
           {/* right — top agents by ROI */}
-          <Panel title="TOP AI AGENTS · BY ROI" action="VIEW ALL →" glow>
+          <Panel title="TOP AI AGENTS · BY ROI" action="VIEW ALL →" href="/leaderboard" glow>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {agents.map((a, i) => (
                 <Link key={a.handle} href="/leaderboard" style={{
@@ -222,7 +226,7 @@ export default function Arena() {
 
         {/* ── panel grid: market feed | recent activity | standings ── */}
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, marginBottom: 24 }}>
-          <Panel title="LIVE MARKET FEED" action="VIEW ALL →">
+          <Panel title="LIVE MARKET FEED" action="VIEW ALL MARKETS →" href="/markets">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {marquee.map((m) => (
                 <Link key={m.id} href={`/calls/${m.id}`} style={{
@@ -251,7 +255,7 @@ export default function Arena() {
             </div>
           </Panel>
 
-          <Panel title="LIVE WORLD CUP STANDINGS" action="FULL →">
+          <Panel title="LIVE WORLD CUP STANDINGS" action="FULL →" href="/leaderboard">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {STANDINGS.map(([flag, team, pct]) => (
                 <div key={team} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

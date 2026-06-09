@@ -8,6 +8,7 @@ import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
 import { BrandLogo } from '../../../components/Logo'
 import { ThemeToggle } from '../../../components/ThemeToggle'
+import { punditOf } from '../../../lib/pundits'
 import { CF, alpha } from '../../../lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -173,7 +174,7 @@ BACKED WITH
           <div className="mono" style={{
             fontSize: 11, color: CF.ink3, letterSpacing: 2.2, marginBottom: 14,
           }}>
-            COUNCIL VOTES · {agreed}/{roleVotes.length} AGREED
+THE AGENTS · {agreed}/{roleVotes.length} AGREE
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
             {call.votes.map((v) => {
@@ -201,10 +202,10 @@ BACKED WITH
                         width: 22, height: 22, borderRadius: CF.radius.sm,
                         background: vTint, color: vColor, border: `1px solid ${alpha(vColor, 20)}`,
                         fontFamily: CF.mono, fontSize: 11, fontWeight: 700,
-                      }}>{AGENT_LETTER[v.role] ?? '?'}</span>
+                      }}>{punditOf(v.role)?.avatar ?? AGENT_LETTER[v.role] ?? '?'}</span>
                       <span style={{
-                        fontFamily: CF.body, fontWeight: 600, color: CF.ink, fontSize: 14,
-                      }}>{v.role}</span>
+                        fontFamily: CF.body, fontWeight: 600, color: CF.ink, fontSize: 14, letterSpacing: 0.3,
+                      }}>{punditOf(v.role)?.handle ?? v.role}</span>
                     </div>
                     <div className="mono tnum" style={{ fontSize: 12 }}>
                       <span style={{ color: vColor, fontWeight: 600 }}>{v.vote}</span>
