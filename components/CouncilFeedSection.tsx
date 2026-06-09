@@ -8,24 +8,21 @@ import { CF } from '../lib/theme'
 import { CallCard } from './CallCard'
 import type { PublishedCall } from '../lib/calls-data'
 
-type Tab = 'all' | 'sports' | 'politics' | 'crypto' | 'tech' | 'macro' | 'other'
+type Tab = 'all' | 'outright' | 'knockouts' | 'goals' | 'group' | 'other'
 
 const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'all',      label: 'All' },
-  { id: 'sports',   label: 'Sports' },
-  { id: 'politics', label: 'Politics' },
-  { id: 'crypto',   label: 'Crypto' },
-  { id: 'tech',     label: 'Tech' },
-  { id: 'macro',    label: 'Macro' },
-  { id: 'other',    label: 'Other' },
+  { id: 'all',       label: 'All' },
+  { id: 'outright',  label: 'Outright' },
+  { id: 'knockouts', label: 'Knockouts' },
+  { id: 'goals',     label: 'Goals' },
+  { id: 'group',     label: 'Group' },
 ]
 
 function bucketFor(marketId: string): Tab {
-  if (marketId.startsWith('wc-')) return 'sports'
-  if (/btc|eth|sol|crypto/.test(marketId)) return 'crypto'
-  if (/gpt|openai|apple|gpt6/.test(marketId)) return 'tech'
-  if (/fed|10y|cpi|rate/.test(marketId)) return 'macro'
-  if (/trump|election|pardon/.test(marketId)) return 'politics'
+  if (/golden|score|goals|btts|hattrick/.test(marketId)) return 'goals'
+  if (/winner|outright|champion|quarters|argentina-2026/.test(marketId)) return 'outright'
+  if (/group/.test(marketId)) return 'group'
+  if (/wc-/.test(marketId)) return 'knockouts'
   return 'other'
 }
 
