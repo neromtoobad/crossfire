@@ -5,6 +5,7 @@
 import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
 import { VideoBackground } from '../components/VideoBackground'
+import { WinnerPicks } from '../components/WinnerPicks'
 import { BrandLogo } from '../components/Logo'
 import { loadCalls } from '../lib/calls-data'
 import { computeAgentStats } from '../lib/leaderboard'
@@ -43,16 +44,8 @@ export default function Arena() {
     })
     .sort((a, b) => b.winRate - a.winRate)
 
-  // the agents' real outright-winner calls (real conviction from the pipeline)
-  const outright = calls
-    .filter((c) => /win the 2026|to lift the|to win the world|reach the (quarter|semi|final)|golden boot/i.test(c.marketTitle))
-    .slice(0, 5)
-    .map((c) => ({ title: c.marketTitle.replace(/\?.*$/, ''), pct: Math.round(c.selectedSideProb * 100), side: c.side, id: c.id }))
-
-  // the agents' highest-conviction live calls (real %), excluding the outrights above
-  const outrightIds = new Set(outright.map((o) => o.id))
+  // the agents' highest-conviction live calls (real %)
   const marquee = calls
-    .filter((c) => !outrightIds.has(c.id))
     .sort((a, b) => b.selectedSideProb - a.selectedSideProb)
     .slice(0, 6)
     .map((c) => ({ title: c.marketTitle.replace(/\?.*$/, '?'), pct: Math.round(c.selectedSideProb * 100), side: c.side, id: c.id }))
@@ -90,10 +83,7 @@ export default function Arena() {
         </header>
 
         {/* ── hero ── */}
-        <section style={{
-          display: 'grid', gridTemplateColumns: '1fr 0.92fr', gap: 56,
-          alignItems: 'center', padding: '72px 0 64px',
-        }}>
+        <section style={{ padding: '76px 0 4px', maxWidth: 780 }}>
           <div>
             <div className="mono" style={{ fontSize: 11, letterSpacing: 2.6, color: A.gold, marginBottom: 22, display: 'flex', alignItems: 'center', gap: 9 }}>
               <span className="cf-live-dot" aria-hidden /> LIVE WORLD CUP ARENA
@@ -115,38 +105,10 @@ export default function Arena() {
             </div>
           </div>
 
-          {/* the agents' real outright calls (real conviction from the pipeline) */}
-          <div style={{
-            background: A.panel, border: `1px solid ${A.border}`, borderRadius: A.radius.xl,
-            padding: '24px 26px', boxShadow: `0 0 0 1px ${A.goldTint}, 0 24px 60px rgba(0,0,0,0.5)`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <div>
-                <div className="mono" style={{ fontSize: 10, letterSpacing: 1.8, color: A.gold, marginBottom: 5 }}>THE AGENTS’ OUTRIGHT CALLS</div>
-                <div style={{ fontFamily: A.display, fontSize: 22, fontWeight: 600, color: A.cream, letterSpacing: -0.4 }}>How they read the big ones</div>
-              </div>
-              <Icon name="trophy" size={30} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {outright.map((o) => {
-                const col = o.side === 'YES' ? A.green : A.red
-                return (
-                  <Link key={o.id} href={`/calls/${o.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: A.cream, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</span>
-                    <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: col, padding: '2px 7px', borderRadius: 999, background: col + '1f' }}>{o.side}</span>
-                    <span className="mono tnum" style={{ width: 36, textAlign: 'right', fontSize: 13, fontWeight: 700, color: A.gold }}>{o.pct}%</span>
-                  </Link>
-                )
-              })}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, paddingTop: 16, borderTop: `1px solid ${A.borderDim}` }}>
-              <span className="mono" style={{ fontSize: 11, color: A.text3 }}>conviction = the agents’ read</span>
-              <Link href="/markets" className="mono" style={{ fontSize: 11, letterSpacing: 0.5, color: A.gold, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                All markets <Icon name="arrow" size={13} />
-              </Link>
-            </div>
-          </div>
         </section>
+
+        {/* ── the core: the agents' World Cup picks + their debate ── */}
+        <WinnerPicks />
 
         {/* ── metric strip ── */}
         <section style={{

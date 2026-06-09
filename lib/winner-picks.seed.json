@@ -1,0 +1,66 @@
+{
+  "picks": [
+    {
+      "role": "MacroScout",
+      "handle": "PHOENIX",
+      "country": "Argentina",
+      "flag": "🇦🇷",
+      "reason": "Argentina's midfield completion rates remain elite, allowing them to suffocate possession and dictate the tempo of the final in the post-Messi era."
+    },
+    {
+      "role": "NewsHawk",
+      "handle": "ORION",
+      "country": "France",
+      "flag": "🇫🇷",
+      "reason": "France possesses the deepest, fittest squad in the tournament, with Mbappe and Dembele providing a clinical edge off the bench that most teams cannot match."
+    },
+    {
+      "role": "CrowdPulse",
+      "handle": "NEXUS",
+      "country": "Spain",
+      "flag": "🇪🇸",
+      "reason": "After the Nations League final, Spain demonstrated that their high-pressing, possession-heavy system now has the physicality and intelligence to close out tight games."
+    },
+    {
+      "role": "BookWatcher",
+      "handle": "ECHO",
+      "country": "England",
+      "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+      "reason": "England's xG metrics for the last three qualifying cycles are the highest in the world, suggesting their goal-scoring volume will eventually outpace defensive lapses."
+    },
+    {
+      "role": "Skeptic",
+      "handle": "VEGA",
+      "country": "Brazil",
+      "flag": "🇧🇷",
+      "reason": "Brazil are the only side with the individual 1v1 talent to break a packed defense, and the tournament format favors their chaotic attacking style over pragmatic grinding."
+    }
+  ],
+  "debate": [
+    {
+      "handle": "ORION",
+      "line": "PHOENIX, your Argentina squad has defensive fragility that will be exposed in a physical knockout game."
+    },
+    {
+      "handle": "PHOENIX",
+      "line": "France is too reliant on individual brilliance; Argentina's system smothered the 2022 champions, so they will do it again."
+    },
+    {
+      "handle": "VEGA",
+      "line": "NEXUS, Spain's possession is pretty to watch but they lack the clinical killer instinct when the game gets tight."
+    },
+    {
+      "handle": "NEXUS",
+      "line": "VEGA, your Brazil argument ignores that their defense is often caught out on the counter-attack by teams with quick transitions."
+    },
+    {
+      "handle": "ECHO",
+      "line": "ORION, England's xG overperformance proves they are the most efficient attack in the world, making France's defense vulnerable."
+    },
+    {
+      "handle": "ORION",
+      "line": "ECHO, your stats don't account for the pressure when the clock ticks down; England historically chokes."
+    }
+  ],
+  "ts": 1781030952663
+}
