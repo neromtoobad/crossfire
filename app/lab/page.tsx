@@ -43,7 +43,11 @@ const RECEIPTS = [
 ]
 
 export default async function Lab() {
-  const marketChoices = loadMarketsMeta().map((m) => ({ id: m.id, title: m.title }))
+  // Only the World Cup markets — the arena runs on football, not the legacy
+  // crypto/macro markets left over from the original duel build.
+  const marketChoices = loadMarketsMeta()
+    .filter((m) => m.id.startsWith('wc-'))
+    .map((m) => ({ id: m.id, title: m.title }))
 
   return (
     <main style={{
