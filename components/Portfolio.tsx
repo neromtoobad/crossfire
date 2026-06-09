@@ -10,12 +10,16 @@ import Link from 'next/link'
 import { ConnectButton } from './ConnectButton'
 import { CF, alpha } from '../lib/theme'
 
-type Position = { marketId: string; title: string; yes: string; no: string; impliedProbYes: number; hasPosition: boolean }
+type Bet = {
+  callId: string; marketId: string; marketTitle: string; agentHandle: string
+  choice: 'follow' | 'fade'; side: 'YES' | 'NO'; amountUsdc: number; ts: number
+  resolution: 'YES' | 'NO' | 'PENDING'; outcome: 'won' | 'lost' | 'pending'
+}
 type Mandate = { user: string; marketId: string; capUsdc: number; expiresAt: number; revoked?: boolean }
 
 export function Portfolio() {
   const { address, isConnected } = useAccount()
-  const [positions, setPositions] = useState<Position[]>([])
+  const [bets, setBets] = useState<Bet[]>([])
   const [mandates, setMandates] = useState<Mandate[]>([])
   const [loading, setLoading] = useState(false)
   const [revoking, setRevoking] = useState<string | null>(null)
@@ -24,11 +28,11 @@ export function Portfolio() {
     if (!address) return
     setLoading(true)
     try {
-      const [p, m] = await Promise.all([
-        fetch(`/api/positions?user=${address}`).then((r) => r.json()).catch(() => ({})),
+      const [b, m] = await Promise.all([
+        fetch(`/api/bets?user=${address}`).then((r) => r.json()).catch(() => ({})),
         fetch(`/api/mandate?user=${address}`).then((r) => r.json()).catch(() => ({})),
       ])
-      setPositions((p.positions ?? []).filter((x: Position) => x.hasPosition))
+      setBets((b.bets ?? []) as Bet[])
       setMandates((m.mandates ?? []).filter((x: Mandate) => !x.revoked))
     } finally {
       setLoading(false)
@@ -61,16 +65,18 @@ export function Portfolio() {
     )
   }
 
-  const totalStaked = positions.reduce((s, p) => s + Number(p.yes) + Number(p.no), 0)
+  const totalStaked = bets.reduce((s, b) => s + b.amountUsdc, 0)
+  const wins = bets.filter((b) => b.outcome === 'won').length
+  const settled = bets.filter((b) => b.outcome !== 'pending').length
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       {/* summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
         {[
-          ['POSITIONS', `${positions.length}`],
-          ['STAKED', `${totalStaked.toFixed(2)} USDC`],
-          ['ACTIVE MANDATES', `${mandates.length}`],
+          ['BACKED CALLS', `${bets.length}`],
+          ['STAKED', `${totalStaked.toFixed(0)} USDC`],
+          ['RECORD', settled ? `${wins}/${settled} won` : '—'],
         ].map(([l, v]) => (
           <div key={l} style={{ padding: '16px 18px', background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, boxShadow: CF.shadow.card }}>
             <div className="mono" style={{ fontSize: 9.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 8 }}>{l}</div>
@@ -79,24 +85,29 @@ export function Portfolio() {
         ))}
       </div>
 
-      {/* positions */}
+      {/* backed calls */}
       <section>
-        <SectionLabel>YOUR POSITIONS</SectionLabel>
-        {loading && !positions.length ? <Muted>Reading the chain…</Muted>
-          : positions.length === 0 ? (
-            <Muted>No positions yet. <Link href="/markets" style={{ color: CF.gold }}>Back an agent’s call →</Link></Muted>
+        <SectionLabel>YOUR BACKED CALLS</SectionLabel>
+        {loading && !bets.length ? <Muted>Loading…</Muted>
+          : bets.length === 0 ? (
+            <Muted>You haven’t backed a call yet. <Link href="/markets" style={{ color: CF.gold }}>Fade or follow an agent →</Link></Muted>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {positions.map((p) => {
-                const side = Number(p.yes) >= Number(p.no) ? 'YES' : 'NO'
-                const amt = Math.max(Number(p.yes), Number(p.no))
-                const col = side === 'YES' ? CF.bull : CF.bear
+              {bets.map((b) => {
+                const col = b.side === 'YES' ? CF.bull : CF.bear
+                const oc = b.outcome === 'won' ? CF.positive : b.outcome === 'lost' ? CF.bear : CF.ink3
+                const ocLabel = b.outcome === 'won' ? '✓ WON' : b.outcome === 'lost' ? '✗ LOST' : 'OPEN'
                 return (
-                  <div key={p.marketId} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: CF.surface, border: `1px solid ${CF.line}`, borderLeft: `3px solid ${col}`, borderRadius: CF.radius.lg, boxShadow: CF.shadow.card }}>
-                    <span style={{ flex: 1, minWidth: 0, fontFamily: CF.body, fontWeight: 600, fontSize: 14.5, color: CF.ink }}>{p.title}</span>
-                    <span className="mono" style={{ fontSize: 10.5, fontWeight: 700, color: col, padding: '3px 8px', borderRadius: CF.radius.sm, background: alpha(col, 12) }}>{side}</span>
-                    <span className="mono tnum" style={{ fontSize: 13, color: CF.ink, width: 90, textAlign: 'right' }}>{amt.toFixed(2)} USDC</span>
-                  </div>
+                  <Link key={b.callId} href={`/calls/${b.callId}`} className="cf-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: CF.surface, border: `1px solid ${CF.line}`, borderLeft: `3px solid ${oc}`, borderRadius: CF.radius.lg, boxShadow: CF.shadow.card }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: CF.body, fontWeight: 600, fontSize: 14.5, color: CF.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.marketTitle}</div>
+                      <div className="mono" style={{ fontSize: 11, color: CF.ink3, marginTop: 3 }}>
+                        {b.choice === 'fade' ? 'faded' : 'followed'} <span style={{ color: CF.ink2, fontWeight: 600 }}>{b.agentHandle}</span> · bet {b.side}
+                      </div>
+                    </div>
+                    <span className="mono tnum" style={{ fontSize: 13, color: CF.ink, width: 64, textAlign: 'right' }}>{b.amountUsdc} USDC</span>
+                    <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: oc, width: 50, textAlign: 'right' }}>{ocLabel}</span>
+                  </Link>
                 )
               })}
             </div>

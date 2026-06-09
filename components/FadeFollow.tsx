@@ -9,7 +9,8 @@
 // ERC-7715 capped mandate (the kit moment) — the chain won't let it overspend.
 
 import { useState } from 'react'
-import { punditOf } from '../lib/pundits'
+import { useAccount } from 'wagmi'
+import { punditOf, handleOf } from '../lib/pundits'
 import type { PublishedCall } from '../lib/calls-data'
 import { GrantCouncilMandate } from './GrantCouncilMandate'
 import { CF, alpha } from '../lib/theme'
@@ -42,6 +43,7 @@ function computePools(call: PublishedCall): { YES: number; NO: number } {
 }
 
 export function FadeFollow({ call }: { call: PublishedCall }) {
+  const { address } = useAccount()
   const [choice, setChoice] = useState<null | 'follow' | 'fade'>(null)
   const [amount, setAmount] = useState(2)
 
@@ -153,17 +155,29 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
             </span>
           </div>
 
-          {/* the on-chain bet = the capped ERC-7715 mandate, reframed */}
-          <GrantCouncilMandate context={{
-            kicker: null,
-            title: `Place your ${betSide} bet`,
-            cta: `Bet ${betSide} · up to $5`,
-            blurb: (
-              <>Authorize up to <strong style={{ color: CF.ink, fontWeight: 600 }}>$5</strong> in MetaMask to place this bet.
-              It’s a capped, expiring permission (ERC-7715) — the chain won’t let your bet exceed the limit, and you can
-              revoke anytime. Try to bet past the cap and the transaction reverts on-chain.</>
-            ),
-          }} />
+          {/* the on-chain bet = the capped ERC-7715 mandate, reframed. On grant,
+              record the backed call so it shows up in The Vault. */}
+          <GrantCouncilMandate
+            onDone={() => {
+              if (!address) return
+              fetch('/api/bets', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  user: address, callId: call.id, marketId: call.marketId, marketTitle: call.marketTitle,
+                  agentHandle: handleOf(lead.role), choice: choice ?? 'follow', side: betSide, amountUsdc: amount,
+                }),
+              }).catch(() => {})
+            }}
+            context={{
+              kicker: null,
+              title: `Place your ${betSide} bet`,
+              cta: `Bet ${betSide} · up to $5`,
+              blurb: (
+                <>Authorize up to <strong style={{ color: CF.ink, fontWeight: 600 }}>$5</strong> in MetaMask to place this bet.
+                It’s a capped, expiring permission (ERC-7715) — the chain won’t let your bet exceed the limit, and you can
+                revoke anytime. Try to bet past the cap and the transaction reverts on-chain.</>
+              ),
+            }} />
         </div>
       )}
     </div>
