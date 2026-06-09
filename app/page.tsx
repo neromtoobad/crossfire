@@ -77,7 +77,7 @@ export default function Arena() {
             <Link href="/markets" style={navStyle}>Markets</Link>
             <Link href="/leaderboard" style={navStyle}>Standings</Link>
             <Link href="/portfolio" style={navStyle}>Vault</Link>
-            <Link href="/lab" style={navStyle}>Lab</Link>
+            <Link href="/lab" style={navStyle}>War Room</Link>
             <ConnectButton variant="primary" />
           </nav>
         </header>
@@ -214,7 +214,7 @@ export default function Arena() {
             <Link href="/markets" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>Markets</Link>
             <Link href="/leaderboard" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>Standings</Link>
             <Link href="/portfolio" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>Vault</Link>
-            <Link href="/lab" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>Lab</Link>
+            <Link href="/lab" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>War Room</Link>
           </div>
         </footer>
       </div>

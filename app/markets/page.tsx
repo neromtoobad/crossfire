@@ -32,7 +32,7 @@ export default async function Markets() {
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
             <Link href="/" style={navStyle}>← Arena</Link>
             <Link href="/leaderboard" style={navStyle}>Standings</Link>
-            <Link href="/lab" style={navStyle}>Lab</Link>
+            <Link href="/lab" style={navStyle}>War Room</Link>
             <ConnectButton variant="primary" />
           </div>
         </header>

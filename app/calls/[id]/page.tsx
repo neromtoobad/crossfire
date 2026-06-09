@@ -174,12 +174,15 @@ BACKED WITH
         {/* ── Venice verdict card ── */}
         <VerdictCard callId={call.id} side={call.side} marketTitle={call.marketTitle} agentHandle={leadHandle} pct={selectedPct} />
 
-        {/* ── COUNCIL VOTES ── */}
+        {/* ── THE AGENTS' PICKS ── */}
         <section style={{ padding: '8px 0 24px' }}>
-          <div className="mono" style={{
-            fontSize: 11, color: CF.ink3, letterSpacing: 2.2, marginBottom: 14,
-          }}>
-THE AGENTS · {agreed}/{roleVotes.length} AGREE
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12, flexWrap: 'wrap' }}>
+            <div className="mono" style={{ fontSize: 11, color: CF.ink3, letterSpacing: 2.2 }}>
+              THE AGENTS’ PICKS · {agreed}/{roleVotes.length} AGREE
+            </div>
+            <Link href={`/lab?topic=${call.id}`} className="mono" style={{ fontSize: 11.5, color: CF.gold, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              ▸ Watch them debate in the War Room →
+            </Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
             {call.votes.map((v) => {
