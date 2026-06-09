@@ -17,7 +17,11 @@ import type { AgentRole, AgentVote } from '../calls-data.js'
 import { ROLE_PROMPTS } from './prompts.js'
 import { PUNDITS, handleOf } from '../pundits.js'
 
-const COUNCIL_MODEL = 'qwen3-235b-a22b-instruct-2507'
+// The live debate streams turn-by-turn, so it needs a fast Venice model that
+// stays available under load (the heavy qwen3-235b decision model is frequently
+// overloaded → 429). glm-4.7-flash is quick and reliable. Still Venice — the
+// only provider. (Deeper conviction/scoring elsewhere can use the big model.)
+const COUNCIL_MODEL = 'zai-org-glm-4.7-flash'
 
 const ROLES = ['MacroScout', 'NewsHawk', 'CrowdPulse', 'BookWatcher'] as const
 type RoleName = (typeof ROLES)[number]
@@ -62,22 +66,35 @@ async function streamTurn(
   onToken: (t: string) => void | Promise<void>,
   temperature = 0.55,
 ): Promise<string> {
-  const stream = await venice.chat.completions.create({
-    model: COUNCIL_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-    ],
-    temperature,
-    // Cap length so no single turn runs long — 2-3 sentences + the marker
-    // fit comfortably in ~180 tokens. Keeps each wave snappy.
-    max_tokens: 200,
-    stream: true,
-    // Web scraping adds latency per call; the role agents reason from the
-    // x402 evidence already handed to them, so keep the debate calls lean.
-    // @ts-expect-error - Venice extension passed through the OpenAI SDK
-    venice_parameters: { enable_web_scraping: false },
-  })
+  // Open the stream with a short retry: Venice can 429/503 under load. We retry
+  // the create() (before any tokens stream) so a transient overload doesn't kill
+  // the turn.
+  let stream: Awaited<ReturnType<typeof venice.chat.completions.create>> & AsyncIterable<unknown>
+  let attempt = 0
+  for (;;) {
+    try {
+      stream = (await venice.chat.completions.create({
+        model: COUNCIL_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature,
+        max_tokens: 320,
+        stream: true,
+        // disable_thinking so a reasoning model streams the answer as content;
+        // enable_web_scraping off to keep each turn lean.
+        // @ts-expect-error - Venice extensions passed through the OpenAI SDK
+        venice_parameters: { enable_web_scraping: false, disable_thinking: true },
+      })) as Awaited<ReturnType<typeof venice.chat.completions.create>> & AsyncIterable<unknown>
+      break
+    } catch (e) {
+      const status = (e as { status?: number })?.status
+      if ((status !== 429 && status !== 503 && status !== 500) || attempt >= 3) throw e
+      attempt++
+      await new Promise((r) => setTimeout(r, 800 * attempt))
+    }
+  }
 
   // Hold back the trailing N chars while streaming so a partial "POSITION"
   // marker (which arrives before its ":") never escapes to the UI. The full
@@ -85,8 +102,10 @@ async function streamTurn(
   const HOLDBACK = 16
   let full = ''
   let emitted = 0
-  for await (const chunk of stream) {
-    const delta = chunk.choices?.[0]?.delta?.content ?? ''
+  for await (const chunk of stream as AsyncIterable<{ choices?: { delta?: { content?: string | null; reasoning_content?: string | null } }[] }>) {
+    // reasoning models may stream the answer in reasoning_content — read both
+    const d = chunk.choices?.[0]?.delta
+    const delta = d?.content || d?.reasoning_content || ''
     if (!delta) continue
     full += delta
     // If the complete marker is already present, cut there. Otherwise hold
