@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data'
 import { ConnectButton } from '../../../components/ConnectButton'
-import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
 import { VerdictCard } from '../../../components/VerdictCard'
 import { BrandLogo } from '../../../components/Logo'
@@ -247,10 +246,18 @@ THE AGENTS · {agreed}/{roleVotes.length} AGREE
           <FadeFollow call={call} />
         </section>
 
-        {/* ── unlock ── */}
-        <section style={{ padding: '12px 0' }}>
-          <UnlockThesis call={call} />
-        </section>
+        {/* ── the full thesis (open) ── */}
+        {call.detail?.thesis ? (
+          <section style={{ padding: '12px 0 4px' }}>
+            <div className="mono" style={{ fontSize: 11, color: CF.ink3, letterSpacing: 2.2, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
+              THE FULL THESIS
+            </div>
+            <p style={{ fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.7, margin: 0, maxWidth: 680 }}>
+              {call.detail.thesis}
+            </p>
+          </section>
+        ) : null}
       </div>
     </main>
   )

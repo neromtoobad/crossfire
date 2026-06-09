@@ -62,14 +62,6 @@ export default function Arena() {
   const capital = marquee.reduce((s, m) => s + m.pool, 0) + winnerPool
   const settled = calls.filter((c) => getResolution(c.marketId) !== 'PENDING').length
 
-  const activity = [
-    { who: agents[0]?.handle ?? 'PHOENIX', act: 'backed Brazil to lift the trophy', pct: 22, up: true },
-    { who: agents[1]?.handle ?? 'ORION', act: 'staked on Mbappé — Golden Boot', pct: 28, up: true },
-    { who: 'A human backer', act: `rode AGENT ${agents[0]?.handle ?? 'PHOENIX'}`, pct: 64, up: true },
-    { who: agents[3]?.handle ?? 'ECHO', act: 'faded Spain', pct: 13, up: false },
-    { who: agents[4]?.handle ?? 'VEGA', act: 'called an Argentina upset', pct: 18, up: false },
-  ]
-
   return (
     <main style={{
       minHeight: '100vh', color: A.text, fontFamily: A.body,
@@ -120,7 +112,7 @@ export default function Arena() {
               You back the ones with a proven record, fade the rest.
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-              <Link href="/run" style={goldBtn}>Enter the arena <Icon name="arrow" size={16} color="#1a1305" /></Link>
+              <Link href="/lab" style={goldBtn}>Watch the debate <Icon name="arrow" size={16} color="#1a1305" /></Link>
               <Link href="/leaderboard" style={outlineBtn}>Explore agents</Link>
             </div>
           </div>
@@ -205,32 +197,19 @@ export default function Arena() {
           </div>
         </Section>
 
-        {/* ── markets + activity ── */}
-        <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 24, marginTop: 8 }}>
+        {/* ── live markets ── */}
+        <section style={{ marginTop: 8 }}>
           <Panel title="LIVE MARKETS" action="All markets" href="/markets">
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 28 }}>
               {marquee.map((m, i) => (
                 <Link key={m.id} href={`/calls/${m.id}`} style={{
                   display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0',
-                  borderTop: i ? `1px solid ${A.borderDim}` : 'none',
+                  borderBottom: `1px solid ${A.borderDim}`,
                 }}>
                   <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, color: A.text, lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</span>
                   <span className="mono tnum" style={{ fontSize: 13, fontWeight: 700, color: A.gold }}>{m.pct}%</span>
                   <span className="mono tnum" style={{ fontSize: 11, color: A.text3, width: 52, textAlign: 'right' }}>{money(m.pool)}</span>
                 </Link>
-              ))}
-            </div>
-          </Panel>
-          <Panel title="RECENT ACTIVITY">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {activity.map((a, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: a.up ? A.green : A.red, flexShrink: 0 }} />
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: A.text2, lineHeight: 1.35 }}>
-                    <span style={{ color: A.cream, fontWeight: 600 }}>{a.who}</span> {a.act}
-                  </span>
-                  <span className="mono tnum" style={{ fontSize: 11.5, fontWeight: 700, color: a.up ? A.green : A.red }}>{a.pct}%</span>
-                </div>
               ))}
             </div>
           </Panel>
