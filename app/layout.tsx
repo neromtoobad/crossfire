@@ -28,7 +28,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             or the OS preference, so dark never flashes light on load. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('cf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`,
+            // The arena is a committed dark design — force dark everywhere and
+            // clear any stale light preference so the landing and inner pages
+            // never diverge.
+            __html: `(function(){try{localStorage.removeItem('cf-theme');}catch(e){}document.documentElement.setAttribute('data-theme','dark');})();`,
           }}
         />
         <style>{`

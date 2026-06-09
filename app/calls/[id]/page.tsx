@@ -7,7 +7,6 @@ import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
 import { BrandLogo } from '../../../components/Logo'
-import { ThemeToggle } from '../../../components/ThemeToggle'
 import { punditOf } from '../../../lib/pundits'
 import { CF, alpha } from '../../../lib/theme'
 
@@ -68,7 +67,6 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             }}>
               ← all calls
             </Link>
-            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>

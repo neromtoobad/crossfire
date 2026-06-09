@@ -5,7 +5,6 @@
 import Link from 'next/link'
 import { ConnectButton } from '../../components/ConnectButton'
 import { BrandLogo } from '../../components/Logo'
-import { ThemeToggle } from '../../components/ThemeToggle'
 import { LiveRun } from '../../components/LiveRun'
 import { loadMarketsMeta } from '../../lib/markets-data'
 import { CF } from '../../lib/theme'
@@ -45,7 +44,6 @@ export default function RunPage() {
             <Link href="/" style={navLinkStyle}>← Feed</Link>
             <Link href="/lab" style={navLinkStyle}>Lab</Link>
             <span style={{ width: 8 }} />
-            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>

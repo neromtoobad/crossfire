@@ -6,7 +6,6 @@ import { computeAgentStats, rankAgents, councilBrier } from '../../lib/leaderboa
 import { getResolution } from '../../lib/resolutions'
 import { ConnectButton } from '../../components/ConnectButton'
 import { BrandLogo } from '../../components/Logo'
-import { ThemeToggle } from '../../components/ThemeToggle'
 import { PUNDITS } from '../../lib/pundits'
 import { CF, alpha } from '../../lib/theme'
 
@@ -51,7 +50,6 @@ export default function Leaderboard() {
             }}>
               ← all calls
             </Link>
-            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>

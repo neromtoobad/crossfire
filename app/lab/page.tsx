@@ -16,7 +16,6 @@ import { RunCouncilLive } from '../../components/RunCouncilLive'
 import { RelayLive } from '../../components/RelayLive'
 import { RevertProof } from '../../components/RevertProof'
 import { BrandLogo } from '../../components/Logo'
-import { ThemeToggle } from '../../components/ThemeToggle'
 import { loadMarketsMeta } from '../../lib/markets-data'
 import { CF } from '../../lib/theme'
 
@@ -76,7 +75,6 @@ export default async function Lab() {
             <Link href="/" style={navLinkStyle}>← Arena</Link>
             <Link href="/leaderboard" style={navLinkStyle}>Standings</Link>
             <span style={{ width: 8 }} />
-            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>
