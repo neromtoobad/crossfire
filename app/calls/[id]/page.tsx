@@ -6,6 +6,7 @@ import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
+import { VerdictCard } from '../../../components/VerdictCard'
 import { BrandLogo } from '../../../components/Logo'
 import { punditOf } from '../../../lib/pundits'
 import { CF, alpha } from '../../../lib/theme'
@@ -41,6 +42,10 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
   const roleVotes = call.votes.filter((v) => v.role !== 'Skeptic')
   const skepticVote = call.votes.find((v) => v.role === 'Skeptic')
   const agreed = roleVotes.filter((v) => v.vote === call.side).length
+
+  // lead agent = highest-confidence voter on the called side (for the card)
+  const lead = [...call.votes].filter((v) => v.vote === call.side).sort((a, b) => b.confidence - a.confidence)[0]
+  const leadHandle = punditOf(lead?.role ?? '')?.handle ?? 'THE PANEL'
 
   return (
     <main style={{
@@ -166,6 +171,9 @@ BACKED WITH
             </a></span>
           </div>
         </section>
+
+        {/* ── Venice verdict card ── */}
+        <VerdictCard callId={call.id} side={call.side} marketTitle={call.marketTitle} agentHandle={leadHandle} pct={selectedPct} />
 
         {/* ── COUNCIL VOTES ── */}
         <section style={{ padding: '8px 0 24px' }}>
