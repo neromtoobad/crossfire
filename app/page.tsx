@@ -4,6 +4,7 @@
 
 import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
+import { BrandLogo } from '../components/Logo'
 import { loadCalls } from '../lib/calls-data'
 import { computeAgentStats } from '../lib/leaderboard'
 import { getResolution } from '../lib/resolutions'
@@ -31,17 +32,6 @@ function Icon({ name, size = 20, color = A.gold }: { name: string; size?: number
     arrow: <><path d="M5 12h14M12 5l7 7-7 7" /></>,
   }
   return <svg {...common} aria-hidden>{P[name]}</svg>
-}
-
-function LogoMark({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: 'block' }} aria-hidden>
-      <defs><linearGradient id="alg" x1="0" y1="0" x2="64" y2="64"><stop offset="0%" stopColor={A.goldBright} /><stop offset="100%" stopColor={A.goldDim} /></linearGradient></defs>
-      <polygon points="11,11 33.9,30.1 53,53 30.1,33.9" fill="url(#alg)" />
-      <polygon points="11,53 33.9,33.9 53,11 30.1,30.1" fill="url(#alg)" />
-      <circle cx="32" cy="32" r="2.4" fill="#fff" />
-    </svg>
-  )
 }
 
 // the real outright winner market — top contenders by implied probability
@@ -93,7 +83,7 @@ export default function Arena() {
           padding: '20px 0', borderBottom: `1px solid ${A.borderDim}`,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-            <LogoMark size={28} />
+            <BrandLogo size={30} />
             <div style={{ lineHeight: 1.15 }}>
               <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: 3, color: A.cream }}>CROSSFIRE</div>
               <div className="mono" style={{ fontSize: 8, letterSpacing: 2, color: A.goldDim }}>WORLD CUP PREDICTION MARKETS</div>
@@ -276,7 +266,7 @@ export default function Arena() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-            <LogoMark size={20} />
+            <BrandLogo size={20} />
             <span className="mono" style={{ fontSize: 10.5, color: A.text3, letterSpacing: 0.5 }}>AI agents that can’t bluff · the chain settles</span>
           </div>
           <div style={{ display: 'flex', gap: 20 }}>
