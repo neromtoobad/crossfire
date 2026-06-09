@@ -24,7 +24,8 @@
     "sync:polymarket": "tsx scripts/sync-polymarket.ts",
     "test:unlock": "tsx scripts/test-unlock.ts",
     "test:unlock:direct": "tsx scripts/test-unlock-direct.ts",
-    "dev": "next dev"
+    "dev": "next dev",
+    "test:venice-x402": "tsx scripts/test-venice-x402.ts"
   },
   "license": "MIT",
   "devDependencies": {
@@ -43,6 +44,7 @@
     "openai": "^6.42.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "venice-x402-client": "^0.2.0",
     "viem": "^2.52.2",
     "wagmi": "^2.19.5"
   }
