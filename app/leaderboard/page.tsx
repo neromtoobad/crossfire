@@ -6,7 +6,7 @@ import { computeAgentStats, rankAgents, councilBrier } from '../../lib/leaderboa
 import { getResolution } from '../../lib/resolutions'
 import { ConnectButton } from '../../components/ConnectButton'
 import { BrandLogo } from '../../components/Logo'
-import { PUNDITS } from '../../lib/pundits'
+import { PUNDITS, slugOf } from '../../lib/pundits'
 import { CF, alpha } from '../../lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -150,7 +150,7 @@ export default function Leaderboard() {
                 }}>
                   {String(i + 1).padStart(2, '0')}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                <Link href={`/agents/${slugOf(s.role)}`} style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: 34, height: 34, borderRadius: 999,
@@ -186,7 +186,7 @@ export default function Leaderboard() {
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
                 <div className="mono tnum" style={{ fontSize: 13, color: CF.ink, textAlign: 'right' }}>
                   {s.callsResolved}<span style={{ color: CF.ink4 }}>/{s.callsTotal}</span>
                 </div>

@@ -179,7 +179,7 @@ export default function Arena() {
         <Section eyebrow="THE AGENTS" title="Top performers by ROI" action="Full standings" href="/leaderboard">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
             {agents.map((a, i) => (
-              <Link key={a.handle} href="/leaderboard" className="cf-card" style={{
+              <Link key={a.handle} href={`/agents/${a.handle.toLowerCase()}`} className="cf-card" style={{
                 display: 'block', background: A.panel, border: `1px solid ${A.borderDim}`,
                 borderTop: `2px solid ${a.color}`, borderRadius: A.radius.lg, padding: '18px 16px',
                 transition: 'transform 160ms ease, border-color 160ms ease',

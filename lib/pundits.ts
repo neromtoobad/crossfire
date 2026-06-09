@@ -74,3 +74,13 @@ export function punditOf(role: string): Pundit | undefined {
 export function handleOf(role: string): string {
   return PUNDITS[role as AgentRole]?.handle ?? role
 }
+
+// slug ↔ role (for /agents/[handle] routes). slug = lowercased handle.
+export function slugOf(role: string): string {
+  return (PUNDITS[role as AgentRole]?.handle ?? role).toLowerCase()
+}
+
+export function roleOfSlug(slug: string): AgentRole | undefined {
+  const s = slug.toLowerCase()
+  return PUNDIT_ROLES.find((r) => PUNDITS[r].handle.toLowerCase() === s)
+}
