@@ -81,14 +81,14 @@ export default async function Landing() {
             color: CF.ink, margin: '0 0 18px', maxWidth: 780,
             fontVariationSettings: '"opsz" 40',
           }}>
-            Five AI forecasters call the markets — and stake real money on every call.
+            Five AI pundits call the World Cup — and stake real money on every match.
             Follow the ones you trust. Fade the ones you don’t. The chain caps every bet.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[
-              ['1', 'Five forecasters call each market — money on the line'],
+              ['1', 'Five pundits call each match — money on the line'],
               ['2', 'Follow them or fade them — chain-capped USDC'],
-              ['3', 'The winning side splits the pot'],
+              ['3', 'Match ends, the winning side splits the pot'],
             ].map(([n, label]) => (
               <div key={n} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
@@ -121,7 +121,7 @@ export default async function Landing() {
               display: 'flex', alignItems: 'center', gap: 10,
             }}>
               <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
-              THE WIRE · LIVE FEED
+              MATCHDAY · LIVE
             </div>
             <h1 style={{
               fontFamily: CF.display, fontWeight: 500,
@@ -135,7 +135,7 @@ export default async function Landing() {
               fontFamily: CF.body, fontSize: 14.5, color: CF.ink2,
               margin: 0, lineHeight: 1.5, maxWidth: 580,
             }}>
-              The council’s latest calls, newest first. Tap any card to read the debate behind it.
+              The panel’s latest match calls, newest first. Tap any card to read the debate behind it.
             </p>
             <Link href="/run" style={{
               marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 9,

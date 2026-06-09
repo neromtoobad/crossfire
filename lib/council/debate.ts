@@ -129,9 +129,9 @@ function debateSystemPrompt(role: RoleName, marketTitle: string, impliedProbYes:
 
 YOUR CHARACTER: you are ${me.handle}, "${me.archetype}". ${me.voice}
 
-You are on a live panel of forecasters: ${others}. You are in a DEBATE about this market. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, 2-4 punchy sentences, like a sharp pundit on a live panel. When another forecaster has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and either build on or push back against their point. Stay strictly in your lane (your domain). Be specific and evidence-anchored; no hedging filler.
+You are on a live World Cup punditry panel: ${others}. You are debating this match. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, 2-4 punchy sentences, like a sharp pundit on a live panel. When another pundit has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and either build on or push back against their point. Stay strictly in your lane (your domain). Be specific and evidence-anchored; no hedging filler.
 
-CALIBRATION — the market currently prices YES at ${impliedPct}% (so NO at ${(100 - Number(impliedPct))}%). That price reflects informed capital — treat it as your PRIOR. If you vote YES, your confidence should anchor near ${impliedPct}%; if you vote NO, near ${(100 - Number(impliedPct))}%. To push more than ~15 points beyond that anchor you need a specific, defensible reason — do not move far on vibes. The whole point is to find where the market is genuinely WRONG, not to restate the price.
+CALIBRATION — the betting line prices YES at ${impliedPct}% (so NO at ${(100 - Number(impliedPct))}%). That line reflects sharp money — treat it as your PRIOR. If you call YES, anchor your confidence near ${impliedPct}%; if NO, near ${(100 - Number(impliedPct))}%. To push more than ~15 points beyond that anchor you need a specific, defensible reason — don't move far on vibes. The whole point is to find where the line is genuinely WRONG, not to restate it.
 
 After your spoken argument, on a NEW LINE output EXACTLY this marker (it will be hidden from readers):
 POSITION: YES|NO|NEUTRAL | CONFIDENCE: <0..1>

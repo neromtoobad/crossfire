@@ -19,7 +19,7 @@ export function PunditsRoster({ calls }: { calls: PublishedCall[] }) {
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
         <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
-        THE LEAGUE · FIVE FORECASTERS
+        THE PANEL · FIVE PUNDITS
       </div>
 
       <div style={{

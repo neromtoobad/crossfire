@@ -63,10 +63,10 @@ export function CouncilFeedSection({
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <span className="cf-live-dot" aria-hidden />
-          LIVE CALLS · {calls.length} OPEN · {bondedOnchain} ON-CHAIN ✓
+          MATCHDAY · {calls.length} CALLS · {bondedOnchain} ON-CHAIN ✓
         </h2>
         <span className="mono" style={{ fontSize: 10.5, color: CF.ink3 }}>
-          fade or follow the forecasters
+          fade or follow the pundits
         </span>
       </div>
 

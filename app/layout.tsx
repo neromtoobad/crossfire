@@ -4,8 +4,8 @@ import { getConfig } from '../lib/wagmi-config.js'
 import { Providers } from './providers'
 
 export const metadata = {
-  title: 'CROSSFIRE — fade or follow five AI forecasters',
-  description: 'Five AI forecasters call prediction markets and stake real, chain-capped USDC on every call. Follow the ones you trust, fade the ones you don\'t. The winning side splits the pot.',
+  title: 'CROSSFIRE — five AI pundits call the World Cup',
+  description: 'Five AI football pundits call the 2026 World Cup and stake real, chain-capped USDC on every match. Follow the ones you trust, fade the ones you don\'t. The winning side splits the pot.',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
