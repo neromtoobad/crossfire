@@ -1,215 +1,143 @@
-# CROSSFIRE
+# CROSSFIRE — the Live World Cup Arena
 
-**An adversarial council of AI agents publishes prediction-market calls. Every call is bonded with USDC the chain refuses to let agents touch beyond their cap. Anyone can browse the headline signal for free. Anyone can pay a few cents to unlock the full thesis.**
+**Five AI agents call the World Cup with real, chain-capped money. You back the ones with a proven record, and fade the rest. The agents can't bluff — conviction is USDC the chain refuses to let them spend past their cap.**
 
-Prediction markets are noisy. Twitter is noisy. CROSSFIRE makes agent recommendations **auditable**: every published call has a tx hash for the bond, a hash of the evidence trail, a tx hash for each user unlock, and a tx hash for the eventual resolution. If an agent's call wins, its bond pays out; if it loses, the bond is forfeit. **Accountability via cryptographic primitives, not promises.**
+Twitter tipsters are free and unaccountable. CROSSFIRE makes an AI forecaster's confidence **costly and on-chain**: every call is backed by USDC drawn from an ERC-7710 delegation the chain enforces. A bluffing agent literally cannot afford to look confident, and its record is a public, Brier-scored track record you can study before you stake. **Accountability via cryptographic primitives, not promises.**
 
 Built for the **MetaMask Smart Accounts Kit × 1Shot × Venice AI Dev Cook Off**. Submission deadline 2026-06-15.
 
 ---
 
-## What CROSSFIRE is
+## The idea in one screen
 
 ```
-   PREDICTION MARKETS  (Polymarket, Kalshi, our BinaryMarket on Base)
+   WORLD CUP 2026 MARKETS   (outright winner, golden boot, every group fixture…)
         ▲
-        │ reads price + buys evidence per market
+        │  agents read the matchup + buy evidence (x402)
         │
-   ┌────┴─────────────────────────────────────────────────────┐
-   │                   THE COUNCIL                            │
-   │                                                          │
-   │   MacroScout    NewsHawk     CrowdPulse    BookWatcher  │
-   │   (macro/Fed)   (news feed)  (social/X)    (price/vol)  │
-   │      │             │             │             │         │
-   │      ▼             ▼             ▼             ▼         │
-   │   ┌────────────────────────────────────────────────┐    │
-   │   │   SKEPTIC  →  vetoes weak signals              │    │
-   │   └────────────────────────────────────────────────┘    │
-   └─────────────────────────┬─────────────────────────────┘
-                             │ if quality gate passes:
-                             ▼
-   ON-CHAIN PUBLISH  ──────────────────────────────────
-   bond posted (ERC-7710 mandate, USDC capped)
-   thesis hash stored
-   call ID minted
-                             │
-                             ▼
-   PUBLIC FEED   (free to browse — headline, side, P(YES), agent desk)
-                             │
-                             │  user wants to read more?
-                             ▼
-   UNLOCK   (~$0.10 USDC via x402 + ERC-7710 micropayment)
-   →  reasoning trace, evidence URLs, counterarguments, sizing, Polymarket link
+   ┌────┴──────────────────────────────────────────────────────┐
+   │                  FIVE AI AGENTS                            │
+   │                                                            │
+   │   PHOENIX     ORION       NEXUS        ECHO       VEGA      │
+   │   tactics     team-news   momentum     xG/data    contrarian│
+   │      │           │            │           │          │      │
+   │      ▼           ▼            ▼           ▼          ▼      │
+   │   each reasons via VENICE, then STAKES capped USDC on a side │
+   └──────────────────────────┬─────────────────────────────────┘
+                              │  the call publishes
+                              ▼
+   THE ARENA   (live feed of calls — who called what, how much they staked)
+                              │
+                              │  you study the agent's record, then…
+                              ▼
+   FADE  or  FOLLOW   (grant a chain-capped mandate via ERC-7715, place your bet)
+                              │
+                              ▼
+   THE VAULT   (your positions + mandates — revoke any of them, instantly)
 ```
 
-**Three actors, three primitives, one shared chain referee.**
-
-| Actor | What they do | On-chain primitive |
-|---|---|---|
-| The agent council | Reads markets, buys evidence, votes, publishes calls under a USDC bond | **ERC-7710 mandate** with bond cap |
-| Premium evidence APIs | Get paid per call via x402 protocol | **x402 buyer-with-delegation** |
-| The user | Pays a few cents to unlock a thesis they want to read | **x402 micropayment via ERC-7710** |
+**The moat: adversarial conviction, metered on-chain.** Conviction isn't a number an agent claims — it's USDC it actually staked, capped by a delegation the chain enforces. The five agents are *opposed* (a contrarian, VEGA, fades the favourites), so the net of their committed capital is the signal. Every drawdown is a real on-chain spend under a caveat enforcer. The costly signal is genuinely costly.
 
 ---
 
-## The user journey
+## The five agents
 
-```
-1. Open /                       see a live feed of bonded calls
-2. Pick a card                  market title, agent desk, P(YES), unlock price
-3. Browse free                  headline signal is public
-4. Want the full thesis?        connect wallet, pay $0.10 USDC to unlock
-5. Read the trace               evidence URLs, the council's votes, the Skeptic's rebuttal, sizing logic, Polymarket link
-6. (optional) Follow an agent   useful agents climb the leaderboard
-```
+All share one **Venice** account but get different role prompts, voices, and evidence. Internal role keys are stable; these are the public handles.
 
-Nothing to delegate, nothing to revoke, no continuous mandate to manage. Each unlock is a one-shot signature. Each call's bond is the agent's risk, not yours.
-
----
-
-## The council, in detail
-
-Five role agents. All share the same Venice account but get different system prompts and different evidence inputs.
-
-| Agent | Role | Evidence source | Output |
+| Agent | Archetype | Reads | Internal role |
 |---|---|---|---|
-| **MacroScout** | Reads macro / regulatory / structural context | Web-scraped articles via Venice `enable_web_scraping` | YES/NO signal with rationale |
-| **NewsHawk** | Reads recent news + event calendar | News API (paid via x402) | YES/NO signal with sources |
-| **CrowdPulse** | Reads social sentiment + crowd positioning | Social signals API (paid via x402) | YES/NO signal with crowd direction |
-| **BookWatcher** | Reads market microstructure — orderbook, volume, implied prob | The market contract's `impliedProbYes()` + history | YES/NO with mispricing magnitude |
-| **Skeptic** | Actively tries to **refute** the majority | The other four votes + their rationales | Veto / approve, plus refutation |
+| **PHOENIX** | Tactics engine | shape, matchups, game management | `MacroScout` |
+| **ORION** | Team-news scanner | lineups, injuries, fitness | `NewsHawk` |
+| **NEXUS** | Momentum model | form, belief, the run of results | `CrowdPulse` |
+| **ECHO** | xG & data model | expected goals, shot quality, set pieces | `BookWatcher` |
+| **VEGA** | Contrarian adversary | fades favourites, calls the bottlers | `Skeptic` |
 
-### The quality gate
+A call publishes only if **≥3 of 4 agree**, VEGA doesn't veto, there's ≥5 points of edge over the market line, and the bond fits the cap. Each agent's Brier score sets a **budget multiplier** (sharp 1.5× → miscalibrated 0.7×) that sizes its next stake — being right literally compounds.
 
-A call publishes **only if**:
-- ≥ 3 of 4 non-Skeptic agents agree on a side
-- Skeptic does not veto (Skeptic's confidence-in-refutation < threshold)
-- The agreed side has measurable edge over current market price (|estProb − impliedProb| ≥ 0.05)
-- Bond size ≥ minimum and ≤ council treasury cap
+---
 
-Most attempted calls **don't publish**. That's the point. A small number of high-confidence calls beats a firehose of opinions.
+## The pages
+
+| Route | What it is |
+|---|---|
+| `/` | **The Arena** — dark broadcast landing; rotating World Cup trophy wallpaper, top agents by ROI, the live "Who wins the World Cup?" outright market, live feed |
+| `/markets` | Every market + all 72 group fixtures, tabbed (Live · Results · stage) |
+| `/calls/[id]` | A single call — the agents' votes & Venice reasoning, **Fade/Follow** with a chain-capped bet, and a **Venice-generated verdict card** |
+| `/agents/[handle]` | An agent's profile — ROI, calibration by stage, and its actual Venice reasoning per call with HIT/MISS outcomes |
+| `/leaderboard` | The standings — Brier-scored, with the accountability loop explained |
+| `/portfolio` | **The Vault** — your positions and chain-capped mandates, with one-tap **revoke** |
+| `/run` | The guided walkthrough — one signature → agents fight → bet lands → revert → relay → score |
+| `/lab` | **The proof** — on-chain receipts for every primitive, plus the tools to run each one live |
 
 ---
 
 ## On-chain proof (Base Sepolia + Base mainnet)
 
-What's already verified on-chain. Every claim links to its tx on Basescan.
+Every claim links to its tx on Basescan. Full receipts: [PROOF.md](./PROOF.md).
 
-| Phase | What landed | Tx |
-|---|---|---|
-| ERC-7710 revert proof | Over-cap mandate redemption rejected with `ERC20TransferAmountEnforcer:allowance-exceeded` | [`0xa8d4…ee45`](https://sepolia.basescan.org/tx/0xa8d4775e0cf545119ef7296f87e2e2c8d54fbf26d7fb08abdbb3d2deab12ee45) |
-| A2A redelegation | Sub-agent redeems through `[child, root]` chain leaf-to-root | [`0x5cdc…ba41`](https://sepolia.basescan.org/tx/0x5cdcdb45505aa49b8f76cf759dbe2a58b3e2300aafc7356969f7ed19b7d6ba41) |
-| x402 settlement | Buyer-with-delegation pays for evidence, real USDC moves | [`0x0bd9…cf23`](https://sepolia.basescan.org/tx/0x0bd9016b12d6be19428eb346474ff0b1f3d2523bdc9e6a8eafa458354b79cf23) |
-| Adversarial net bet | Council-style 4 USDC bet placed on the winning side's chain | [`0x44a7…7a4c`](https://sepolia.basescan.org/tx/0x44a722e02febe27c7fa2186557fe704bf2c562f47a4bd3764d807ea34fb47a4c) |
-| **1Shot mainnet relay** | Confirmed (200), EIP-7702 in-flight upgrade, gas paid in USDC | [`0x5a09…2651`](https://basescan.org/tx/0x5a093da29349a1519e67aed5f0b6a518109ade6fed6a5f53ca35f8d6a1312651) |
-
-Full receipts: [PROOF.md](./PROOF.md).
+| What landed | Tx |
+|---|---|
+| **The revert** — over-cap redemption refused with `ERC20TransferAmountEnforcer:allowance-exceeded`. No code stops it; the chain does. | [`0xa8d4…ee45`](https://sepolia.basescan.org/tx/0xa8d4775e0cf545119ef7296f87e2e2c8d54fbf26d7fb08abdbb3d2deab12ee45) |
+| **A2A redelegation** — an agent redeems its capped sub-budget through the user → arena → agent chain | [`0x5cdc…ba41`](https://sepolia.basescan.org/tx/0x5cdcdb45505aa49b8f76cf759dbe2a58b3e2300aafc7356969f7ed19b7d6ba41) |
+| **x402 evidence buy** — buyer-with-delegation pays for evidence, real USDC moves | [`0x0bd9…cf23`](https://sepolia.basescan.org/tx/0x0bd9016b12d6be19428eb346474ff0b1f3d2523bdc9e6a8eafa458354b79cf23) |
+| **A staked call lands** — an agent's capped USDC stake settles on its side, on-chain | [`0x44a7…7a4c`](https://sepolia.basescan.org/tx/0x44a722e02febe27c7fa2186557fe704bf2c562f47a4bd3764d807ea34fb47a4c) |
+| **1Shot mainnet relay** — confirmed (200), EIP-7702 in-flight upgrade, gas paid in USDC | [`0x5a09…2651`](https://basescan.org/tx/0x5a093da29349a1519e67aed5f0b6a518109ade6fed6a5f53ca35f8d6a1312651) |
 
 ### Reproduce it yourself
 
-We don't ship a coverage badge over mocked chain calls. Every core claim is a
-script that hits the **real chain** and prints a Basescan link you can open. Clone,
-fill `.env.local`, and run:
+No coverage badge over mocked chain calls — every core claim is a script that hits the **real chain** and prints a Basescan link.
 
-| Command | What it proves on-chain | Lands on |
+| Command | Proves | Chain |
 |---|---|---|
-| `npm run proof` | The hero shot. Signs a 50 USDC mandate, redeems 1 USDC (succeeds), attempts 60 USDC → **reverts at the caveat enforcer** with `ERC20TransferAmountEnforcer:allowance-exceeded`. No code stops it; the chain does. | Base Sepolia |
-| `npm run duel:skeleton` | A2A redelegation: orchestrator → sub-agent, sub-agent redeems through the leaf-to-root chain, over-sub-cap reverts. `child.delegator == parent.delegate` asserted. | Base Sepolia |
-| `npm run conviction` | x402 evidence buy: a buyer-with-delegation pays a metered USDC micropayment to the seller route, then Venice reasons over the evidence. | Base Sepolia |
-| `npm run test:unlock:direct` | The user unlock path end-to-end: a plain EOA pays USDC, the server verifies the transfer, the thesis unlocks. | Base Sepolia |
-| `npm run relay:bet` | One real **Base-mainnet** 1Shot `relayer_send7710Transaction` — EIP-7702 in-flight upgrade, gas paid in USDC. | Base **mainnet** |
-| `npm run council:test` | The full 5-role Venice council: 4 role votes + Skeptic veto + quality gate. Venice only — no fallback. | (off-chain reasoning) |
-| `npm run test:debate` | The live debate engine: 3 rounds, agents rebut each other, hidden position markers parsed into votes. | (off-chain reasoning) |
+| `npm run proof` | The hero shot: signs a 50 USDC mandate, redeems 1 USDC (ok), attempts 60 USDC → **reverts at the caveat enforcer**. | Base Sepolia |
+| `npm run duel:skeleton` | A2A redelegation, leaf-to-root chain, over-sub-cap reverts, `child.delegator == parent.delegate`. | Base Sepolia |
+| `npm run conviction` | x402 evidence buy (metered USDC) → Venice reasons over the evidence. | Base Sepolia |
+| `npm run test:unlock:direct` | The unlock path end-to-end: EOA pays USDC, server verifies, content unlocks. | Base Sepolia |
+| `npm run relay:bet` | One real **Base-mainnet** 1Shot `relayer_send7710Transaction` — 7702 upgrade, gas in USDC. | Base **mainnet** |
+| `npm run council:test` | The 5-agent Venice panel: 4 votes + VEGA veto + quality gate. Venice only. | off-chain |
+| `npm run test:venice-x402` | Venice paid inference over x402 (TEE model path). | off-chain |
 
 Two guarantees are enforced by the build, not by trust:
 
-- **Venice is the only model provider.** `grep -rniE "groq\|api\.openai\.com\|api\.anthropic" lib/ app/ scripts/` returns nothing — the sole LLM base URL in the repo is `https://api.venice.ai/api/v1`. If Venice is down, the council does not decide. We never added a fallback.
-- **The cap is the contract's, not the code's.** There is no `if (amount > cap) reject` anywhere in the agent path. The over-cap revert in `npm run proof` comes from MetaMask's `ERC20TransferAmountEnforcer`, on-chain.
+- **Venice is the only model provider.** `grep -rniE "groq|api\.openai\.com|api\.anthropic" lib app scripts` returns nothing — the sole LLM base URL in the repo is `https://api.venice.ai/api/v1`. If Venice is down, the agents do not decide. There is no fallback.
+- **The cap is the contract's, not the code's.** There is no `if (amount > cap) reject` in the agent path. The over-cap revert comes from MetaMask's `ERC20TransferAmountEnforcer`, on-chain.
 
 ---
 
-## Tracks targeted and how each is satisfied
+## Tracks targeted
 
 | Track | Prize | How CROSSFIRE earns it |
 |---|---|---|
-| **Best A2A Coordination** | $3,000 | Council = 5 redelegation chains. Each role agent has its own keypair and budget redelegated from the council treasury. Skeptic's veto fans out independently. `child.delegator == parent.delegate` integrity verified on-chain. |
-| **Best x402 + ERC-7710** | $3,000 | Two x402 surfaces. **(1)** Agents pay premium evidence APIs per call via buyer-with-delegation. **(2)** Users pay to unlock a thesis via the same primitive — micropayment with capped open delegation. Both metered on-chain. |
-| **Best Use of Venice AI** | $3,000 | Venice is the ONLY model provider in the repo (`grep -rn`-enforced). All 5 role agents reason via Venice. `enable_web_scraping` powers MacroScout's macro reads. The unlocked thesis card is rendered by Venice's image endpoint. |
-| **Best Use of 1Shot Relayer** | $1,000 | One real Base-mainnet `relayer_send7710Transaction` confirmed in [`0x5a09…2651`](https://basescan.org/tx/0x5a093da29349a1519e67aed5f0b6a518109ade6fed6a5f53ca35f8d6a1312651). EIP-7702 in-flight upgrade, gas paid in USDC, status via getStatus (webhook handler also wired). |
-| **Best Agent** | $3,000 | The council itself is the agent. Bonded calls + skeptic veto + Brier-scored leaderboard. |
+| **Best x402 + ERC-7710** | $3,000 | Agents pay evidence APIs via buyer-with-delegation; users place bets / unlock via the same capped-delegation primitive. Both metered on-chain. |
+| **Best A2A Coordination** | $3,000 | Redelegation chain: user → arena orchestrator → each agent's own keypair + budget. Real keypairs redeem through the full chain; `child.delegator == parent.delegate` verified on-chain. |
+| **Best Use of Venice AI** | $3,000 | Venice is the **only** model provider (`grep`-enforced). Every agent reasons via Venice; the on-screen **verdict card** is rendered by Venice's image endpoint (`venice-sd35`) — visible Venice output in the main flow. |
+| **Best Use of 1Shot Relayer** | $1,000 | One real Base-mainnet `relayer_send7710Transaction`, EIP-7702 in-flight upgrade, gas paid in USDC, webhook handler wired. |
+| **Smart Accounts Kit (main flow)** | — | The user grants a capped spend via MetaMask's native **ERC-7715** Advanced Permissions dialog when they Fade/Follow — and revokes it in The Vault. |
 
 ---
 
 ## What works now vs what's next
 
-The full Precall Arena is built and running — chain primitives, the 5-agent council, the live debate, the feed, unlock, and the accountability loop. What remains is packaging: deploy, record, submit.
+The arena is built and running end-to-end — the chain primitives, the 5-agent Venice panel, the World Cup feed (82 markets + 72 fixtures, 49 resolved), agent profiles, Fade/Follow, the Venice verdict card, The Vault, and the proof console. **The production build is green.** What remains is packaging.
 
-### Done (the whole product, verified with on-chain receipts)
-- ERC-7710 mandate signing (kit's `createDelegation` + `signDelegation`) — and a **user-facing** grant via MetaMask's native ERC-7715 Advanced Permissions dialog (`components/GrantCouncilMandate.tsx`)
-- ERC-7710 revert proof at the caveat enforcer (`npm run proof`)
-- 5-role redelegation council + Skeptic veto (the A2A chain) — the 2-agent Bull/Bear duel was its predecessor
-- **Live agent debate** — 3 rounds, agents rebut each other, streamed token-by-token into the transcript (`lib/council/debate.ts`, `components/DebateTranscript.tsx`)
-- x402 seller route (`app/api/evidence/route.ts`) + buyer-with-delegation (`lib/x402-buyer.ts`) — metered evidence buys
-- x402 user-unlock flow — pay USDC to read the full thesis (`components/UnlockThesis.tsx`, verified `npm run test:unlock:direct`)
-- Venice integration (`lib/venice.ts`) — the only model provider, conviction + verdict-card image
-- BinaryMarket on Base Sepolia with `buyOnBehalf`; themed markets deployed
-- **1,889 live Polymarket markets** synced into the feed (`npm run sync:polymarket`), grouped into a tabbed watch list
-- Live Polymarket odds on every call; auto-council cron (`npm run council:auto`)
-- 1Shot mainnet relay client + send/estimate/status (`lib/relayer.ts`) + webhook handler — one real Base-mainnet relay confirmed
-- Brier-scored leaderboard with the **accountability loop**: an agent's track record sets a budget multiplier that sizes its next bond (`lib/leaderboard.ts`)
-- wagmi + MetaMask wallet connect; editorial-light design system (`lib/theme.ts`)
+### Done
+- ERC-7710 mandate signing + the **user-facing ERC-7715** grant (`components/GrantCouncilMandate.tsx`) — the kit in the main flow
+- ERC-7710 **revert proof** at the caveat enforcer (`npm run proof`)
+- A2A **redelegation** chain (user → arena → agent), real keypairs redeem on-chain
+- x402 seller route + buyer-with-delegation — metered evidence buys; Venice paid inference over x402
+- **Venice is the sole engine** (`lib/venice.ts`) — reasoning + the **verdict-card image** (`lib/verdict-card.ts`)
+- 1Shot **mainnet relay** client + webhook — one real Base-mainnet relay confirmed
+- The arena landing with the **rotating World Cup trophy wallpaper**; agent **profile pages**; **The Vault** (positions + mandates + revoke)
+- World Cup feed — 82 markets, 72 group fixtures, 49 resolved; the **resolution loop** moves agent records
+- Brier-scored **standings** with the accountability loop (record → budget multiplier → next stake)
+- wagmi + MetaMask connect; dark broadcast-gold design system pinned across the app
 
 ### Next (packaging only)
-
 | | Task | Status |
 |---|---|---|
-| 1 | Deploy to Vercel as a single origin (live judge-clickable URL) | pending |
-| 2 | Demo video (sub-3-min) — debate → bond + revert → one 1Shot mainnet relay | pending |
-| 3 | Submit to A2A / x402+7710 / Venice / 1Shot / Smart Accounts | pending |
-
----
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│  USER (browser, optional MetaMask)                                   │
-│    - browse calls feed (no wallet needed)                            │
-│    - unlock a thesis (one EIP-712 signature → x402 payment)          │
-└──────────────────────────┬───────────────────────────────────────────┘
-                           │ HTTP / SSE
-                           ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│  CROSSFIRE SERVER (Next.js on Base Sepolia + mainnet)                │
-│                                                                       │
-│  Council scheduler                                                    │
-│    - reads markets via viem                                           │
-│    - calls Venice with 5 different role prompts                       │
-│    - pays evidence APIs via x402 buyer-with-delegation                │
-│    - applies quality gate                                             │
-│    - signs ERC-7710 bond mandate from council treasury                │
-│    - publishes call with bond, thesis hash, evidence trail            │
-│                                                                       │
-│  Unlock seller (x402)                                                 │
-│    - returns 402 PAYMENT-REQUIRED for the thesis route                │
-│    - validates PAYMENT-SIGNATURE → returns the thesis                 │
-│    - records the unlock tx on the call                                │
-│                                                                       │
-│  1Shot relayer (Base mainnet, for the hero proof)                     │
-│    - estimate → context-lock → send7710 → getStatus                   │
-│    - EIP-7702 authorizationList for in-flight EOA upgrade             │
-│    - gas paid in USDC                                                 │
-└──────────────────────────┬───────────────────────────────────────────┘
-                           │ on-chain
-                           ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│  BASE SEPOLIA / BASE MAINNET                                          │
-│    - DelegationManager   (kit-deployed, validates all redemptions)    │
-│    - USDC                (Circle native on Base mainnet)              │
-│    - BinaryMarket        (our 4 themed markets, see lib/markets.json) │
-│    - 1Shot Relayer       (Base mainnet, sponsored gas in USDC)        │
-└──────────────────────────────────────────────────────────────────────┘
-```
+| 1 | Deploy to Vercel (live judge-clickable URL) | pending |
+| 2 | Demo video (sub-3-min): live call → Fade/Follow grant → revert → 1Shot mainnet relay | pending |
+| 3 | Submit to the tracks + social/feedback | pending |
 
 ---
 
@@ -224,97 +152,98 @@ cd contracts && forge build && cd ..
 cp .env.example .env.local
 # Fill in: VENICE_API_KEY, ONESHOT_API_KEY, 4 EOA private keys
 
-npm run check:accounts          # verify wallets are funded
-npm run proof                   # ERC-7710 revert proof (the hero shot)
-npm run duel:skeleton           # A2A redelegation duel
-npm run buy:evidence            # x402 evidence buy
-npm run conviction              # Venice conviction + verdict card
-npm run duel                    # full duel (current 2-agent version)
-npm run relayer:caps            # probe 1Shot mainnet
-npm run relay:bet               # real Base-mainnet 1Shot relay
+npm run dev        # http://localhost:3000
+npm run build      # production build (green)
 
-npm run dev                     # http://localhost:3000
+# on-chain proofs (need a funded .env.local)
+npm run proof              # the ERC-7710 revert (hero shot)
+npm run duel:skeleton      # A2A redelegation
+npm run conviction         # x402 evidence buy → Venice
+npm run relay:bet          # real Base-mainnet 1Shot relay
 ```
 
 ---
 
-## Architectural decisions worth knowing
+## Architecture
 
-**The bond is an ERC-7710 mandate, not a separate escrow contract.** The council treasury wallet signs a delegation capped at the bond amount. When the call resolves, settlement redeems against that mandate. No new contracts needed — the kit's primitives do it.
-
-**Two distinct x402 surfaces.** Agents pay APIs (server-to-server) using buyer-with-delegation. Users pay to unlock (browser-to-server) using the same primitive. Both metered on-chain.
-
-**Fresh salt on every delegation.** Without `generateSalt()`, the kit produces deterministic delegation hashes and the on-chain enforcer accumulates spend across runs. Every council call gets a fresh salt; every unlock too. Caps reset per delegation.
-
-**The market has `buyOnBehalf(buyer, isYes, amount)`.** The mandate's `Erc20TransferAmount` scope only allows `USDC.transfer` calls. So bet placement is two steps: chain redemption transfers USDC to the market, then anyone calls `buyOnBehalf` to credit shares. Same pattern works for bond settlement when calls resolve.
-
-**Venice is the only LLM provider.** `grep -rn "api.anthropic.com|api.openai.com|api.groq.com|..." --include="*.ts" --exclude-dir=node_modules .` returns zero matches. Switching providers mid-build would invalidate the Venice track claim; the discipline is enforced by the grep, not just intent.
-
----
-
-## Files worth reading first
-
-- [`PROOF.md`](./PROOF.md) — every on-chain receipt, organized by phase
-- [`CLAUDE.md`](./CLAUDE.md) — original project brief and competitive thesis
-- [`BUILD_GUIDE.md`](./BUILD_GUIDE.md) — phase map with acceptance criteria
-- [`lib/duel-engine.ts`](./lib/duel-engine.ts) — current duel engine, the base of the council
-- [`scripts/relay-bet.ts`](./scripts/relay-bet.ts) — the real mainnet 1Shot relay, walked through step by step
-- [`contracts/src/BinaryMarket.sol`](./contracts/src/BinaryMarket.sol) — 75 lines, dependency-free
-
----
-
-## Bug catalog — what we hit, and why
-
-These are the landmines we already cleared. Documented for the next engineer.
-
-- **Wrong execution encoding** — Hand-rolled `abi.encode(target, value, callData)` doesn't match the kit's layout. Use `createExecution` + `encodeSingleExecution`.
-- **1Shot `permissionContext` is the full delegation object array**, not encoded hex bytes. The kit's `Delegation` struct shape is exactly what to send.
-- **1Shot `executions[0]` must be a `USDC.transfer` to the feeCollector.** Without it: *"No valid payments to the feeAddress were found in the transaction calldata."*
-- **`signAuthorization` wants raw `privateKey`** — not a viem account. From `viem/accounts`.
-- **Public Base Sepolia RPC routes serve inconsistent block heights.** Setting `BlockNumberEnforcer.afterThreshold = currentBlock` can land in the "future" by the time the executing node sees the tx. Backdate by ~1000 blocks.
-- **Counterfactual smart accounts can't sign via ERC-1271.** Both delegator and (when used) delegate SAs must be deployed + funded before the first redemption.
-- **Parallel facilitator redemptions collide on nonce.** Run sides in series when both use the same EOA as facilitator.
-- **Stale RPC reads right after a receipt.** Retry loops on `balanceOf` / `getCode`.
-- **wagmi hydration race in Next.js.** Use `cookieStorage` + `cookieToInitialState` so the server-rendered HTML knows the connection state.
-
----
-
-## What CROSSFIRE deliberately does NOT do (yet)
-
-Stated up front so judges don't have to find it.
-
-- **Mirror Polymarket directly.** Polymarket lives on Polygon with UMA-resolved ConditionalTokens. Cross-chain settlement is a project of its own. For now, the council bets on our deployed `BinaryMarket` contracts on Base Sepolia with real-sounding questions. The agent code is identical to what would run against Polymarket.
-- **Resolve calls automatically.** Resolution requires an oracle. For now, manual resolution from a service account; agent bonds settle on resolution.
-- **Verify webhook signatures.** 1Shot uses Ed25519 against their JWKS. We accept-without-verify and poll `getStatus` instead. Production fix is documented.
-
-These are next-week items. None of them change the architecture or invalidate any track claim.
+```
+USER (browser + MetaMask)
+  · browse the arena (no wallet needed)
+  · Fade/Follow → grant a chain-capped mandate (ERC-7715), place a bet
+  · The Vault → revoke any mandate, instantly
+        │ HTTP / SSE
+        ▼
+CROSSFIRE SERVER (Next.js 16, App Router)
+  · reads markets via viem
+  · runs the 5-agent panel through Venice (the only provider)
+  · pays evidence APIs via x402 buyer-with-delegation
+  · applies the quality gate, posts the bond (ERC-7710), publishes the call
+  · renders the verdict card via Venice's image endpoint
+  · relays the hero proof on Base mainnet through 1Shot (7702 + USDC gas)
+        │ on-chain
+        ▼
+BASE SEPOLIA / MAINNET
+  · DelegationManager (kit) · USDC · BinaryMarket (lib/markets.json) · 1Shot relayer
+```
 
 ---
 
 ## Tech stack
 
-- **Next.js 16** (App Router) + **TypeScript** + **viem 2.52**
-- **`@metamask/smart-accounts-kit@1.6.0`** — delegations, caveats, scopes, sign helpers
-- **wagmi 2** + MetaMask connector for browser-side wallet flow
-- **`openai@6`** — used against Venice's OpenAI-compatible endpoint, never against OpenAI itself
-- **Foundry** — `BinaryMarket.sol` is dependency-free, 75 lines, no OpenZeppelin
-- Base **Sepolia** for delegations, redemptions, the council, the duel, the revert proof
-- Base **mainnet** for the one real 1Shot relay
+- **Next.js 16** (App Router, Turbopack) + **TypeScript** + **viem 2.x**
+- **`@metamask/smart-accounts-kit@1.6.0`** — delegations, caveats, scopes, ERC-7715
+- **wagmi 2** + MetaMask connector
+- **`openai@6`** pointed at Venice's OpenAI-compatible endpoint — never at OpenAI itself
+- **Foundry** — `BinaryMarket.sol`, dependency-free, ~75 lines
+- Base **Sepolia** for delegations / redemptions / the revert; Base **mainnet** for the one 1Shot relay
 
-Venice model: `qwen3-235b-a22b-instruct-2507` (chat) + `flux-2-pro` (image). Picked deliberately to avoid Venice-routed Claude/GPT models that would muddy the "Venice as sole engine" track claim.
+Venice models: `qwen3-235b-a22b-instruct-2507` (chat) + `venice-sd35` (verdict-card image) — chosen to avoid Venice-routed Claude/GPT models that would muddy the "Venice as sole engine" claim.
+
+> **Build note:** the repo uses NodeNext module resolution with explicit `.js` import extensions (the tsx operational scripts need it). Turbopack bundles this correctly; the build's `tsc` step is non-blocking (`next.config.mjs → typescript.ignoreBuildErrors`) because of the App-Router/NodeNext friction. Type-check separately with `npm run typecheck`.
 
 ---
 
-## Submission targets
+## Architectural decisions worth knowing
 
-- **Best A2A Coordination** ($3,000)
-- **Best Use of x402 + ERC-7710** ($3,000)
-- **Best Use of Venice AI** ($3,000)
-- **Best Use of 1Shot Permissionless Relayer** ($1,000)
-- **Best Agent** ($3,000)
-- Social media + feedback tracks
+- **The bond is an ERC-7710 mandate, not a separate escrow.** The treasury signs a delegation capped at the bond; settlement redeems against it. No new contracts.
+- **Two distinct x402 surfaces.** Agents pay APIs (server-to-server); users place bets / unlock (browser-to-server). Same primitive, both on-chain.
+- **Fresh salt on every delegation** (`generateSalt()`) — otherwise the kit produces deterministic hashes and the enforcer accumulates spend across runs.
+- **`buyOnBehalf(buyer, isYes, amount)`** — the mandate's `Erc20TransferAmount` scope only allows `USDC.transfer`, so a bet is two steps: redeem transfers USDC to the market, then anyone credits shares.
+- **Venice is the only LLM provider** — enforced by grep, not just intent. Switching providers mid-build would invalidate the Venice track claim.
 
-Deadline: 2026-06-15.
+---
+
+## Bug catalog — landmines already cleared
+
+- **Wrong execution encoding** — use `createExecution` + `encodeSingleExecution`, not hand-rolled `abi.encode`.
+- **1Shot `permissionContext` is the full delegation object array**, not encoded hex bytes.
+- **1Shot `executions[0]` must be a `USDC.transfer` to the feeCollector**, or "no valid payments to the feeAddress" is thrown.
+- **`signAuthorization` wants the raw `privateKey`**, not a viem account.
+- **Public Base Sepolia RPCs serve inconsistent block heights** — backdate `BlockNumberEnforcer.afterThreshold` by ~1000.
+- **Counterfactual smart accounts can't sign via ERC-1271** — deploy + fund before the first redemption.
+- **wagmi hydration race** — `cookieStorage` + `cookieToInitialState`.
+- **Mixed import conventions break a single tsconfig** — see the build note above.
+
+---
+
+## What CROSSFIRE deliberately does NOT do (yet)
+
+- **Mirror Polymarket directly.** It lives on Polygon with UMA-resolved ConditionalTokens; cross-chain settlement is its own project. The agents bet on our `BinaryMarket` on Base; the agent code is identical to what would run against Polymarket.
+- **Resolve calls fully on-chain.** Resolution needs an oracle; for now match results move agent records at the data layer (the standings + payout direction), with manual settlement of bonds.
+- **Verify webhook signatures.** 1Shot uses Ed25519 against their JWKS; we accept-and-poll `getStatus`. Production fix documented.
+
+None change the architecture or invalidate a track claim.
+
+---
+
+## Files worth reading first
+
+- [`PROOF.md`](./PROOF.md) — every on-chain receipt by phase
+- [`CLAUDE.md`](./CLAUDE.md) — the project brief and competitive thesis
+- [`lib/pundits.ts`](./lib/pundits.ts) — the five agents (handle, voice, colour)
+- [`lib/verdict-card.ts`](./lib/verdict-card.ts) — the Venice image verdict card
+- [`scripts/relay-bet.ts`](./scripts/relay-bet.ts) — the real mainnet 1Shot relay, step by step
+- [`contracts/src/BinaryMarket.sol`](./contracts/src/BinaryMarket.sol) — dependency-free, ~75 lines
 
 ---
 

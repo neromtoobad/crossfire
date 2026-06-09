@@ -25,7 +25,7 @@ function Tx({ hash, label, network = 'sepolia' }: { hash: string; label?: string
 }
 
 const RECEIPTS = [
-  { phase: '01', what: 'The cap holds — the revert', detail: 'An over-cap bet is refused live at the ERC-7710 caveat enforcer. No code stops it; the chain does.', tx: '0x516d7a44120c3edbb8f4e8dbf54d6c9cab39698f125b75651d6a3cd2586a0e6a', label: 'enforced', net: 'sepolia' as const },
+  { phase: '01', what: 'The cap holds — the revert', detail: 'An over-cap bet is refused live at the ERC-7710 caveat enforcer (ERC20TransferAmountEnforcer:allowance-exceeded). No code stops it; the chain does.', tx: '0xa8d4775e0cf545119ef7296f87e2e2c8d54fbf26d7fb08abdbb3d2deab12ee45', label: 'enforced', net: 'sepolia' as const },
   { phase: '02', what: 'A2A — agent budget', detail: 'An agent redeems its capped sub-budget through the redelegation chain (user → arena → agent).', tx: '0x5cdcdb45505aa49b8f76cf759dbe2a58b3e2300aafc7356969f7ed19b7d6ba41', label: 'agent · 1 USDC', net: 'sepolia' as const },
   { phase: '03', what: 'x402 — evidence buy', detail: 'An agent pays for evidence with a buyer-side delegation — real USDC moves over x402.', tx: '0x0bd9016b12d6be19428eb346474ff0b1f3d2523bdc9e6a8eafa458354b79cf23', label: 'evidence settled', net: 'sepolia' as const },
   { phase: '04', what: 'A staked call lands', detail: 'An agent’s capped USDC stake settles on its side of a call, on-chain — the costly signal.', tx: '0x44a722e02febe27c7fa2186557fe704bf2c562f47a4bd3764d807ea34fb47a4c', label: 'stake · 4 USDC', net: 'sepolia' as const },
