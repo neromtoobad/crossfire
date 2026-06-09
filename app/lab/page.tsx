@@ -211,7 +211,7 @@ export default async function Lab() {
               title="The panel calls the match"
               body={
                 <>
-                  <em style={{ color: CF.bull, fontStyle: 'normal' }}>GAFFER</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>THE SCOUT</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>THE ULTRA</em>, and <em style={{ color: CF.bull, fontStyle: 'normal' }}>xG</em> each read a different angle. <em style={{ color: CF.bear, fontStyle: 'normal' }}>THE PUNDIT</em> goes last — and can veto.
+                  <em style={{ color: CF.bull, fontStyle: 'normal' }}>PHOENIX</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>ORION</em>, <em style={{ color: CF.bull, fontStyle: 'normal' }}>NEXUS</em>, and <em style={{ color: CF.bull, fontStyle: 'normal' }}>ECHO</em> each read a different angle. <em style={{ color: CF.bear, fontStyle: 'normal' }}>VEGA</em> goes last — and can veto.
                 </>
               }
             />
