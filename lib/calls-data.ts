@@ -5,6 +5,10 @@
 // For Phase 8.1 we hand-craft 4 realistic-looking calls so the product
 // is legible immediately, before any new agent code lands.
 
+// World Cup group-stage fixtures (72 matches), generated deterministically.
+// wc-fixtures imports only TYPES from here, so there's no runtime cycle.
+import { FIXTURE_CALLS } from './wc-fixtures.js'
+
 export type AgentRole = 'MacroScout' | 'NewsHawk' | 'CrowdPulse' | 'BookWatcher' | 'Skeptic'
 
 export type AgentVote = {
@@ -398,18 +402,20 @@ function dedupeByMarket(calls: PublishedCall[]): PublishedCall[] {
 export function loadCalls(): PublishedCall[] {
   // Server-side: stored calls take precedence; samples back-fill so the feed
   // is never empty during early demos.
+  // marquee hand-authored calls first (most recent), then the 72 group fixtures.
+  const seed = [...SAMPLE_CALLS, ...FIXTURE_CALLS]
   if (typeof process === 'undefined' || typeof window !== 'undefined') {
-    return dedupeByMarket(SAMPLE_CALLS)
+    return dedupeByMarket(seed)
   }
   try {
     const mod = require('./calls-store.js') as typeof import('./calls-store.js')
     const stored = mod.loadStoredCalls()
-    if (stored.length === 0) return dedupeByMarket(SAMPLE_CALLS)
+    if (stored.length === 0) return dedupeByMarket(seed)
     // Stored first so a real published call wins over the sample for the same
     // market; dedupeByMarket then keeps the newest per market.
-    return dedupeByMarket([...stored, ...SAMPLE_CALLS]).slice(0, 24)
+    return dedupeByMarket([...stored, ...seed]).slice(0, 200)
   } catch {
-    return dedupeByMarket(SAMPLE_CALLS)
+    return dedupeByMarket(seed)
   }
 }
 

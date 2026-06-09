@@ -44,10 +44,14 @@ export function CouncilFeedSection({
     return m
   }, [calls])
 
+  // "All" shows the marquee calls (calls are pre-sorted newest-first, so the
+  // hand-authored picks lead); a specific tab shows that bucket in full.
+  const ALL_CAP = 18
   const visible = useMemo(() => {
-    if (tab === 'all') return calls
+    if (tab === 'all') return calls.slice(0, ALL_CAP)
     return calls.filter((c) => bucketFor(c.marketId) === tab)
   }, [calls, tab])
+  const hiddenInAll = tab === 'all' ? Math.max(0, calls.length - ALL_CAP) : 0
 
   return (
     <section style={{ padding: '32px 0 8px' }}>
@@ -119,6 +123,21 @@ export function CouncilFeedSection({
           {visible.map((c) => <CallCard key={c.id} call={c} />)}
         </div>
       )}
+
+      {hiddenInAll > 0 ? (
+        <div style={{
+          marginTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          fontFamily: CF.body, fontSize: 13, color: CF.ink3,
+        }}>
+          + {hiddenInAll} more fixtures —
+          <button onClick={() => setTab('group')} style={{
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontFamily: CF.body, fontSize: 13, fontWeight: 600, color: CF.ink, textDecoration: 'underline',
+          }}>
+            see all group fixtures →
+          </button>
+        </div>
+      ) : null}
     </section>
   )
 }
