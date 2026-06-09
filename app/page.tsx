@@ -4,6 +4,7 @@
 
 import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
+import { VideoBackground } from '../components/VideoBackground'
 import { BrandLogo } from '../components/Logo'
 import { loadCalls } from '../lib/calls-data'
 import { computeAgentStats } from '../lib/leaderboard'
@@ -72,10 +73,10 @@ export default function Arena() {
   return (
     <main style={{
       minHeight: '100vh', color: A.text, fontFamily: A.body,
-      background: `radial-gradient(1200px 700px at 50% -5%, #0d1422 0%, ${A.bg} 55%)`,
-      padding: '0 28px 80px',
+      background: A.bg, padding: '0 28px 80px',
     }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <VideoBackground />
+      <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
 
         {/* ── top bar ── */}
         <header style={{

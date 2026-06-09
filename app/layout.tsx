@@ -122,6 +122,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           :root[data-theme="dark"] .cf-logo-dark { display: inline-flex !important; }
           @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+            /* reduced-motion users get the static poster, not the looping video */
+            .cf-wallpaper-video { display: none !important; }
           }
         `}</style>
       </head>
