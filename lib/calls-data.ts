@@ -490,11 +490,6 @@ export async function getCallByIdWithPolymarket(id: string): Promise<PublishedCa
   }
 }
 
-export function relativeTime(ms: number): string {
-  const delta = Date.now() - ms
-  const hr = Math.floor(delta / 3600000)
-  if (hr < 1) return 'just now'
-  if (hr < 24) return `${hr}h ago`
-  const d = Math.floor(hr / 24)
-  return `${d}d ago`
-}
+// Re-exported from lib/time.ts (pure) for back-compat; client components should
+// import it from lib/time directly to avoid pulling this module's node:fs deps.
+export { relativeTime } from './time.js'

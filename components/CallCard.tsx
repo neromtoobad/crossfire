@@ -7,7 +7,7 @@
 
 import Link from 'next/link'
 import type { PublishedCall } from '../lib/calls-data'
-import { relativeTime } from '../lib/calls-data'
+import { relativeTime } from '../lib/time'
 import { PUNDITS, punditOf } from '../lib/pundits'
 import { getResolution } from '../lib/resolutions'
 import { CF, alpha } from '../lib/theme'
