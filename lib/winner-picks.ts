@@ -51,7 +51,7 @@ ${roster}
 
 Rules:
 - Each analyst picks exactly one nation. Picks MAY overlap (two analysts can back the same nation) — only pick the same nation if the analyst genuinely would.
-- Each gives a sharp ONE-SENTENCE argument for their pick, in their own voice and analytical lane.
+- Each gives a 1-2 sentence PITCH addressed directly to the bettor (second person — "you"), SELLING their pick with swagger and a concrete footballing reason, in their own voice and lane. They are competing to convince you to follow THEM.
 - Then they DEBATE: 4 short rebuttal lines where analysts challenge each other's picks by name (e.g. VEGA jabs at ECHO's pick). One sentence each.
 
 Return JSON exactly:

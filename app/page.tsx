@@ -40,7 +40,7 @@ export default function Arena() {
   const agents = stats
     .map((s) => {
       const p = PUNDITS[s.role]
-      return { handle: p.handle, avatar: p.avatar, color: p.color, archetype: p.archetype, winRate: s.winRate, won: s.callsWon, resolved: s.callsResolved }
+      return { handle: p.handle, avatar: p.avatar, color: p.color, archetype: p.archetype, persona: p.persona, portrait: p.portrait, winRate: s.winRate, won: s.callsWon, resolved: s.callsResolved }
     })
     .sort((a, b) => b.winRate - a.winRate)
 
@@ -108,7 +108,7 @@ export default function Arena() {
         </section>
 
         {/* ── the core: the agents' World Cup picks + their debate ── */}
-        <WinnerPicks />
+        <WinnerPicks winRates={Object.fromEntries(agents.filter((a) => a.resolved > 0).map((a) => [a.handle, Math.round(a.winRate * 100)]))} />
 
         {/* ── metric strip ── */}
         <section className="cf-g4 cf-divided" style={{
@@ -139,14 +139,16 @@ export default function Arena() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <span style={{
-                    width: 38, height: 38, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: a.color + '1f', border: `1.5px solid ${a.color}`, color: a.color,
-                    fontFamily: A.mono, fontWeight: 700, fontSize: 15, boxShadow: `0 0 12px ${a.color}40`,
-                  }}>{a.avatar}</span>
+                    width: 42, height: 42, borderRadius: 9, display: 'inline-flex', overflow: 'hidden',
+                    border: `1.5px solid ${a.color}`, boxShadow: `0 0 12px ${a.color}40`, flexShrink: 0,
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={a.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
+                  </span>
                   <span className="mono" style={{ fontSize: 10, color: A.text3 }}>#{i + 1}</span>
                 </div>
                 <div style={{ fontWeight: 700, fontSize: 14, color: A.cream, letterSpacing: 0.4 }}>AGENT {a.handle}</div>
-                <div className="mono" style={{ fontSize: 9.5, color: A.text3, margin: '3px 0 14px' }}>{a.archetype}</div>
+                <div className="mono" style={{ fontSize: 9.5, color: a.color, margin: '3px 0 14px' }}>{a.persona}</div>
                 <div className="mono tnum" style={{ fontSize: 20, fontWeight: 700, color: a.winRate >= 0.6 ? A.green : a.winRate >= 0.4 ? A.gold : A.red }}>
                   {a.resolved ? `${Math.round(a.winRate * 100)}%` : '—'}
                 </div>

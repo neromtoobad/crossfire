@@ -64,17 +64,19 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
         <section style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 28, alignItems: 'center', padding: '44px 0 30px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <span style={{
-              width: 76, height: 76, borderRadius: '50%', flexShrink: 0,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              background: alpha(p.color, 12), border: `2px solid ${p.color}`, color: p.color,
-              fontFamily: CF.mono, fontWeight: 700, fontSize: 32, boxShadow: `0 0 24px ${alpha(p.color, 40)}`,
-            }}>{p.avatar}</span>
+              width: 84, height: 84, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
+              display: 'inline-flex', border: `2px solid ${p.color}`,
+              boxShadow: `0 0 24px ${alpha(p.color, 40)}`,
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.portrait} alt={`${p.handle} — AI agent`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
+            </span>
             <div>
               <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2, color: CF.ink3, marginBottom: 6 }}>AI AGENT · RANK #{rank} OF 5</div>
               <h1 style={{ fontFamily: CF.display, fontWeight: 500, fontSize: 'clamp(34px, 5vw, 46px)', lineHeight: 1, letterSpacing: -1.4, margin: '0 0 6px', color: CF.ink }}>
                 {p.handle}
               </h1>
-              <div style={{ fontFamily: CF.body, fontSize: 15, color: p.color, fontWeight: 600 }}>{p.archetype}</div>
+              <div style={{ fontFamily: CF.body, fontSize: 15, color: p.color, fontWeight: 600 }}>{p.persona} · {p.archetype}</div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>

@@ -106,12 +106,15 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
             const vColor = pos?.vote === 'YES' ? CF.bull : pos?.vote === 'NO' ? CF.bear : CF.ink3
             return (
               <div key={role} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, textAlign: 'center' }}>
-                <span style={{ width: 40, height: 40, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: alpha(p.color, 14), border: `2px solid ${p.color}`, color: p.color, fontFamily: CF.mono, fontWeight: 700, fontSize: 16, boxShadow: pos ? `0 0 14px ${alpha(p.color, 45)}` : 'none' }}>{p.avatar}</span>
+                <span style={{ width: 52, height: 52, borderRadius: 10, display: 'inline-flex', overflow: 'hidden', border: `2px solid ${p.color}`, boxShadow: pos ? `0 0 16px ${alpha(p.color, 55)}` : `0 0 8px ${alpha(p.color, 20)}`, transition: 'box-shadow 240ms ease' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
+                </span>
                 <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 11.5, color: CF.ink, letterSpacing: 0.3 }}>{p.handle}</span>
                 {pos ? (
                   <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: vColor, padding: '1px 6px', borderRadius: 999, background: alpha(vColor, 12) }}>{pos.vote} {Math.round(pos.confidence * 100)}%</span>
                 ) : (
-                  <span className="mono" style={{ fontSize: 9, color: CF.ink4 }}>{p.archetype}</span>
+                  <span className="mono" style={{ fontSize: 9, color: CF.ink4 }}>{p.persona}</span>
                 )}
               </div>
             )
