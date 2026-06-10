@@ -4,9 +4,9 @@
 // DEBATES in sequential rounds. Each agent reads the running transcript and
 // reacts to what came before — genuine agent-to-agent coordination.
 //
-//   Round 1 · Opening statements   — each role agent states a position
-//   Round 2 · Rebuttal & revision  — each agent rebuts/defends, having read R1
-//   Round 3 · The Skeptic           — cross-examines the emerging majority
+//   ONE round, SEQUENTIAL: the four role agents take the floor one at a time
+//   (each sees and engages everything said before them, with cited evidence),
+//   then VEGA/Skeptic closes by cross-examining the majority.
 //
 // Every turn is STREAMED token-by-token from Venice, so the UI watches the
 // argument form word by word. Each turn ends with a hidden POSITION marker
@@ -80,7 +80,7 @@ async function streamTurn(
           { role: 'user', content: userPrompt },
         ],
         temperature,
-        max_tokens: 320,
+        max_tokens: 460,
         stream: true,
         // disable_thinking so a reasoning model streams the answer as content;
         // enable_web_scraping off to keep each turn lean.
@@ -148,7 +148,7 @@ function debateSystemPrompt(role: RoleName, marketTitle: string, impliedProbYes:
 
 YOUR CHARACTER: you are ${me.handle}, "${me.archetype}". ${me.voice}
 
-You are on a live World Cup punditry panel: ${others}. You are debating this match. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, 2-4 punchy sentences, like a sharp pundit on a live panel. When another pundit has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and either build on or push back against their point. Stay strictly in your lane (your domain). Be specific and evidence-anchored; no hedging filler.
+You are on a live World Cup punditry panel: ${others}. You are debating this match. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, 4-6 substantive sentences. PRESENT PROOF: cite concrete, specific evidence from your lane — actual stats, form lines, head-to-head records, injuries, tactical matchups, xG figures, conversion rates — as if entering exhibits before a panel. When another pundit has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and engage their specific evidence — counter it with your own or build on it. Stay strictly in your lane (your domain). No hedging filler, no vibes — every claim backed by a concrete fact.
 
 CALIBRATION — the betting line prices YES at ${impliedPct}% (so NO at ${(100 - Number(impliedPct))}%). That line reflects sharp money — treat it as your PRIOR. If you call YES, anchor your confidence near ${impliedPct}%; if NO, near ${(100 - Number(impliedPct))}%. To push more than ~15 points beyond that anchor you need a specific, defensible reason — don't move far on vibes. The whole point is to find where the line is genuinely WRONG, not to restate it.
 
@@ -188,8 +188,8 @@ export async function runDebate({
       `Evidence for your role:`,
       evidenceFor(role) || '(none — reason from your domain expertise)',
       ``,
-      round === 1 ? `(This is the opening round — no transcript yet.)` : `Opening statements from the desk:`,
-      round === 1 ? '' : renderTranscript(context),
+      context.length === 0 ? `(You speak first — no transcript yet.)` : `The debate so far — engage it:`,
+      context.length === 0 ? '' : renderTranscript(context),
       ``,
       roundInstruction,
     ].join('\n')
@@ -201,19 +201,23 @@ export async function runDebate({
     return msg
   }
 
-  // ── Round 1 — Opening statements (parallel; agents open cold) ──────────
-  await emit({ type: 'debate-round', round: 1, title: 'Opening statements' })
-  const r1 = await Promise.all(ROLES.map((role) => roleTurn(role, 1, [],
-    `Round 1 — your OPENING STATEMENT. In 2-3 sentences, state your read on whether this resolves YES, from your domain only.`)))
+  // ── Single round — the agents take the floor ONE AT A TIME, in order. ──
+  // Each speaker sees the full running transcript of everyone before them and
+  // must engage it with evidence. Sequential by design: the order IS the show.
+  await emit({ type: 'debate-round', round: 1, title: 'The floor — evidence in, one at a time' })
+  const transcript: DebateMessage[] = []
+  for (let i = 0; i < ROLES.length; i++) {
+    const role = ROLES[i]!
+    const instruction = i === 0
+      ? `You OPEN the debate. Lay out your full case with concrete evidence (specific stats, form, matchups) and state your position.`
+      : `${i + 1 === ROLES.length ? 'You are the LAST role agent to speak. ' : ''}You have heard the ${i} speaker${i > 1 ? 's' : ''} above. Engage at least one BY HANDLE — counter their specific evidence with your own, or reinforce it with NEW proof from your lane. Then state your FINAL position.`
+    const msg = await roleTurn(role, 1, transcript, instruction)
+    transcript.push(msg)
+  }
 
-  // ── Round 2 — Rebuttal (parallel; each rebuts the FULL set of R1) ──────
-  await emit({ type: 'debate-round', round: 2, title: 'Rebuttal & revision' })
-  const r2 = await Promise.all(ROLES.map((role) => roleTurn(role, 2, r1,
-    `Round 2 — REBUTTAL. You've read every opening above. In 2-3 sentences, name at least one colleague BY NAME and engage their argument directly — build on it or push back. State your FINAL position.`)))
-
-  // Final role votes = each agent's round-2 position.
+  // Final role votes = each agent's single, evidence-backed position.
   const roleVotes: AgentVote[] = ROLES.map((role) => {
-    const last = r2.find((m) => m.role === role)
+    const last = transcript.find((m) => m.role === role)
     return {
       role,
       vote: asVote(last?.vote),
@@ -227,9 +231,8 @@ export async function runDebate({
   const no = roleVotes.filter((v) => v.vote === 'NO').length
   const majoritySide: 'YES' | 'NO' = yes >= no ? 'YES' : 'NO'
 
-  // ── Round 3 — The Skeptic cross-examines ───────────────────────────────
-  await emit({ type: 'debate-round', round: 3, title: 'The Skeptic' })
-  await emit({ type: 'debate-turn-start', round: 3, role: 'Skeptic' })
+  // ── VEGA closes the same round — the cross-examination ─────────────────
+  await emit({ type: 'debate-turn-start', round: 1, role: 'Skeptic' })
   const skepticSystem = `You are the Skeptic on a prediction-market council — the adversary in the room. The four role agents have just debated and lean ${majoritySide}.
 
 Your job: cross-examine. Make the STRONGEST possible case that the majority is WRONG. Name specific agents and attack their weakest assumption. You have no evidence of your own — you find the cracks in theirs. You VETO the call if your refutation reaches confidence ≥ 0.5.
@@ -244,13 +247,13 @@ Confidence: 0.0-0.3 = the council is right, you concede; 0.3-0.5 = real concerns
     `The council leans: ${majoritySide}`,
     ``,
     `Full debate transcript:`,
-    renderTranscript([...r1, ...r2]),
+    renderTranscript(transcript),
     ``,
     `Cross-examine the majority now in 2-3 sentences.`,
   ].join('\n')
 
   const skepticFull = await streamTurn(skepticSystem, skepticUser,
-    (t) => emit({ type: 'debate-token', round: 3, role: 'Skeptic', token: t }), 0.6)
+    (t) => emit({ type: 'debate-token', round: 1, role: 'Skeptic', token: t }), 0.6)
   const skepticPos = parsePosition(skepticFull)
   const skepticVote: AgentVote = {
     role: 'Skeptic',
@@ -258,7 +261,7 @@ Confidence: 0.0-0.3 = the council is right, you concede; 0.3-0.5 = real concerns
     confidence: clamp(num(skepticPos.confidence, 0.2), 0, 1),
     oneLiner: oneLineFrom(skepticFull),
   }
-  await emit({ type: 'debate-turn-end', round: 3, role: 'Skeptic', vote: majoritySide, confidence: skepticVote.confidence })
+  await emit({ type: 'debate-turn-end', round: 1, role: 'Skeptic', vote: majoritySide, confidence: skepticVote.confidence })
 
   return { roleVotes, skepticVote }
 }

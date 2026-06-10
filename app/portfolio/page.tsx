@@ -18,7 +18,7 @@ export default function PortfolioPage() {
             <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 13, letterSpacing: 3.4, color: CF.ink }}>CROSSFIRE</span>
           </Link>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-            <Link href="/markets" style={navStyle}>Markets</Link>
+            <Link href="/agents" style={navStyle}>Agents</Link>
             <Link href="/leaderboard" style={navStyle}>Standings</Link>
             <ConnectButton variant="primary" />
           </div>

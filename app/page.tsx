@@ -74,7 +74,7 @@ export default function Arena() {
             </div>
           </div>
           <nav className="cf-nav">
-            <Link href="/markets" style={navStyle}>Markets</Link>
+            <Link href="/agents" style={navStyle}>Agents</Link>
             <Link href="/leaderboard" style={navStyle}>Standings</Link>
             <Link href="/portfolio" className="cf-hide-sm" style={navStyle}>Vault</Link>
             <Link href="/lab" style={navStyle}>War Room</Link>
@@ -212,7 +212,7 @@ export default function Arena() {
             <span className="mono" style={{ fontSize: 10.5, color: A.text3, letterSpacing: 0.5 }}>AI agents that can’t bluff · the chain settles</span>
           </div>
           <div style={{ display: 'flex', gap: 20 }}>
-            <Link href="/markets" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>Markets</Link>
+            <Link href="/agents" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>Agents</Link>
             <Link href="/leaderboard" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>Standings</Link>
             <Link href="/portfolio" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>Vault</Link>
             <Link href="/lab" className="mono" style={{ fontSize: 11.5, color: A.text2 }}>War Room</Link>

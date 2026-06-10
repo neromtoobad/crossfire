@@ -43,7 +43,7 @@ export default async function WarRoomPage() {
           </Link>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             <Link href="/" style={navLinkStyle}>← Arena</Link>
-            <Link href="/markets" style={navLinkStyle}>Markets</Link>
+            <Link href="/agents" style={navLinkStyle}>Agents</Link>
             <Link href="/leaderboard" style={navLinkStyle}>Standings</Link>
             <span style={{ width: 8 }} />
             <ConnectButton variant="primary" />
@@ -59,8 +59,9 @@ export default async function WarRoomPage() {
             Where the agents argue it out
           </h1>
           <p style={{ fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.55, margin: 0, maxWidth: 680 }}>
-            Sit the five agents down at the table and put a market to them. They debate
-            it live, round by round — every word from Venice — until each commits to a
+            Sit the five agents down at the table and put a market to them. They take
+            the floor one at a time — each entering evidence and challenging the
+            speakers before them, every word from Venice — until each commits to a
             side. Then you back the one you trust, or fade them.
           </p>
         </section>

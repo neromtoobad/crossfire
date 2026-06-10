@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data'
 import { ConnectButton } from '../../../components/ConnectButton'
+import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
 import { VerdictCard } from '../../../components/VerdictCard'
 import { BrandLogo } from '../../../components/Logo'
@@ -244,21 +245,18 @@ BACKED WITH
           ) : null}
         </section>
 
-        {/* ── fade or follow: the staked call + your capped bet (ERC-7715) ── */}
+        {/* ── fade or follow: the staked call + your capped bet (ERC-7715) ──
+               locked reasoning stripped — client components never see it unpaid */}
         <section style={{ padding: '12px 0' }}>
-          <FadeFollow call={call} />
+          <FadeFollow call={{ ...call, locked: undefined } as unknown as typeof call} />
         </section>
 
-        {/* ── the full thesis (open) ── */}
-        {call.detail?.thesis ? (
+        {/* ── the full reasoning — x402 nano-payment unlock (same gate as the
+               agent pages; the one-liners above are the free layer) ── */}
+        {call.locked?.thesis ? (
           <section style={{ padding: '12px 0 4px' }}>
-            <div className="mono" style={{ fontSize: 11, color: CF.ink3, letterSpacing: 2.2, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
-              THE FULL THESIS
-            </div>
-            <p style={{ fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.7, margin: 0, maxWidth: 680 }}>
-              {call.detail.thesis}
-            </p>
+            {/* slim object only — the thesis itself never ships until paid */}
+            <UnlockThesis call={{ id: call.id, unlockUsdc: call.unlockUsdc, marketTitle: call.marketTitle } as typeof call} />
           </section>
         ) : null}
       </div>

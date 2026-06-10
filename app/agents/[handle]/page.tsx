@@ -9,6 +9,7 @@ import { computeAgentStats } from '../../../lib/leaderboard'
 import { getResolution } from '../../../lib/resolutions'
 import { PUNDITS, PUNDIT_ROLES, roleOfSlug, slugOf } from '../../../lib/pundits'
 import { ConnectButton } from '../../../components/ConnectButton'
+import { AgentPicks } from '../../../components/AgentPicks'
 import { BrandLogo } from '../../../components/Logo'
 import { CF, alpha } from '../../../lib/theme'
 
@@ -39,7 +40,19 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
     .sort((a, b) => b!.c.publishedAt - a!.c.publishedAt) as { c: typeof calls[number]; v: NonNullable<ReturnType<typeof calls[number]['votes']['find']>>; outcome: 'hit' | 'miss' | 'pending' }[]
 
   const resolved = record.filter((r) => r.outcome !== 'pending')
-  const recent = record.slice(0, 16)
+
+  // serializable pick rows for the client list — the thesis content itself
+  // NEVER ships here; it's returned by the unlock API after payment.
+  const pickRows = record.map(({ c, v, outcome }) => ({
+    callId: c.id,
+    marketTitle: c.marketTitle,
+    unlockUsdc: c.unlockUsdc || 0.1,
+    vote: v.vote,
+    confidence: v.confidence,
+    oneLiner: v.oneLiner,
+    outcome,
+    hasThesis: !!c.locked?.thesis,
+  }))
 
   const brierColor = me.callsResolved === 0 ? CF.ink3 : me.brierScore < 0.15 ? CF.bull : me.brierScore < 0.25 ? CF.amber : CF.bear
   const brierLabel = me.callsResolved === 0 ? 'unscored' : me.brierScore < 0.10 ? 'sharp' : me.brierScore < 0.20 ? 'calibrated' : me.brierScore < 0.25 ? 'fair' : 'miscalibrated'
@@ -55,7 +68,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
           </Link>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
             <Link href="/leaderboard" style={navStyle}>← All agents</Link>
-            <Link href="/markets" style={navStyle}>Markets</Link>
+            <Link href="/agents" style={navStyle}>Agents</Link>
             <ConnectButton variant="primary" />
           </div>
         </header>
@@ -129,30 +142,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
             <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
             THE CALLS · {resolved.length} settled
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {recent.map(({ c, v, outcome }) => {
-              const oc = outcome === 'hit' ? CF.positive : outcome === 'miss' ? CF.bear : CF.ink3
-              const ocLabel = outcome === 'hit' ? '✓ HIT' : outcome === 'miss' ? '✗ MISS' : 'OPEN'
-              const voteColor = v.vote === 'YES' ? CF.bull : CF.bear
-              return (
-                <Link key={c.id} href={`/calls/${c.id}`} className="cf-card" style={{
-                  display: 'block', background: CF.surface, border: `1px solid ${CF.line}`,
-                  borderLeft: `3px solid ${oc}`, borderRadius: CF.radius.lg, padding: '14px 18px', boxShadow: CF.shadow.card,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
-                    <span style={{ flex: 1, minWidth: 0, fontFamily: CF.body, fontWeight: 600, fontSize: 14.5, color: CF.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.marketTitle}</span>
-                    <span className="mono" style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, color: voteColor, padding: '2px 7px', borderRadius: CF.radius.sm, background: alpha(voteColor, 12) }}>
-                      {v.vote} {Math.round(v.confidence * 100)}%
-                    </span>
-                    <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: oc, width: 50, textAlign: 'right' }}>{ocLabel}</span>
-                  </div>
-                  <div style={{ fontFamily: CF.body, fontSize: 13.5, color: CF.ink2, lineHeight: 1.5, fontStyle: 'italic' }}>
-                    “{v.oneLiner}”
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
+          <AgentPicks picks={pickRows} color={p.color} />
         </section>
 
         {/* other agents */}
