@@ -1,13 +1,14 @@
 // Call resolutions — used by the leaderboard to score per-role calibration.
 //
-// In production these would come from oracles or settled markets. For the
-// hackathon demo they're hand-set so judges can see real Brier scores
-// across the council without waiting months for markets to resolve.
+// The agents' graded record is a BACKTEST on real, already-played matches
+// (lib/historical-matches.ts) with REAL outcomes. The 2026 World Cup hasn't
+// happened, so those markets are PENDING — we never invent results for games
+// that haven't aired.
 //
 // 'PENDING' means the market is still open — those calls don't contribute
 // to the score (they show in the "open" tally on the leaderboard).
 
-import { FIXTURE_RESOLUTIONS } from './wc-fixtures.js'
+import { HISTORICAL_RESOLUTIONS } from './historical-matches.js'
 
 export type Resolution = 'YES' | 'NO' | 'PENDING'
 
@@ -34,5 +35,5 @@ export const RESOLUTIONS: Record<string, Resolution> = {
 }
 
 export function getResolution(marketId: string): Resolution {
-  return RESOLUTIONS[marketId] ?? FIXTURE_RESOLUTIONS[marketId] ?? 'PENDING'
+  return RESOLUTIONS[marketId] ?? HISTORICAL_RESOLUTIONS[marketId] ?? 'PENDING'
 }

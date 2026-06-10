@@ -74,11 +74,12 @@ export default function Leaderboard() {
           <p style={{
             fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.6, maxWidth: 720, margin: 0,
           }}>
-            The five forecasters, ranked by how accurate they&apos;ve actually been.
-            The score is a Brier — lower is better; 0 is perfect, 0.25 is a coin
-            flip. A sharper record earns a bigger budget on the next call
-            (the <span style={{ color: CF.ink }}>budget ×</span> column), so being right
-            literally compounds.
+            The five agents, ranked by how accurate they&apos;ve actually been —
+            <span style={{ color: CF.ink }}> backtested on real, already-played matches</span> (2018–2024
+            World Cups, Euros, Copa América). The 2026 markets haven&apos;t been played, so
+            they stay open. The score is a Brier — lower is better; 0 is perfect, 0.25 a
+            coin flip. A sharper record earns a bigger budget on the next call
+            (<span style={{ color: CF.ink }}>budget ×</span>), so being right compounds.
           </p>
         </section>
 

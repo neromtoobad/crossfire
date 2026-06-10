@@ -8,6 +8,7 @@
 // World Cup group-stage fixtures (72 matches), generated deterministically.
 // wc-fixtures imports only TYPES from here, so there's no runtime cycle.
 import { FIXTURE_CALLS } from './wc-fixtures.js'
+import { HISTORICAL_CALLS } from './historical-matches.js'
 
 export type AgentRole = 'MacroScout' | 'NewsHawk' | 'CrowdPulse' | 'BookWatcher' | 'Skeptic'
 
@@ -402,8 +403,9 @@ function dedupeByMarket(calls: PublishedCall[]): PublishedCall[] {
 export function loadCalls(): PublishedCall[] {
   // Server-side: stored calls take precedence; samples back-fill so the feed
   // is never empty during early demos.
-  // marquee hand-authored calls first (most recent), then the 72 group fixtures.
-  const seed = [...SAMPLE_CALLS, ...FIXTURE_CALLS]
+  // marquee hand-authored calls first, then the real-result backtest matches
+  // (the agents' graded record), then the upcoming 2026 group fixtures (pending).
+  const seed = [...SAMPLE_CALLS, ...HISTORICAL_CALLS, ...FIXTURE_CALLS]
   if (typeof process === 'undefined' || typeof window !== 'undefined') {
     return dedupeByMarket(seed)
   }

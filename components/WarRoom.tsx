@@ -26,6 +26,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
   const [running, setRunning] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  const [winnerPicks, setWinnerPicks] = useState<Record<string, { country: string; flag: string }>>({})
   const started = useRef(false)
 
   // preselect from ?topic=
@@ -33,6 +34,13 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
     const t = params.get('topic')
     if (t && (t === WINNER_ID || callById.has(t))) setSelectedId(t)
   }, [params]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // the agents' country picks — shown on the seats for the winner debate
+  useEffect(() => {
+    fetch('/api/winner-picks').then((r) => r.json()).then((d) => {
+      if (d.picks?.length) setWinnerPicks(Object.fromEntries(d.picks.map((p: { role: string; country: string; flag: string }) => [p.role, { country: p.country, flag: p.flag }])))
+    }).catch(() => {})
+  }, [])
 
   const selectedCall = selectedId === WINNER_ID ? null : callById.get(selectedId)
   const topicTitle = selectedId === WINNER_ID ? WINNER_TITLE : selectedCall?.marketTitle ?? ''
@@ -75,7 +83,8 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
     if (running) return
     setMessages([]); setRounds([]); setPositions({}); setError(''); setDone(false); setRunning(true)
     try {
-      const res = await fetch('/api/debate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marketTitle: topicTitle, impliedProbYes }) })
+      const payload = selectedId === WINNER_ID ? { winner: true } : { marketTitle: topicTitle, impliedProbYes }
+      const res = await fetch('/api/debate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       if (!res.body) throw new Error('no stream')
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
       for (;;) {
@@ -111,7 +120,11 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
                   <img src={p.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
                 </span>
                 <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 11.5, color: CF.ink, letterSpacing: 0.3 }}>{p.handle}</span>
-                {pos ? (
+                {selectedId === WINNER_ID && winnerPicks[role] ? (
+                  <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: p.color, padding: '1px 6px', borderRadius: 999, background: alpha(p.color, 12), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span>{winnerPicks[role].flag}</span>{winnerPicks[role].country}
+                  </span>
+                ) : pos ? (
                   <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: vColor, padding: '1px 6px', borderRadius: 999, background: alpha(vColor, 12) }}>{pos.vote} {Math.round(pos.confidence * 100)}%</span>
                 ) : (
                   <span className="mono" style={{ fontSize: 9, color: CF.ink4 }}>{p.persona}</span>

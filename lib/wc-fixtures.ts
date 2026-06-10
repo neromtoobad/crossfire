@@ -151,30 +151,20 @@ function makeFixtureCall(group: string, a: [string, number], b: [string, number]
   }
 }
 
-// Resolutions for the fixtures that have already been played (matchdays 1-2 of
-// 3). Favourites win more often than not, scaled by the strength gap, with
-// genuine upsets — so the agents who back chalk score well, the contrarian and
-// the dissenters have mixed records, and the standings have real depth. The
-// last third of fixtures stay PENDING (live matches still to come).
+// The 2026 World Cup hasn't been played, so EVERY fixture is genuinely PENDING.
+// We do NOT invent results for matches that haven't aired. The agents' track
+// record comes from a backtest on real, already-played matches instead — see
+// lib/historical-matches.ts. (Kept as an empty export for back-compat.)
 export const FIXTURE_RESOLUTIONS: Record<string, 'YES' | 'NO'> = {}
-const RESOLVED_THROUGH = 48 // of 72 — leaves 24 live
 
 export const FIXTURE_CALLS: PublishedCall[] = (() => {
   const out: PublishedCall[] = []
   let idx = 0
   for (const [group, teams] of Object.entries(GROUPS)) {
-    // round-robin: 6 matches per group of 4
+    // round-robin: 6 matches per group of 4 — all upcoming, all pending
     for (let i = 0; i < teams.length; i++) {
       for (let j = i + 1; j < teams.length; j++) {
-        const call = makeFixtureCall(group, teams[i], teams[j], idx)
-        out.push(call)
-        if (idx < RESOLVED_THROUGH) {
-          const [fa, fb] = teams[i][1] >= teams[j][1] ? [teams[i], teams[j]] : [teams[j], teams[i]]
-          const gap = fa[1] - fb[1]
-          const favWinP = Math.min(0.85, 0.58 + gap / 60)
-          const draw = rng(hashStr(`res-${call.marketId}`))()
-          FIXTURE_RESOLUTIONS[call.marketId] = draw < favWinP ? 'YES' : 'NO'
-        }
+        out.push(makeFixtureCall(group, teams[i], teams[j], idx))
         idx++
       }
     }

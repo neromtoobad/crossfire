@@ -140,7 +140,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
         <section>
           <div className="mono" style={{ fontSize: 11, letterSpacing: 2.2, color: CF.ink3, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
-            THE CALLS · {resolved.length} settled
+THE CALLS · {resolved.length} graded on real results · backtest
           </div>
           <AgentPicks picks={pickRows} color={p.color} />
         </section>

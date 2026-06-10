@@ -15,7 +15,7 @@
 import { venice } from '../venice.js'
 import type { AgentRole, AgentVote } from '../calls-data.js'
 import { ROLE_PROMPTS } from './prompts.js'
-import { PUNDITS, handleOf } from '../pundits.js'
+import { PUNDITS, PUNDIT_ROLES, handleOf } from '../pundits.js'
 
 // The live debate streams turn-by-turn, so it needs a fast Venice model that
 // stays available under load (the heavy qwen3-235b decision model is frequently
@@ -264,6 +264,57 @@ Confidence: 0.0-0.3 = the council is right, you concede; 0.3-0.5 = real concerns
   await emit({ type: 'debate-turn-end', round: 1, role: 'Skeptic', vote: majoritySide, confidence: skepticVote.confidence })
 
   return { roleVotes, skepticVote }
+}
+
+// ── the WINNER debate ──────────────────────────────────────────────────────
+// A multi-CANDIDATE debate (not binary): each agent has already backed a NATION
+// to win the World Cup. They take the floor one at a time, IN ORDER, each
+// defending its own country with concrete evidence and arguing why it beats the
+// other agents' picks. The arguments correlate with the picks because each
+// agent is literally told which country to defend.
+export type WinnerPickInput = { role: AgentRole; handle: string; country: string; reason: string }
+
+function renderWinnerTranscript(t: { handle: string; country: string; text: string }[]): string {
+  if (t.length === 0) return '(you speak first)'
+  return t.map((m) => `${m.handle} (backs ${m.country}): ${m.text.trim()}`).join('\n\n')
+}
+
+export async function runWinnerDebate({
+  picks, emit,
+}: { picks: WinnerPickInput[]; emit: Emit }): Promise<void> {
+  // speak in the canonical agent order, but only those with a pick
+  const ordered = PUNDIT_ROLES
+    .map((role) => picks.find((p) => p.role === role))
+    .filter((p): p is WinnerPickInput => !!p)
+
+  await emit({ type: 'debate-round', round: 1, title: 'Who lifts the trophy — make your case' })
+
+  const transcript: { handle: string; country: string; text: string }[] = []
+  for (let i = 0; i < ordered.length; i++) {
+    const pk = ordered[i]!
+    const me = PUNDITS[pk.role]
+    await emit({ type: 'debate-turn-start', round: 1, role: pk.role })
+
+    const rivals = ordered.filter((p) => p.handle !== pk.handle).map((p) => `${p.handle} backs ${p.country}`).join('; ')
+    const system = `You are ${me.handle}, "${me.archetype}". ${me.voice}
+
+You are on a live panel debating WHO WILL WIN the 2026 FIFA World Cup. YOU have backed ${pk.country.toUpperCase()} to lift the trophy. Your entire job is to DEFEND ${pk.country} and argue it beats every rival pick.
+
+Speak in the FIRST PERSON, fully in character, 4-6 substantive sentences. Make the concrete case for ${pk.country}: squad depth, current form, tactical identity, key players, tournament pedigree, draw/route — real, specific evidence from your lane. ${i === 0 ? 'You OPEN the debate — set out why ' + pk.country + ' wins it.' : `Rivals on the panel: ${rivals}. Name at least ONE rival BY HANDLE and argue directly why ${pk.country} is a better bet than the nation THEY backed.`} Never concede your pick. No POSITION marker, no hedging — pure advocacy for ${pk.country}.`
+
+    const user = [
+      `YOUR PICK: ${pk.country} to win the 2026 World Cup.`,
+      `Your seed argument: ${pk.reason}`,
+      ``,
+      i === 0 ? '(You are first to speak.)' : `The debate so far — engage it:\n${renderWinnerTranscript(transcript)}`,
+      ``,
+      `Defend ${pk.country} now.`,
+    ].join('\n')
+
+    const full = await streamTurn(system, user, (t) => emit({ type: 'debate-token', round: 1, role: pk.role, token: t }), 0.7)
+    transcript.push({ handle: pk.handle, country: pk.country, text: full })
+    await emit({ type: 'debate-turn-end', round: 1, role: pk.role })
+  }
 }
 
 // Reduce a multi-sentence debate turn to a single public-facing one-liner:
