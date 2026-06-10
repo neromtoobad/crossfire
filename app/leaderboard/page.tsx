@@ -83,9 +83,7 @@ export default function Leaderboard() {
         </section>
 
         {/* summary tiles */}
-        <section style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24,
-        }}>
+        <section className="cf-g4" style={{ gap: 12, marginBottom: 24 }}>
           {[
             { label: 'CALLS PUBLISHED', value: calls.length.toString(), color: CF.ink },
             { label: 'RESOLVED', value: resolvedCalls.length.toString(), color: CF.ink },
@@ -113,10 +111,10 @@ export default function Leaderboard() {
           ))}
         </section>
 
-        {/* table */}
-        <section style={{
+        {/* table — wide grid scrolls inside the card on small screens */}
+        <section className="cf-scroll-x" style={{
           background: CF.surface, border: `1px solid ${CF.line}`,
-          borderRadius: CF.radius.lg, boxShadow: CF.shadow.card, overflow: 'hidden',
+          borderRadius: CF.radius.lg, boxShadow: CF.shadow.card,
         }}>
           <div className="mono" style={{
             display: 'grid', gridTemplateColumns: '36px 1.5fr 64px 64px 80px 84px 110px',

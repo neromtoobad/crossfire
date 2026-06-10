@@ -73,10 +73,10 @@ export default function Arena() {
               <div className="mono" style={{ fontSize: 8, letterSpacing: 2, color: A.goldDim }}>WORLD CUP PREDICTION MARKETS</div>
             </div>
           </div>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <nav className="cf-nav">
             <Link href="/markets" style={navStyle}>Markets</Link>
             <Link href="/leaderboard" style={navStyle}>Standings</Link>
-            <Link href="/portfolio" style={navStyle}>Vault</Link>
+            <Link href="/portfolio" className="cf-hide-sm" style={navStyle}>Vault</Link>
             <Link href="/lab" style={navStyle}>War Room</Link>
             <ConnectButton variant="primary" />
           </nav>
@@ -100,8 +100,8 @@ export default function Arena() {
               You back the ones with a proven record, fade the rest.
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-              <Link href="/lab" style={goldBtn}>Watch the debate <Icon name="arrow" size={16} color="#1a1305" /></Link>
-              <Link href="/leaderboard" style={outlineBtn}>Explore agents</Link>
+              <Link href="/lab" className="cf-press" style={goldBtn}>Watch the debate <Icon name="arrow" size={16} color="#1a1305" /></Link>
+              <Link href="/leaderboard" className="cf-press" style={outlineBtn}>Explore agents</Link>
             </div>
           </div>
 
@@ -111,9 +111,8 @@ export default function Arena() {
         <WinnerPicks />
 
         {/* ── metric strip ── */}
-        <section style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-          border: `1px solid ${A.borderDim}`, borderRadius: A.radius.lg, background: A.panel,
+        <section className="cf-g4 cf-divided" style={{
+          gap: 0, border: `1px solid ${A.borderDim}`, borderRadius: A.radius.lg, background: A.panel,
           padding: '4px 0', marginBottom: 8,
         }}>
           {[
@@ -121,8 +120,8 @@ export default function Arena() {
             ['5', 'AI agents'],
             [`${settled}`, 'Calls graded'],
             ['5', 'On-chain proofs'],
-          ].map(([v, l], i) => (
-            <div key={l} style={{ padding: '22px 26px', borderLeft: i ? `1px solid ${A.borderDim}` : 'none' }}>
+          ].map(([v, l]) => (
+            <div key={l} style={{ padding: '22px 26px', minWidth: 0 }}>
               <div className="mono tnum" style={{ fontSize: 26, fontWeight: 700, color: A.gold, letterSpacing: -0.5 }}>{v}</div>
               <div className="mono" style={{ fontSize: 9.5, letterSpacing: 1.2, color: A.text3, marginTop: 5 }}>{(l as string).toUpperCase()}</div>
             </div>
@@ -131,7 +130,7 @@ export default function Arena() {
 
         {/* ── top agents ── */}
         <Section eyebrow="THE AGENTS" title="Ranked by win rate" action="Full standings" href="/leaderboard">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
+          <div className="cf-g5 cf-stagger">
             {agents.map((a, i) => (
               <Link key={a.handle} href={`/agents/${a.handle.toLowerCase()}`} className="cf-card" style={{
                 display: 'block', background: A.panel, border: `1px solid ${A.borderDim}`,
@@ -160,7 +159,7 @@ export default function Arena() {
         {/* ── live markets ── */}
         <section style={{ marginTop: 8 }}>
           <Panel title="LIVE MARKETS" action="All markets" href="/markets">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 28 }}>
+            <div className="cf-g2" style={{ columnGap: 28, rowGap: 0 }}>
               {marquee.map((m, i) => (
                 <Link key={m.id} href={`/calls/${m.id}`} style={{
                   display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0',
@@ -177,7 +176,7 @@ export default function Arena() {
 
         {/* ── how it works ── */}
         <Section eyebrow="HOW IT WORKS" title="On-chain. Transparent. Trustless.">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 28, rowGap: 34 }}>
+          <div className="cf-g3 cf-stagger" style={{ gap: 28, rowGap: 34 }}>
             {[
               ['globe', 'World Cup 2026', 'The biggest stage. The sharpest minds. Every fixture is a market.'],
               ['coins', 'Real money, real stakes', 'Every call is backed by chain-capped USDC. An agent can’t bluff.'],

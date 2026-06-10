@@ -106,7 +106,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }
           main { position: relative; z-index: 1; }
           /* feed cards lift on hover — a little life for the betting feed */
+          .cf-card { transition: transform 180ms cubic-bezier(0.22,1,0.36,1), box-shadow 180ms ease, border-color 180ms ease; will-change: transform; }
           .cf-card:hover { transform: translateY(-2px); box-shadow: var(--cf-shadow-hover); border-color: var(--cf-line-2); }
+          .cf-card:active { transform: translateY(0) scale(0.99); }
           /* ── motion toolkit ── */
           @keyframes cf-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.82); } }
           @keyframes cf-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
@@ -116,6 +118,58 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           .cf-think span { animation: cf-blink 1.1s infinite; }
           .cf-think span:nth-child(2) { animation-delay: 0.18s; }
           .cf-think span:nth-child(3) { animation-delay: 0.36s; }
+          /* staggered entrance — apply .cf-stagger to a grid/list; children rise in sequence */
+          .cf-stagger > * { animation: cf-rise 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+          .cf-stagger > *:nth-child(1) { animation-delay: 0.03s; }
+          .cf-stagger > *:nth-child(2) { animation-delay: 0.08s; }
+          .cf-stagger > *:nth-child(3) { animation-delay: 0.13s; }
+          .cf-stagger > *:nth-child(4) { animation-delay: 0.18s; }
+          .cf-stagger > *:nth-child(5) { animation-delay: 0.23s; }
+          .cf-stagger > *:nth-child(6) { animation-delay: 0.28s; }
+          .cf-stagger > *:nth-child(n+7) { animation-delay: 0.33s; }
+          /* button + interactive press feedback (Linear/Raycast-style tap response) */
+          .cf-press { transition: transform 120ms cubic-bezier(0.22,1,0.36,1), opacity 120ms ease, box-shadow 160ms ease; }
+          .cf-press:hover { filter: brightness(1.06); }
+          .cf-press:active { transform: scale(0.97); }
+          /* visible keyboard focus — never remove, always on-brand */
+          :focus-visible { outline: 2px solid var(--cf-gold); outline-offset: 2px; border-radius: 4px; }
+          select, button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+          /* ── responsive grid system — fixed multi-col grids collapse cleanly ── */
+          .cf-g5, .cf-g4, .cf-g3, .cf-g2 { display: grid; gap: 14px; }
+          .cf-g5 { grid-template-columns: repeat(5, 1fr); }
+          .cf-g4 { grid-template-columns: repeat(4, 1fr); }
+          .cf-g3 { grid-template-columns: repeat(3, 1fr); }
+          .cf-g2 { grid-template-columns: repeat(2, 1fr); }
+          @media (max-width: 920px) {
+            .cf-g5 { grid-template-columns: repeat(3, 1fr); }
+            .cf-g4 { grid-template-columns: repeat(2, 1fr); }
+            .cf-g3 { grid-template-columns: repeat(2, 1fr); }
+          }
+          @media (max-width: 600px) {
+            .cf-g5, .cf-g4, .cf-g3, .cf-g2 { grid-template-columns: 1fr 1fr; }
+            .cf-g5 > *, .cf-g4 > * { min-width: 0; }
+          }
+          @media (max-width: 430px) {
+            .cf-g5, .cf-g3, .cf-g2 { grid-template-columns: 1fr; }
+            .cf-g4 { grid-template-columns: 1fr 1fr; }
+          }
+          /* wide tables scroll inside their card instead of stretching the page */
+          .cf-scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .cf-scroll-x > * { min-width: 640px; }
+          /* divided strip — vertical separators between cells, desktop only
+             (children with their own inline padding keep it — inline wins) */
+          @media (min-width: 921px) { .cf-divided > * + * { border-left: 1px solid var(--cf-line); padding-left: 28px; } }
+          /* nav wraps gracefully on small screens */
+          .cf-nav { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; row-gap: 8px; }
+          @media (max-width: 600px) {
+            .cf-nav { gap: 12px; }
+            .cf-hide-sm { display: none !important; }
+            main { padding-left: 16px !important; padding-right: 16px !important; }
+            /* every page header (logo · links · connect) wraps instead of overflowing */
+            main header { flex-wrap: wrap; row-gap: 10px; }
+            main header > div { flex-wrap: wrap; row-gap: 8px; }
+            main header a, main header button { font-size: 12.5px !important; }
+          }
           /* logo variant swap — BrandLogo renders both, CSS shows one */
           .cf-logo-dark { display: none !important; }
           :root[data-theme="dark"] .cf-logo-light { display: none !important; }

@@ -93,9 +93,9 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             {call.marketTitle}
           </h1>
 
-          {/* ── numbers card ── */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 28, alignItems: 'center',
+          {/* ── numbers card — wraps on small screens, dividers on desktop ── */}
+          <div className="cf-divided" style={{
+            display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'center',
             padding: '24px 28px',
             background: CF.surface, border: `1px solid ${CF.line}`,
             borderRadius: CF.radius.lg, boxShadow: CF.shadow.card,
@@ -115,7 +115,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
               </div>
             </div>
             {/* edge */}
-            <div style={{ borderLeft: `1px solid ${CF.line}`, paddingLeft: 28 }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
               <div className="mono" style={{
                 fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
               }}>
@@ -131,7 +131,7 @@ agents {selectedPct}% {call.side} · {marketRef} {marketPct}% YES
               </div>
             </div>
             {/* bond */}
-            <div style={{ textAlign: 'right', borderLeft: `1px solid ${CF.line}`, paddingLeft: 28 }}>
+            <div style={{ textAlign: 'right', minWidth: 150 }}>
               <div className="mono" style={{
                 fontSize: 10.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 6,
               }}>
@@ -184,7 +184,7 @@ BACKED WITH
               ▸ Watch them debate in the War Room →
             </Link>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          <div className="cf-g2" style={{ gap: 12 }}>
             {call.votes.map((v) => {
               const isSkeptic = v.role === 'Skeptic'
               const vColor = isSkeptic

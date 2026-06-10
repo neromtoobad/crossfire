@@ -99,7 +99,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
           </div>
           <span className="mono" style={{ fontSize: 10.5, color: CF.ink4 }}>5 agents · Venice</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+        <div className="cf-g5" style={{ gap: 10 }}>
           {PUNDIT_ROLES.map((role) => {
             const p = PUNDITS[role]
             const pos = positions[role]
@@ -128,7 +128,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
           <option value={WINNER_ID}>🏆 {WINNER_TITLE}</option>
           {calls.map((c) => <option key={c.id} value={c.id}>{c.marketTitle}</option>)}
         </select>
-        <button onClick={start} disabled={running} style={{
+        <button onClick={start} disabled={running} className="cf-press" style={{
           padding: '11px 22px', borderRadius: CF.radius.md, border: 'none', cursor: running ? 'wait' : 'pointer',
           background: running ? CF.surface2 : CF.ink, color: running ? CF.ink3 : CF.bg, fontFamily: CF.body, fontWeight: 700, fontSize: 13.5,
         }}>{running ? 'Debating…' : done ? 'Debate again' : 'Open the floor'}</button>

@@ -73,7 +73,7 @@ export function WinnerPicks() {
       ) : (
         <>
           {/* the picks — each links into the War Room to watch the debate */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
+          <div className="cf-g5 cf-stagger">
             {picks.map((p) => {
               const c = colorOf(p.handle)
               return (

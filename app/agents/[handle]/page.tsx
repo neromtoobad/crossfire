@@ -61,7 +61,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
         </header>
 
         {/* hero */}
-        <section style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 28, alignItems: 'center', padding: '44px 0 30px' }}>
+        <section style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 28, alignItems: 'center', padding: '44px 0 30px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <span style={{
               width: 76, height: 76, borderRadius: '50%', flexShrink: 0,
@@ -91,7 +91,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
         </p>
 
         {/* stat tiles */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 14 }}>
+        <section className="cf-g4 cf-stagger" style={{ gap: 12, marginBottom: 14 }}>
           {[
             { label: 'CALLS MADE', value: `${me.callsTotal}` },
             { label: 'RESOLVED', value: `${me.callsResolved}` },

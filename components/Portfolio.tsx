@@ -72,7 +72,7 @@ export function Portfolio() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       {/* summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+      <div className="cf-g3" style={{ gap: 12 }}>
         {[
           ['BACKED CALLS', `${bets.length}`],
           ['STAKED', `${totalStaked.toFixed(0)} USDC`],

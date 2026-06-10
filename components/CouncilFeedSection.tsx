@@ -130,7 +130,7 @@ export function CouncilFeedSection({
           No calls in this category yet.
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+        <div className="cf-g2 cf-stagger" style={{ gap: 14 }}>
           {visible.map((c) => <CallCard key={c.id} call={c} />)}
         </div>
       )}
