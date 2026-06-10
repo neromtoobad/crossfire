@@ -13,9 +13,9 @@ export const dynamic = 'force-dynamic'
 
 function brierBadge(brier: number, resolved: number) {
   if (resolved === 0) return { color: CF.ink3, bg: CF.surface2, label: 'unscored' }
-  if (brier < 0.10) return { color: CF.bull, bg: CF.bullTint, label: 'sharp' }
-  if (brier < 0.20) return { color: CF.bullInk, bg: CF.bullTint, label: 'calibrated' }
-  if (brier < 0.25) return { color: CF.amber, bg: CF.amberTint, label: 'fair' }
+  if (brier < 0.12) return { color: CF.bull, bg: CF.bullTint, label: 'sharp' }
+  if (brier < 0.21) return { color: CF.bullInk, bg: CF.bullTint, label: 'calibrated' }
+  if (brier < 0.27) return { color: CF.amber, bg: CF.amberTint, label: 'fair' }
   return { color: CF.bear, bg: CF.bearTint, label: 'miscalibrated' }
 }
 

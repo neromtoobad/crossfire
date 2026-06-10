@@ -56,6 +56,25 @@ const MATCHES: Match[] = [
   { fav: 'France', dog: 'Croatia', comp: '2018 World Cup final', favProb: 0.60, favWon: true },            // 4-2
   { fav: 'England', dog: 'Italy', comp: 'Euro 2020 final', favProb: 0.52, favWon: false },                 // Italy on pens
   { fav: 'Brazil', dog: 'Argentina', comp: '2021 Copa América final', favProb: 0.54, favWon: false },      // Argentina 1-0
+
+  // More chalk that held — so the favourite-win rate is realistic (~70%) and the
+  // favourite-backers aren't punished into "miscalibrated" by a cherry-picked
+  // run of shocks. All real results.
+  { fav: 'Spain', dog: 'Georgia', comp: 'Euro 2024 round of 16', favProb: 0.78, favWon: true },           // 4-1
+  { fav: 'France', dog: 'Belgium', comp: 'Euro 2024 round of 16', favProb: 0.55, favWon: true },          // 1-0
+  { fav: 'Germany', dog: 'Denmark', comp: 'Euro 2024 round of 16', favProb: 0.62, favWon: true },         // 2-0
+  { fav: 'Spain', dog: 'Costa Rica', comp: '2022 World Cup group stage', favProb: 0.82, favWon: true },   // 7-0
+  { fav: 'England', dog: 'Iran', comp: '2022 World Cup group stage', favProb: 0.74, favWon: true },       // 6-2
+  { fav: 'France', dog: 'Australia', comp: '2022 World Cup group stage', favProb: 0.78, favWon: true },    // 4-1
+  { fav: 'Portugal', dog: 'Ghana', comp: '2022 World Cup group stage', favProb: 0.72, favWon: true },     // 3-2
+  { fav: 'Argentina', dog: 'Poland', comp: '2022 World Cup group stage', favProb: 0.66, favWon: true },    // 2-0
+  { fav: 'Brazil', dog: 'Switzerland', comp: '2022 World Cup group stage', favProb: 0.66, favWon: true },  // 1-0
+  { fav: 'England', dog: 'Senegal', comp: '2022 World Cup round of 16', favProb: 0.70, favWon: true },     // 3-0
+  { fav: 'France', dog: 'Poland', comp: '2022 World Cup round of 16', favProb: 0.74, favWon: true },       // 3-1
+  { fav: 'Argentina', dog: 'Mexico', comp: '2022 World Cup group stage', favProb: 0.70, favWon: true },    // 2-0
+  { fav: 'Croatia', dog: 'Canada', comp: '2022 World Cup group stage', favProb: 0.60, favWon: true },      // 4-1
+  { fav: 'Netherlands', dog: 'Qatar', comp: '2022 World Cup group stage', favProb: 0.84, favWon: true },   // 2-0
+  { fav: 'USA', dog: 'Iran', comp: '2022 World Cup group stage', favProb: 0.52, favWon: true },            // 1-0
 ]
 
 const ROLES: AgentVote['role'][] = ['MacroScout', 'NewsHawk', 'CrowdPulse', 'BookWatcher', 'Skeptic']

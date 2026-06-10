@@ -49,10 +49,12 @@ export function categoryOf(marketId: string): Category {
 // Well-calibrated agents earn a bigger share of the bond; miscalibrated ones
 // shrink. Unscored agents sit at neutral 1.0×.
 export function budgetMultiplier(brierScore: number, callsResolved: number): number {
+  // Thresholds tuned to real-match forecasting (favourites win ~70%): a Brier
+  // near 0.20 is genuinely well-calibrated; ~0.27+ is worse than backing chalk.
   if (callsResolved === 0) return 1.0
-  if (brierScore < 0.10) return 1.5   // sharp
-  if (brierScore < 0.20) return 1.2   // calibrated
-  if (brierScore < 0.25) return 1.0   // fair (≈ coin flip)
+  if (brierScore < 0.12) return 1.5   // sharp
+  if (brierScore < 0.21) return 1.2   // calibrated
+  if (brierScore < 0.27) return 1.0   // fair
   return 0.7                          // miscalibrated — staked smaller
 }
 

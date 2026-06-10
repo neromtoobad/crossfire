@@ -54,8 +54,8 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
     hasThesis: !!c.locked?.thesis,
   }))
 
-  const brierColor = me.callsResolved === 0 ? CF.ink3 : me.brierScore < 0.15 ? CF.bull : me.brierScore < 0.25 ? CF.amber : CF.bear
-  const brierLabel = me.callsResolved === 0 ? 'unscored' : me.brierScore < 0.10 ? 'sharp' : me.brierScore < 0.20 ? 'calibrated' : me.brierScore < 0.25 ? 'fair' : 'miscalibrated'
+  const brierColor = me.callsResolved === 0 ? CF.ink3 : me.brierScore < 0.21 ? CF.bull : me.brierScore < 0.27 ? CF.amber : CF.bear
+  const brierLabel = me.callsResolved === 0 ? 'unscored' : me.brierScore < 0.12 ? 'sharp' : me.brierScore < 0.21 ? 'calibrated' : me.brierScore < 0.27 ? 'fair' : 'miscalibrated'
 
   return (
     <main style={{ background: CF.bg, color: CF.ink, minHeight: '100vh', padding: '0 24px 96px' }}>
