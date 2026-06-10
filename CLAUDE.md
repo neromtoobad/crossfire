@@ -153,3 +153,18 @@ const venice = new OpenAI({ apiKey: process.env.VENICE_API_KEY, baseURL: 'https:
 
 ## Definition of done
 A user signs one 50 USDC / 24h mandate. The orchestrator redelegates 20 USDC each to a Bull and a Bear on a real binary market. Both buy evidence via x402 (metered on-chain), Venice produces each side's written verdict and a verdict card on screen, and a net bet lands on-chain sized by their conviction spread. The execution is relayed once on Base mainnet through 1Shot — 7702 upgrade, gas in USDC, webhook status flips to success on screen. An over-cap attempt reverts live at the enforcer. Revoke halts everything. Every artifact has a tx hash in PROOF.md.
+
+## Competitive intel — adapted mechanics (field read, do NOT copy the competitor)
+A rival ("Clashboard": agents trade intelligence in a debate arena) is on the same stack and winning the social track by posting daily. Our edge is legibility ("five AI oracles call World Cup games, follow or fade them" — one sentence) + the event starts Thursday. Mechanics worth adapting, ranked by value/effort:
+
+1. **Strict match state machine** (free quality, prevents live-demo breakage): `calls open → oracle debate → calls LOCK at kickoff → halftime updates → full time → settlement → receipts`. Nothing advances until the prior step settles. A match must not settle while Venice is mid-generation; calls must lock at kickoff or betting is meaningless.
+2. **Oracle-to-oracle research commerce** (the big A2A+x402+7710+1Shot demo): each oracle produces a *priced, owned* intel artifact (ORION → lineup intel, ECHO → xG model). Before a call, an oracle can BUY another oracle's artifact via x402, paid from its delegated sub-budget through 1Shot, and the purchase trail is shown ("ECHO paid 2 USDC for ORION's intel before changing his read"). Money moving between oracles as they argue.
+3. **User-facing premium reads** (already built — the x402 unlock): free tier = call + one line; ~2 USDC = full reasoning + sources + confidence. Same endpoint, pointed at humans.
+4. **Venice voice** (demo gold, ~30 min): one TTS call per oracle line (Venice `audio/speech`, models like `tts-kokoro`/`tts-elevenlabs-turbo-v2-5`, 8 voices). Each oracle reads its call aloud in a distinct voice at settlement/halftime. Multiple Venice endpoints = Venice-track points.
+
+**Skip / remember:**
+- Do NOT build a custom x402 facilitator (resale-between-users) — infra-heavy, ate the rival's build. We only need oracle-to-oracle purchases → the hosted facilitator path handles it.
+- **1Shot settlement-split trick:** one ERC-20 transfer per redemption. To pay BOTH the relayer fee AND a seller in one settlement, split into TWO transfers in the execution calldata. Remember this when wiring 1Shot settlement (don't build a facilitator for it).
+- Buy Venice credits with USDC from a wallet (no card). Stack the METAMASK25 code.
+
+Build order: state machine → research commerce → premium reads → voice. First two are substance; last two are the show. The cheapest win we keep leaving on the table is POSTING (the social track).

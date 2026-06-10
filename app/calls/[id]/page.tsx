@@ -7,6 +7,8 @@ import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
 import { TheCap } from '../../../components/TheCap'
+import { PhaseBadge, MatchLifecycle } from '../../../components/PhaseBadge'
+import { matchPhase, canBet, PHASE_META } from '../../../lib/match-phase'
 import { VerdictCard } from '../../../components/VerdictCard'
 import { BrandLogo } from '../../../components/Logo'
 import { punditOf } from '../../../lib/pundits'
@@ -48,6 +50,10 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
   const lead = [...call.votes].filter((v) => v.vote === call.side).sort((a, b) => b.confidence - a.confidence)[0]
   const leadHandle = punditOf(lead?.role ?? '')?.handle ?? 'THE PANEL'
 
+  // match state machine — betting is only open in OPEN; SETTLED shows the result
+  const phase = matchPhase(call, Date.now())
+  const bettingOpen = canBet(phase)
+
   return (
     <main style={{
       background: CF.bg, color: CF.ink, minHeight: '100vh', padding: '0 24px 96px',
@@ -81,10 +87,11 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
         <section style={{ padding: '48px 0 32px' }}>
           <div className="mono" style={{
             fontSize: 11, color: CF.ink3, letterSpacing: 2.2, marginBottom: 14,
-            display: 'flex', alignItems: 'center', gap: 10,
+            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           }}>
             <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />
-            AGENT CALL · {call.publishedBy.toUpperCase()} · {relativeTime(call.publishedAt).toUpperCase()}
+            AGENT CALL · {call.publishedBy.toUpperCase()}
+            <PhaseBadge phase={phase} size="sm" />
           </div>
           <h1 style={{
             fontFamily: CF.display, fontWeight: 500,
@@ -171,6 +178,12 @@ BACKED WITH
               {call.marketAddress.slice(0, 10)}…{call.marketAddress.slice(-4)} ↗
             </a></span>
           </div>
+
+          {/* ── the match state machine ── */}
+          <div style={{ marginTop: 20, padding: '16px 18px', background: CF.surface2, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg }}>
+            <MatchLifecycle phase={phase} />
+            <div style={{ fontFamily: CF.body, fontSize: 12.5, color: CF.ink2, marginTop: 12 }}>{PHASE_META[phase].blurb}</div>
+          </div>
         </section>
 
         {/* ── Venice verdict card ── */}
@@ -246,16 +259,30 @@ BACKED WITH
           ) : null}
         </section>
 
-        {/* ── fade or follow: the staked call + your capped bet (ERC-7715) ──
+        {/* ── fade or follow: only while the market is OPEN (locks at kickoff) ──
                locked reasoning stripped — client components never see it unpaid */}
-        <section style={{ padding: '12px 0' }}>
-          <FadeFollow call={{ ...call, locked: undefined } as unknown as typeof call} />
-        </section>
-
-        {/* ── THE IT MOMENT: the cap is the chain's, not our code ── */}
-        <section style={{ padding: '12px 0' }}>
-          <TheCap capUsdc={5} agentHandle={`AGENT ${leadHandle}`} />
-        </section>
+        {bettingOpen ? (
+          <>
+            <section style={{ padding: '12px 0' }}>
+              <FadeFollow call={{ ...call, locked: undefined } as unknown as typeof call} />
+            </section>
+            {/* ── THE IT MOMENT: the cap is the chain's, not our code ── */}
+            <section style={{ padding: '12px 0' }}>
+              <TheCap capUsdc={5} agentHandle={`AGENT ${leadHandle}`} />
+            </section>
+          </>
+        ) : (
+          <section style={{ padding: '12px 0' }}>
+            <div style={{ padding: '18px 20px', background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <PhaseBadge phase={phase} />
+              <span style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink2 }}>
+                {phase === 'SETTLED'
+                  ? `Betting is closed — this match has settled. The agents were graded on the result.`
+                  : `Betting is closed — the market locked at kickoff. The calls are set.`}
+              </span>
+            </div>
+          </section>
+        )}
 
         {/* ── the full reasoning — x402 nano-payment unlock (same gate as the
                agent pages; the one-liners above are the free layer) ── */}

@@ -451,7 +451,9 @@ export async function loadCallsWithPolymarket(): Promise<PublishedCall[]> {
 }
 
 export function getCallById(id: string): PublishedCall | undefined {
-  // Server-side: search live store first, then fall back to samples.
+  // Server-side: search live store first, then fall back to ALL seeded calls
+  // (samples + the real-match backtest + the 2026 fixtures) — not just samples,
+  // or every historical/fixture detail page 404s.
   if (typeof process !== 'undefined' && typeof window === 'undefined') {
     try {
       const mod = require('./calls-store.js') as typeof import('./calls-store.js')
@@ -461,6 +463,8 @@ export function getCallById(id: string): PublishedCall | undefined {
     } catch { /* fall through */ }
   }
   return SAMPLE_CALLS.find((c) => c.id === id)
+    ?? HISTORICAL_CALLS.find((c) => c.id === id)
+    ?? FIXTURE_CALLS.find((c) => c.id === id)
 }
 
 // Server-side: same as getCallById but attaches the live Polymarket line when
