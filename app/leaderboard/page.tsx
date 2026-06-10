@@ -151,12 +151,14 @@ export default function Leaderboard() {
                 </div>
                 <Link href={`/agents/${slugOf(s.role)}`} style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                   <span style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 34, height: 34, borderRadius: 999,
-                    background: PUNDITS[s.role]?.tint ?? badge.bg,
-                    border: `1px solid ${alpha(PUNDITS[s.role]?.color ?? badge.color, 25)}`,
-                    fontSize: 18, lineHeight: 1,
-                  }}>{PUNDITS[s.role]?.avatar ?? '?'}</span>
+                    display: 'inline-flex', overflow: 'hidden', flexShrink: 0,
+                    width: 38, height: 38, borderRadius: 9,
+                    border: `1.5px solid ${PUNDITS[s.role]?.color ?? badge.color}`,
+                    boxShadow: `0 0 10px ${alpha(PUNDITS[s.role]?.color ?? badge.color, 35)}`,
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={PUNDITS[s.role]?.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
+                  </span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                       <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 14, letterSpacing: 0.3, color: PUNDITS[s.role]?.color ?? CF.ink }}>

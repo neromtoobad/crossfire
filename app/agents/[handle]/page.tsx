@@ -153,7 +153,10 @@ THE CALLS · {resolved.length} graded on real results · backtest
               const o = PUNDITS[r]
               return (
                 <Link key={r} href={`/agents/${slugOf(r)}`} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 14px 8px 9px', borderRadius: 999, background: CF.surface, border: `1px solid ${CF.line}` }}>
-                  <span style={{ width: 26, height: 26, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: alpha(o.color, 14), border: `1.5px solid ${o.color}`, color: o.color, fontFamily: CF.mono, fontWeight: 700, fontSize: 12 }}>{o.avatar}</span>
+                  <span style={{ width: 26, height: 26, borderRadius: 6, overflow: 'hidden', display: 'inline-flex', border: `1.5px solid ${o.color}`, flexShrink: 0 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={o.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
+                  </span>
                   <span style={{ fontFamily: CF.body, fontWeight: 600, fontSize: 13, color: CF.ink }}>{o.handle}</span>
                 </Link>
               )
