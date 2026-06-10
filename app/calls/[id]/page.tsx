@@ -6,6 +6,7 @@ import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
+import { TheCap } from '../../../components/TheCap'
 import { VerdictCard } from '../../../components/VerdictCard'
 import { BrandLogo } from '../../../components/Logo'
 import { punditOf } from '../../../lib/pundits'
@@ -249,6 +250,11 @@ BACKED WITH
                locked reasoning stripped — client components never see it unpaid */}
         <section style={{ padding: '12px 0' }}>
           <FadeFollow call={{ ...call, locked: undefined } as unknown as typeof call} />
+        </section>
+
+        {/* ── THE IT MOMENT: the cap is the chain's, not our code ── */}
+        <section style={{ padding: '12px 0' }}>
+          <TheCap capUsdc={5} agentHandle={`AGENT ${leadHandle}`} />
         </section>
 
         {/* ── the full reasoning — x402 nano-payment unlock (same gate as the

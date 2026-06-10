@@ -12,6 +12,7 @@ import { computeAgentStats } from '../lib/leaderboard'
 import { getResolution } from '../lib/resolutions'
 import { PUNDITS } from '../lib/pundits'
 import { A } from '../lib/arena'
+import { alpha } from '../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -127,6 +128,27 @@ export default function Arena() {
             </div>
           ))}
         </section>
+
+        {/* ── the guarantee band → the IT moment ── */}
+        <Link href="/calls/call-wc-argentina-001" className="cf-card" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap',
+          marginTop: 18, padding: '22px 26px', borderRadius: A.radius.lg,
+          background: `linear-gradient(180deg, ${A.panel2}, #0a0d13)`,
+          border: `1px solid ${alpha(A.red, 28)}`, boxShadow: `0 0 24px ${alpha(A.red, 10)}`,
+        }}>
+          <div>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: 2, color: A.red, marginBottom: 7 }}>THE GUARANTEE</div>
+            <div style={{ fontFamily: A.display, fontSize: 'clamp(20px, 2.4vw, 28px)', fontWeight: 600, letterSpacing: -0.5, color: A.cream }}>
+              You back an agent. The chain caps your bet.
+            </div>
+            <div style={{ fontSize: 13.5, color: A.text2, marginTop: 6, maxWidth: 560 }}>
+              Try to bet past the cap and the transaction <strong style={{ color: A.red }}>reverts on-chain</strong> — refused by MetaMask&apos;s enforcer, not our code.
+            </div>
+          </div>
+          <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: A.red, border: `1px solid ${alpha(A.red, 45)}`, borderRadius: A.radius.md, padding: '11px 18px', whiteSpace: 'nowrap' }}>
+            See the cap hold →
+          </span>
+        </Link>
 
         {/* ── top agents ── */}
         <Section eyebrow="THE AGENTS" title="Ranked by win rate" action="Full standings" href="/leaderboard">
