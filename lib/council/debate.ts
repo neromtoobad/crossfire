@@ -80,7 +80,7 @@ async function streamTurn(
           { role: 'user', content: userPrompt },
         ],
         temperature,
-        max_tokens: 460,
+        max_tokens: 200,
         stream: true,
         // disable_thinking so a reasoning model streams the answer as content;
         // enable_web_scraping off to keep each turn lean.
@@ -148,7 +148,7 @@ function debateSystemPrompt(role: RoleName, marketTitle: string, impliedProbYes:
 
 YOUR CHARACTER: you are ${me.handle}, "${me.archetype}". ${me.voice}
 
-You are on a live World Cup punditry panel: ${others}. You are debating this match. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, 4-6 substantive sentences. PRESENT PROOF: cite concrete, specific evidence from your lane — actual stats, form lines, head-to-head records, injuries, tactical matchups, xG figures, conversion rates — as if entering exhibits before a panel. When another pundit has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and engage their specific evidence — counter it with your own or build on it. Stay strictly in your lane (your domain). No hedging filler, no vibes — every claim backed by a concrete fact.
+You are on a live World Cup punditry panel: ${others}. You are debating this match. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, in 2-3 punchy sentences (this is spoken aloud — keep it tight). PRESENT PROOF: cite ONE or TWO concrete, specific facts from your lane — an actual stat, form line, head-to-head record, injury, tactical matchup, xG figure or conversion rate. When another pundit has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and engage their evidence. Stay strictly in your lane. No hedging filler, no vibes — every claim backed by a concrete fact.
 
 CALIBRATION — the betting line prices YES at ${impliedPct}% (so NO at ${(100 - Number(impliedPct))}%). That line reflects sharp money — treat it as your PRIOR. If you call YES, anchor your confidence near ${impliedPct}%; if NO, near ${(100 - Number(impliedPct))}%. To push more than ~15 points beyond that anchor you need a specific, defensible reason — don't move far on vibes. The whole point is to find where the line is genuinely WRONG, not to restate it.
 
@@ -201,19 +201,15 @@ export async function runDebate({
     return msg
   }
 
-  // ── Single round — the agents take the floor ONE AT A TIME, in order. ──
-  // Each speaker sees the full running transcript of everyone before them and
-  // must engage it with evidence. Sequential by design: the order IS the show.
-  await emit({ type: 'debate-round', round: 1, title: 'The floor — evidence in, one at a time' })
-  const transcript: DebateMessage[] = []
-  for (let i = 0; i < ROLES.length; i++) {
-    const role = ROLES[i]!
-    const instruction = i === 0
-      ? `You OPEN the debate. Lay out your full case with concrete evidence (specific stats, form, matchups) and state your position.`
-      : `${i + 1 === ROLES.length ? 'You are the LAST role agent to speak. ' : ''}You have heard the ${i} speaker${i > 1 ? 's' : ''} above. Engage at least one BY HANDLE — counter their specific evidence with your own, or reinforce it with NEW proof from your lane. Then state your FINAL position.`
-    const msg = await roleTurn(role, 1, transcript, instruction)
-    transcript.push(msg)
-  }
+  // ── The floor — all four role agents make their case. ──
+  // Generated CONCURRENTLY (each argues its own lane) so the whole panel lands
+  // in ~one turn's wall-clock instead of four; the voiced broadcast then plays
+  // them back IN ORDER, one at a time. ~3-4× faster than sequential.
+  await emit({ type: 'debate-round', round: 1, title: 'The floor — all four make their case' })
+  const instruction = `Make your sharp, evidence-based case and state your position. You may name a rival pundit by handle (e.g. NEXUS, ECHO) and their lane, but lead with YOUR own concrete proof.`
+  const transcript: DebateMessage[] = await Promise.all(
+    ROLES.map((role) => roleTurn(role, 1, [], instruction)),
+  )
 
   // Final role votes = each agent's single, evidence-backed position.
   const roleVotes: AgentVote[] = ROLES.map((role) => {
@@ -274,11 +270,6 @@ Confidence: 0.0-0.3 = the council is right, you concede; 0.3-0.5 = real concerns
 // agent is literally told which country to defend.
 export type WinnerPickInput = { role: AgentRole; handle: string; country: string; reason: string }
 
-function renderWinnerTranscript(t: { handle: string; country: string; text: string }[]): string {
-  if (t.length === 0) return '(you speak first)'
-  return t.map((m) => `${m.handle} (backs ${m.country}): ${m.text.trim()}`).join('\n\n')
-}
-
 export async function runWinnerDebate({
   picks, emit,
 }: { picks: WinnerPickInput[]; emit: Emit }): Promise<void> {
@@ -289,9 +280,11 @@ export async function runWinnerDebate({
 
   await emit({ type: 'debate-round', round: 1, title: 'Who lifts the trophy — make your case' })
 
-  const transcript: { handle: string; country: string; text: string }[] = []
-  for (let i = 0; i < ordered.length; i++) {
-    const pk = ordered[i]!
+  // All agents argue CONCURRENTLY (each defends its own nation, referencing
+  // rivals by their known pick) so the panel lands in ~one turn's wall-clock;
+  // the voiced broadcast replays them in order. Each pick is fixed, so the
+  // arguments stay correlated without needing a serial transcript.
+  await Promise.all(ordered.map(async (pk) => {
     const me = PUNDITS[pk.role]
     await emit({ type: 'debate-turn-start', round: 1, role: pk.role })
 
@@ -300,21 +293,18 @@ export async function runWinnerDebate({
 
 You are on a live panel debating WHO WILL WIN the 2026 FIFA World Cup. YOU have backed ${pk.country.toUpperCase()} to lift the trophy. Your entire job is to DEFEND ${pk.country} and argue it beats every rival pick.
 
-Speak in the FIRST PERSON, fully in character, 4-6 substantive sentences. Make the concrete case for ${pk.country}: squad depth, current form, tactical identity, key players, tournament pedigree, draw/route — real, specific evidence from your lane. ${i === 0 ? 'You OPEN the debate — set out why ' + pk.country + ' wins it.' : `Rivals on the panel: ${rivals}. Name at least ONE rival BY HANDLE and argue directly why ${pk.country} is a better bet than the nation THEY backed.`} Never concede your pick. No POSITION marker, no hedging — pure advocacy for ${pk.country}.`
+Speak in the FIRST PERSON, fully in character, in 2-3 punchy sentences (this is spoken aloud — keep it tight). Make the concrete case for ${pk.country} with ONE or TWO specific facts: squad depth, current form, a key player, tournament pedigree or draw. Rivals on the panel: ${rivals}. Name ONE rival BY HANDLE and argue why ${pk.country} beats the nation THEY backed. Never concede your pick. No POSITION marker, no hedging — pure advocacy for ${pk.country}.`
 
     const user = [
       `YOUR PICK: ${pk.country} to win the 2026 World Cup.`,
       `Your seed argument: ${pk.reason}`,
       ``,
-      i === 0 ? '(You are first to speak.)' : `The debate so far — engage it:\n${renderWinnerTranscript(transcript)}`,
-      ``,
-      `Defend ${pk.country} now.`,
+      `Make your case for ${pk.country} now — and say why it beats a rival's pick.`,
     ].join('\n')
 
-    const full = await streamTurn(system, user, (t) => emit({ type: 'debate-token', round: 1, role: pk.role, token: t }), 0.7)
-    transcript.push({ handle: pk.handle, country: pk.country, text: full })
+    await streamTurn(system, user, (t) => emit({ type: 'debate-token', round: 1, role: pk.role, token: t }), 0.7)
     await emit({ type: 'debate-turn-end', round: 1, role: pk.role })
-  }
+  }))
 }
 
 // Reduce a multi-sentence debate turn to a single public-facing one-liner:
