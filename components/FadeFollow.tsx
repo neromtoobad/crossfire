@@ -12,7 +12,7 @@ import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { punditOf, handleOf } from '../lib/pundits'
 import { AgentAvatar } from './AgentAvatar'
-import type { PublishedCall } from '../lib/calls-data'
+import type { PublishedCall, AgentRole } from '../lib/calls-data'
 import { GrantCouncilMandate } from './GrantCouncilMandate'
 import { CF, alpha } from '../lib/theme'
 
@@ -43,16 +43,21 @@ function computePools(call: PublishedCall): { YES: number; NO: number } {
   return { YES, NO }
 }
 
-export function FadeFollow({ call }: { call: PublishedCall }) {
+export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole?: AgentRole }) {
   const { address } = useAccount()
   const [choice, setChoice] = useState<null | 'follow' | 'fade'>(null)
   const [amount, setAmount] = useState(2)
 
-  const lead = leadPundit(call)
-  const deskSide = call.side
-  const fadeSide = deskSide === 'YES' ? 'NO' : 'YES'
-  const betSide = choice === 'fade' ? fadeSide : deskSide
-  const deskColor = deskSide === 'YES' ? CF.bull : CF.bear
+  // Scoped mode (agentRole set) pegs the call to ONE agent: you follow/fade
+  // that agent's own pick, not the desk consensus. Otherwise it's the lead.
+  const scoped = !!agentRole
+  const agentVote = agentRole ? call.votes.find((v) => v.role === agentRole) : undefined
+  const lead = agentRole ? punditOf(agentRole) : leadPundit(call)
+  const followSide: 'YES' | 'NO' =
+    agentVote?.vote === 'YES' || agentVote?.vote === 'NO' ? agentVote.vote : call.side
+  const fadeSide = followSide === 'YES' ? 'NO' : 'YES'
+  const betSide = choice === 'fade' ? fadeSide : followSide
+  const followColor = followSide === 'YES' ? CF.bull : CF.bear
   const fadeColor = fadeSide === 'YES' ? CF.bull : CF.bear
   const betColor = betSide === 'YES' ? CF.bull : CF.bear
 
@@ -70,7 +75,7 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
       borderRadius: CF.radius.lg, boxShadow: CF.shadow.card, padding: '20px 22px',
     }}>
       <div className="mono" style={{ fontSize: 10.5, color: CF.gold, letterSpacing: 1.8, marginBottom: 12 }}>
-        ▸ FADE OR FOLLOW · METAMASK SMART ACCOUNTS KIT
+        ▸ {scoped ? `FADE OR FOLLOW ${lead?.handle ?? ''}` : 'FADE OR FOLLOW'} · METAMASK SMART ACCOUNTS KIT
       </div>
 
       {/* the staked call */}
@@ -79,8 +84,8 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: CF.body, fontSize: 15, color: CF.ink, lineHeight: 1.4 }}>
             <strong style={{ color: lead?.color ?? CF.ink, fontWeight: 700 }}>{lead?.handle ?? 'The desk'}</strong>
-            {' '}leads the desk on{' '}
-            <strong style={{ color: deskColor, fontWeight: 700 }}>{deskSide}</strong>.
+            {' '}{scoped ? 'calls' : 'leads the desk on'}{' '}
+            <strong style={{ color: followColor, fontWeight: 700 }}>{followSide}</strong>.
           </div>
           <div className="mono" style={{ fontSize: 11, color: CF.ink3, marginTop: 2 }}>
             {lead?.archetype ?? 'consensus call'} · staked, chain-capped, can’t bluff
@@ -94,8 +99,8 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
       {choice === null ? (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
-            <button onClick={() => setChoice('follow')} style={btn(deskColor, true)}>
-              ↑ Follow · bet {deskSide}
+            <button onClick={() => setChoice('follow')} style={btn(followColor, true)}>
+              ↑ Follow · bet {followSide}
             </button>
             <button onClick={() => setChoice('fade')} style={btn(fadeColor, false)}>
               ↓ Fade · bet {fadeSide}
@@ -160,7 +165,8 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   user: address, callId: call.id, marketId: call.marketId, marketTitle: call.marketTitle,
-                  agentHandle: handleOf(lead.role), choice: choice ?? 'follow', side: betSide, amountUsdc: amount,
+                  agentHandle: agentRole ? handleOf(agentRole) : lead ? handleOf(lead.role) : 'THE DESK',
+                  choice: choice ?? 'follow', side: betSide, amountUsdc: amount,
                 }),
               }).catch(() => {})
             }}

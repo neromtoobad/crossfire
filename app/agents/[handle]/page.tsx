@@ -7,9 +7,11 @@ import { notFound } from 'next/navigation'
 import { loadCalls } from '../../../lib/calls-data'
 import { computeAgentStats } from '../../../lib/leaderboard'
 import { getResolution } from '../../../lib/resolutions'
+import { matchPhase, canBet } from '../../../lib/match-phase'
 import { PUNDITS, PUNDIT_ROLES, roleOfSlug, slugOf } from '../../../lib/pundits'
 import { ConnectButton } from '../../../components/ConnectButton'
 import { AgentPicks } from '../../../components/AgentPicks'
+import { AgentMarkets } from '../../../components/AgentMarkets'
 import { BrandLogo } from '../../../components/Logo'
 import { CF, alpha } from '../../../lib/theme'
 
@@ -41,9 +43,22 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
 
   const resolved = record.filter((r) => r.outcome !== 'pending')
 
-  // serializable pick rows for the client list — the thesis content itself
+  // split: live/bettable markets vs the graded backtest. Only OPEN calls can be
+  // backed or faded; everything else is the track record below.
+  const now = Date.now()
+  const openRec = record.filter((r) => canBet(matchPhase(r.c, now)))
+  const gradedRec = record.filter((r) => !canBet(matchPhase(r.c, now)))
+
+  // live markets for the agent-scoped Fade/Follow — strip the paid thesis
+  // (locked) before it crosses to the client; it never ships here.
+  const liveCalls = openRec.slice(0, 12).map(({ c }) => {
+    const { locked: _locked, ...rest } = c
+    return rest
+  })
+
+  // serializable pick rows for the track record — the thesis content itself
   // NEVER ships here; it's returned by the unlock API after payment.
-  const pickRows = record.map(({ c, v, outcome }) => ({
+  const pickRows = gradedRec.map(({ c, v, outcome }) => ({
     callId: c.id,
     marketTitle: c.marketTitle,
     unlockUsdc: c.unlockUsdc || 0.1,
@@ -134,6 +149,24 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
               </span>
             )
           })}
+        </section>
+
+        {/* live markets — back or fade THIS agent */}
+        <section style={{ marginBottom: 34 }}>
+          <div className="mono" style={{ fontSize: 11, letterSpacing: 2.2, color: p.color, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ display: 'inline-block', width: 18, height: 1, background: p.color }} />
+            BACK OR FADE {p.handle} · {openRec.length} LIVE MARKET{openRec.length === 1 ? '' : 'S'}
+          </div>
+          <p style={{ fontFamily: CF.body, fontSize: 13.5, color: CF.ink3, lineHeight: 1.55, margin: '0 0 16px', maxWidth: 620 }}>
+            {p.handle} has a call on each of these open markets. <strong style={{ color: CF.ink2 }}>Follow</strong> to bet its
+            side, <strong style={{ color: CF.ink2 }}>fade</strong> to bet against it — placed via the chain-capped ERC-7715 mandate.
+          </p>
+          <AgentMarkets calls={liveCalls} role={role} color={p.color} />
+          {openRec.length > liveCalls.length ? (
+            <Link href="/" className="mono" style={{ display: 'inline-block', marginTop: 14, fontSize: 12, color: p.color }}>
+              + {openRec.length - liveCalls.length} more live in the arena →
+            </Link>
+          ) : null}
         </section>
 
         {/* track record — the Venice reasoning */}
