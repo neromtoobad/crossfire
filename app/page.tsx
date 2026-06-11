@@ -69,10 +69,7 @@ export default function Arena() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <BrandLogo size={30} />
-            <div style={{ lineHeight: 1.15 }}>
-              <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: 3, color: A.cream }}>CROSSFIRE</div>
-              <div className="mono" style={{ fontSize: 8, letterSpacing: 2, color: A.goldDim }}>WORLD CUP PREDICTION MARKETS</div>
-            </div>
+            <div style={{ fontWeight: 800, fontSize: 16, letterSpacing: 3.4, color: A.cream }}>CROSSFIRE</div>
           </div>
           <nav className="cf-nav">
             <Link href="/agents" style={navStyle}>Agents</Link>

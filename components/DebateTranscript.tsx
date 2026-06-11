@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react'
 import { CF, alpha } from '../lib/theme'
 import { PUNDITS } from '../lib/pundits'
 import { SpeakButton } from './SpeakButton'
+import { AgentAvatar } from './AgentAvatar'
 
 export type DebateMsg = {
   id: string
@@ -113,14 +114,7 @@ export function DebateTranscript({
         return (
           <div key={m.id} style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'flex-start' }}>
             {/* avatar */}
-            <span style={{
-              flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 30, height: 30, borderRadius: 8,
-              background: a.tint, color: a.color, border: `1px solid ${alpha(a.color, 20)}`,
-              fontFamily: CF.mono, fontSize: 13, fontWeight: 700, marginTop: 1,
-            }}>
-              {a.letter}
-            </span>
+            <span style={{ marginTop: 1, display: 'inline-flex' }}><AgentAvatar role={m.role} size={30} radius={8} /></span>
             {/* bubble */}
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>

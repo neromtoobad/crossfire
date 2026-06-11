@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { punditOf, handleOf } from '../lib/pundits'
+import { AgentAvatar } from './AgentAvatar'
 import type { PublishedCall } from '../lib/calls-data'
 import { GrantCouncilMandate } from './GrantCouncilMandate'
 import { CF, alpha } from '../lib/theme'
@@ -74,12 +75,7 @@ export function FadeFollow({ call }: { call: PublishedCall }) {
 
       {/* the staked call */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 44, height: 44, borderRadius: 999, flexShrink: 0,
-          background: lead?.tint ?? CF.surface2, border: `1px solid ${alpha(lead?.color ?? CF.ink3, 25)}`,
-          fontSize: 22, lineHeight: 1,
-        }}>{lead?.avatar ?? '🎙'}</span>
+        <AgentAvatar pundit={lead} size={44} radius={999} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: CF.body, fontSize: 15, color: CF.ink, lineHeight: 1.4 }}>
             <strong style={{ color: lead?.color ?? CF.ink, fontWeight: 700 }}>{lead?.handle ?? 'The desk'}</strong>

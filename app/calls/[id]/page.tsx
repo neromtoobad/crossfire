@@ -11,14 +11,11 @@ import { PhaseBadge, MatchLifecycle } from '../../../components/PhaseBadge'
 import { matchPhase, canBet, PHASE_META } from '../../../lib/match-phase'
 import { VerdictCard } from '../../../components/VerdictCard'
 import { BrandLogo } from '../../../components/Logo'
+import { AgentAvatar } from '../../../components/AgentAvatar'
 import { punditOf } from '../../../lib/pundits'
 import { CF, alpha } from '../../../lib/theme'
 
 export const dynamic = 'force-dynamic'
-
-const AGENT_LETTER: Record<string, string> = {
-  MacroScout: 'M', NewsHawk: 'N', CrowdPulse: 'C', BookWatcher: 'B', Skeptic: 'S',
-}
 
 export default async function CallDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -206,10 +203,6 @@ BACKED WITH
                 ? (call.skepticVerdict === 'APPROVED' ? CF.bull : CF.bear)
                 : v.vote === call.side ? sideColor
                   : v.vote === 'NEUTRAL' ? CF.amber : CF.ink3
-              const vTint = isSkeptic
-                ? (call.skepticVerdict === 'APPROVED' ? CF.bullTint : CF.bearTint)
-                : v.vote === call.side ? sideTint
-                  : v.vote === 'NEUTRAL' ? CF.amberTint : CF.surface2
               return (
                 <div key={v.role} style={{
                   padding: '14px 16px',
@@ -220,12 +213,7 @@ BACKED WITH
                     display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        width: 22, height: 22, borderRadius: CF.radius.sm,
-                        background: vTint, color: vColor, border: `1px solid ${alpha(vColor, 20)}`,
-                        fontFamily: CF.mono, fontSize: 11, fontWeight: 700,
-                      }}>{punditOf(v.role)?.avatar ?? AGENT_LETTER[v.role] ?? '?'}</span>
+                      <AgentAvatar role={v.role} size={26} />
                       <span style={{
                         fontFamily: CF.body, fontWeight: 600, color: CF.ink, fontSize: 14, letterSpacing: 0.3,
                       }}>{punditOf(v.role)?.handle ?? v.role}</span>
