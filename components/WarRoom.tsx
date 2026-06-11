@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { DebateTranscript, type DebateMsg, type DebateRound } from './DebateTranscript'
 import { FadeFollow } from './FadeFollow'
-import { RoundTable } from './RoundTable'
+import { DebateArena } from './DebateArena'
 import { PUNDITS, PUNDIT_ROLES } from '../lib/pundits'
 import type { PublishedCall, AgentRole } from '../lib/calls-data'
 import { CF, alpha } from '../lib/theme'
@@ -48,6 +48,9 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
   const audioElRef = useRef<HTMLAudioElement | null>(null)
   const audioResolveRef = useRef<(() => void) | null>(null)
   const audioCacheRef = useRef<Map<string, string>>(new Map())
+  // Web Audio graph — taps the voice so the arena can react to it in real time
+  const ctxRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
   const turnTextRef = useRef<Record<string, string>>({})
   const runIdRef = useRef(0)
 
@@ -72,6 +75,25 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
   const impliedProbYes = selectedCall?.marketImpliedYes ?? 0.5
 
   // ── voice playback ────────────────────────────────────────────────────────
+  // lazily build the Web Audio graph (analyser → speakers) and resume it; must
+  // be triggered by a user gesture (the Open-the-floor click) for autoplay.
+  function ensureAudioGraph() {
+    try {
+      if (!ctxRef.current) {
+        const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+        if (!Ctx) return
+        const ctx = new Ctx()
+        const an = ctx.createAnalyser()
+        an.fftSize = 256
+        an.smoothingTimeConstant = 0.82
+        an.connect(ctx.destination)
+        ctxRef.current = ctx
+        analyserRef.current = an
+      }
+      if (ctxRef.current.state === 'suspended') void ctxRef.current.resume()
+    } catch { /* no Web Audio → arena falls back to a synthetic pulse */ }
+  }
+
   function stopAudio() {
     const a = audioElRef.current
     if (a) { a.pause(); a.onended = null; a.onerror = null }
@@ -104,6 +126,11 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
     return await new Promise<boolean>((resolve) => {
       const a = new Audio(url)
       audioElRef.current = a
+      // tap this element so the arena can react to the actual voice
+      try {
+        const ctx = ctxRef.current, an = analyserRef.current
+        if (ctx && an) ctx.createMediaElementSource(a).connect(an)
+      } catch { /* fall back to direct playback */ }
       let settled = false
       const finish = (ok: boolean) => { if (settled) return; settled = true; audioResolveRef.current = null; resolve(ok) }
       audioResolveRef.current = () => finish(false)
@@ -188,6 +215,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
     if (running) return
     runIdRef.current += 1
     const myRun = runIdRef.current
+    ensureAudioGraph() // build + resume the Web Audio graph within the click gesture
     stopAudio()
     slotsRef.current = new Array(PUNDIT_ROLES.length).fill(null)
     playIdxRef.current = 0; seqRef.current = false; streamDoneRef.current = false; turnTextRef.current = {}
@@ -215,13 +243,14 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      {/* the round table — the broadcast set */}
-      <RoundTable
+      {/* the arena — a live, audio-reactive debate visualisation */}
+      <DebateArena
         speaking={speaking}
         positions={positions}
         winnerPicks={winnerPicks}
         isWinner={selectedId === WINNER_ID}
         deliberating={deliberating}
+        analyserRef={analyserRef}
       />
 
       {/* topic + start + voice toggle */}
