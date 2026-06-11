@@ -22,6 +22,18 @@ function hexA(hex: string, a: number): string {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`
 }
 
+function rrPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const rr = (ctx as unknown as { roundRect?: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect
+  if (rr) { ctx.beginPath(); rr.call(ctx, x, y, w, h, r); return }
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.arcTo(x + w, y, x + w, y + h, r)
+  ctx.arcTo(x + w, y + h, x, y + h, r)
+  ctx.arcTo(x, y + h, x, y, r)
+  ctx.arcTo(x, y, x + w, y, r)
+  ctx.closePath()
+}
+
 type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; c: string; r: number }
 
 export function DebateArena({
@@ -82,8 +94,8 @@ export function DebateArena({
       if (!t0) t0 = t
       const time = (t - t0) / 1000
       const M = Math.min(w, h)
-      const cx = w / 2, cy = h * 0.49
-      const R = M * 0.30
+      const cx = w / 2, cy = h * 0.47
+      const R = M * 0.33
       const baseNode = M * 0.066
 
       // amplitude + spectrum from the real voice, else a synthetic pulse
@@ -129,8 +141,8 @@ export function DebateArena({
       PUNDIT_ROLES.forEach((role, i) => {
         const a = -Math.PI / 2 + (i / PUNDIT_ROLES.length) * Math.PI * 2
         let x = cx + Math.cos(a) * R
-        let y = cy + Math.sin(a) * R * 0.86
-        if (sp?.role === role) { x = x + (cx - x) * 0.20; y = y + (cy - y) * 0.20 } // speaker steps up
+        let y = cy + Math.sin(a) * R * 0.80
+        if (sp?.role === role) { x = x + (cx - x) * 0.16; y = y + (cy - y) * 0.16 } // speaker steps up
         pos[role] = { x, y }
       })
 
@@ -201,71 +213,75 @@ export function DebateArena({
 
       ctx.globalCompositeOperation = 'source-over'
 
-      // agent nodes
+      // agent tiles — big rectangular portraits (not circles)
+      const tileW = M * 0.155
+      const tileH = tileW * 1.24
+      const rad = tileW * 0.14
       PUNDIT_ROLES.forEach((role) => {
         const p = PUNDITS[role]
         const isLive = sp?.role === role
         const dim = !!sp && !isLive
         const { x, y } = pos[role]
-        const nodeR = baseNode * (isLive ? 1.4 : 1)
+        const sc = isLive ? 1.24 : 1
+        const tw = tileW * sc, th = tileH * sc
+        const tx = x - tw / 2, ty = y - th / 2
 
-        // aura for the speaker, sized by amplitude
+        // aura behind the speaker, sized by amplitude
         if (isLive) {
-          const auraR = nodeR * (2.1 + amp * 1.6)
-          const ag = ctx.createRadialGradient(x, y, nodeR * 0.6, x, y, auraR)
-          ag.addColorStop(0, hexA(p.color, 0.55))
-          ag.addColorStop(0.5, hexA(p.color, 0.18))
+          const auraR = Math.max(tw, th) * (0.9 + amp * 0.8)
+          const ag = ctx.createRadialGradient(x, y, tw * 0.3, x, y, auraR)
+          ag.addColorStop(0, hexA(p.color, 0.5))
+          ag.addColorStop(0.5, hexA(p.color, 0.16))
           ag.addColorStop(1, 'rgba(0,0,0,0)')
           ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(x, y, auraR, 0, Math.PI * 2); ctx.fill()
-          // circular frequency spectrum
-          const innerR = nodeR * 1.2
-          ctx.lineWidth = 2.2; ctx.lineCap = 'round'
-          for (let i = 0; i < bins; i++) {
-            const ang = (i / bins) * Math.PI * 2 - Math.PI / 2 + time * 0.3
-            const len = innerR + spectrum[i] * nodeR * 0.95
-            ctx.strokeStyle = hexA(p.color, 0.35 + spectrum[i] * 0.6)
-            ctx.beginPath()
-            ctx.moveTo(x + Math.cos(ang) * innerR, y + Math.sin(ang) * innerR)
-            ctx.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len)
-            ctx.stroke()
-          }
         }
 
-        // portrait, clipped to a circle
+        // the portrait, clipped to a rounded rectangle, cover-fit, face-biased
         const img = imgsRef.current[role]
         ctx.save()
-        ctx.beginPath(); ctx.arc(x, y, nodeR, 0, Math.PI * 2); ctx.closePath(); ctx.clip()
+        rrPath(ctx, tx, ty, tw, th, rad); ctx.clip()
         if (img && img.complete && img.naturalWidth) {
-          ctx.globalAlpha = dim ? 0.5 : 1
-          // cover-fit the circle with a slight zoom (so there's overflow to crop,
-          // never a gap), biased toward the top of the portrait (the face)
-          const D = nodeR * 2
-          const s = Math.max(D / img.naturalWidth, D / img.naturalHeight) * 1.18
+          ctx.globalAlpha = dim ? 0.55 : 1
+          const s = Math.max(tw / img.naturalWidth, th / img.naturalHeight) * 1.04
           const dw = img.naturalWidth * s, dh = img.naturalHeight * s
-          ctx.drawImage(img, x - dw / 2, y - dh * 0.43, dw, dh)
+          ctx.drawImage(img, x - dw / 2, ty - (dh - th) * 0.15, dw, dh)
           ctx.globalAlpha = 1
         } else {
-          ctx.fillStyle = p.tint; ctx.fillRect(x - nodeR, y - nodeR, nodeR * 2, nodeR * 2)
+          ctx.fillStyle = p.tint; ctx.fillRect(tx, ty, tw, th)
+        }
+        // reactive equalizer bars rising from the bottom of the speaker's tile
+        if (isLive) {
+          const bn = 22
+          for (let i = 0; i < bn; i++) {
+            const bh = (0.06 + spectrum[i % bins]) * th * 0.34
+            const bx = tx + (i + 0.5) * (tw / bn)
+            ctx.fillStyle = hexA(p.color, 0.45 + spectrum[i % bins] * 0.5)
+            ctx.fillRect(bx - (tw / bn) * 0.32, ty + th - bh, (tw / bn) * 0.64, bh)
+          }
         }
         ctx.restore()
-        // ring
-        ctx.strokeStyle = hexA(p.color, dim ? 0.4 : 1); ctx.lineWidth = isLive ? 2.5 : 1.6
-        ctx.beginPath(); ctx.arc(x, y, nodeR, 0, Math.PI * 2); ctx.stroke()
 
-        // label
-        ctx.globalAlpha = dim ? 0.5 : 1
+        // frame
+        const glow = isLive ? 14 + amp * 18 : 0
+        ctx.save()
+        ctx.shadowColor = hexA(p.color, isLive ? 0.9 : 0); ctx.shadowBlur = glow
+        ctx.strokeStyle = hexA(p.color, dim ? 0.45 : 1); ctx.lineWidth = isLive ? 3 : 1.8
+        rrPath(ctx, tx, ty, tw, th, rad); ctx.stroke()
+        ctx.restore()
+
+        // label + pick/vote chip
+        ctx.globalAlpha = dim ? 0.55 : 1
         ctx.fillStyle = isLive ? p.color : CF.ink
-        ctx.font = `700 ${Math.round(baseNode * 0.34)}px ui-monospace, monospace`
+        ctx.font = `700 ${Math.round(tileW * 0.2)}px ui-monospace, monospace`
         ctx.textAlign = 'center'; ctx.textBaseline = 'top'
-        ctx.fillText(p.handle, x, y + nodeR + 6)
-        // pick / vote chip
+        ctx.fillText(p.handle, x, ty + th + 7)
         const pick = winnerPicks[role]
         const vote = positions[role]
         const sub = isWinner && pick ? `${pick.flag} ${pick.country}` : vote ? `${vote.vote} ${Math.round(vote.confidence * 100)}%` : ''
         if (sub) {
           ctx.fillStyle = hexA(p.color, 0.85)
-          ctx.font = `600 ${Math.round(baseNode * 0.26)}px ui-monospace, monospace`
-          ctx.fillText(sub, x, y + nodeR + 6 + baseNode * 0.42)
+          ctx.font = `600 ${Math.round(tileW * 0.16)}px ui-monospace, monospace`
+          ctx.fillText(sub, x, ty + th + 7 + tileW * 0.26)
         }
         ctx.globalAlpha = 1
       })
