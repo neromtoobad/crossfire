@@ -11,6 +11,15 @@ import { CF, alpha } from '../../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
+function Stat({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 46 }}>
+      <span className="mono" style={{ fontSize: 8.5, color: CF.ink4, letterSpacing: 1, marginBottom: 2 }}>{label}</span>
+      <span className="mono tnum" style={{ fontSize: 14, fontWeight: 600, color: color ?? CF.ink }}>{value}</span>
+    </div>
+  )
+}
+
 function brierBadge(brier: number, resolved: number) {
   if (resolved === 0) return { color: CF.ink3, bg: CF.surface2, label: 'unscored' }
   if (brier < 0.12) return { color: CF.bull, bg: CF.bullTint, label: 'sharp' }
@@ -112,44 +121,27 @@ export default function Leaderboard() {
           ))}
         </section>
 
-        {/* table — wide grid scrolls inside the card on small screens */}
-        <section className="cf-scroll-x" style={{
+        {/* standings — each agent a row; the stats wrap below the agent on
+            narrow screens, so it fits any width with no horizontal scroll */}
+        <section style={{
           background: CF.surface, border: `1px solid ${CF.line}`,
-          borderRadius: CF.radius.lg, boxShadow: CF.shadow.card,
+          borderRadius: CF.radius.lg, boxShadow: CF.shadow.card, overflow: 'hidden',
         }}>
-          <div className="mono" style={{
-            display: 'grid', gridTemplateColumns: '36px 1.5fr 64px 64px 80px 84px 110px',
-            gap: 12, alignItems: 'center',
-            padding: '12px 20px',
-            background: CF.surface2,
-            fontSize: 10, color: CF.ink3, letterSpacing: 1.5, fontWeight: 600,
-            borderBottom: `1px solid ${CF.line}`,
-          }}>
-            <div>#</div>
-            <div>AGENT</div>
-            <div style={{ textAlign: 'right' }}>CALLS</div>
-            <div style={{ textAlign: 'right' }}>WIN %</div>
-            <div style={{ textAlign: 'right' }}>BRIER</div>
-            <div style={{ textAlign: 'right' }} title="Reputation → budget: bond share scales with calibration">BUDGET ×</div>
-            <div style={{ textAlign: 'right' }}>RATING</div>
-          </div>
-
           {ranked.map((s, i) => {
             const badge = brierBadge(s.brierScore, s.callsResolved)
             const winColor = s.winRate >= 0.66 ? CF.bull : s.winRate >= 0.34 ? CF.amber : CF.bear
             return (
               <div key={s.role} style={{
-                display: 'grid', gridTemplateColumns: '36px 1.5fr 64px 64px 80px 84px 110px',
-                gap: 12, alignItems: 'center', padding: '18px 20px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 14, flexWrap: 'wrap', padding: '16px 18px',
                 borderBottom: i < ranked.length - 1 ? `1px solid ${CF.line}` : 'none',
               }}>
-                <div className="mono tnum" style={{
-                  fontSize: 14, fontWeight: 600,
-                  color: i === 0 ? CF.bull : i === 1 ? CF.amber : CF.ink3,
-                }}>
-                  {String(i + 1).padStart(2, '0')}
-                </div>
-                <Link href={`/agents/${slugOf(s.role)}`} style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                {/* rank + agent */}
+                <Link href={`/agents/${slugOf(s.role)}`} style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: '1 1 230px' }}>
+                  <span className="mono tnum" style={{
+                    fontSize: 14, fontWeight: 600, width: 22, flexShrink: 0,
+                    color: i === 0 ? CF.bull : i === 1 ? CF.amber : CF.ink3,
+                  }}>{String(i + 1).padStart(2, '0')}</span>
                   <span style={{
                     display: 'inline-flex', overflow: 'hidden', flexShrink: 0,
                     width: 38, height: 38, borderRadius: 9,
@@ -160,7 +152,7 @@ export default function Leaderboard() {
                     <img src={PUNDITS[s.role]?.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
                   </span>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 14, letterSpacing: 0.3, color: PUNDITS[s.role]?.color ?? CF.ink }}>
                         {PUNDITS[s.role]?.handle ?? s.role}
                       </span>
@@ -168,7 +160,6 @@ export default function Leaderboard() {
                         {PUNDITS[s.role]?.archetype}
                       </span>
                     </div>
-                    {/* per-category calibration chips */}
                     <div className="mono" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
                       {Object.entries(s.byCategory).length === 0 ? (
                         <span style={{ fontSize: 10.5, color: CF.ink4 }}>{PUNDITS[s.role]?.desk}</span>
@@ -188,29 +179,18 @@ export default function Leaderboard() {
                     </div>
                   </div>
                 </Link>
-                <div className="mono tnum" style={{ fontSize: 13, color: CF.ink, textAlign: 'right' }}>
-                  {s.callsResolved}<span style={{ color: CF.ink4 }}>/{s.callsTotal}</span>
-                </div>
-                <div className="mono tnum" style={{ fontSize: 13, fontWeight: 600, color: winColor, textAlign: 'right' }}>
-                  {s.callsResolved > 0 ? `${(s.winRate * 100).toFixed(0)}%` : '—'}
-                </div>
-                <div className="mono tnum" style={{
-                  fontSize: 15, fontWeight: 600, color: badge.color, textAlign: 'right',
-                }}>
-                  {s.callsResolved > 0 ? s.brierScore.toFixed(3) : '—'}
-                </div>
-                <div className="mono tnum" style={{
-                  fontSize: 14, fontWeight: 600, textAlign: 'right',
-                  color: s.budgetMultiplier > 1 ? CF.bull : s.budgetMultiplier < 1 ? CF.bear : CF.ink2,
-                }}>
-                  {s.budgetMultiplier.toFixed(2)}×
-                </div>
-                <div style={{ textAlign: 'right' }}>
+
+                {/* stats — wrap as a group below the agent on mobile */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <Stat label="CALLS" value={<>{s.callsResolved}<span style={{ color: CF.ink4 }}>/{s.callsTotal}</span></>} />
+                  <Stat label="WIN" value={s.callsResolved > 0 ? `${(s.winRate * 100).toFixed(0)}%` : '—'} color={winColor} />
+                  <Stat label="BRIER" value={s.callsResolved > 0 ? s.brierScore.toFixed(3) : '—'} color={badge.color} />
+                  <Stat label="BUDGET ×" value={`${s.budgetMultiplier.toFixed(2)}×`} color={s.budgetMultiplier > 1 ? CF.bull : s.budgetMultiplier < 1 ? CF.bear : CF.ink2} />
                   <span className="mono" style={{
                     display: 'inline-block', padding: '4px 10px', borderRadius: 999,
                     background: badge.bg, color: badge.color,
                     border: `1px solid ${alpha(badge.color, 20)}`,
-                    fontSize: 10.5, fontWeight: 600, letterSpacing: 0.6, textTransform: 'uppercase',
+                    fontSize: 10, fontWeight: 600, letterSpacing: 0.6, textTransform: 'uppercase',
                   }}>{badge.label}</span>
                 </div>
               </div>
