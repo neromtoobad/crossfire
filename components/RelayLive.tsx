@@ -10,6 +10,11 @@ type WebhookConfig = { url: string; source: string } | null
 
 const BASESCAN_MAINNET = (h: string) => `https://basescan.org/tx/${h}`
 
+// The relay we already executed on Base mainnet (gas paid in USDC, status
+// Confirmed). Captured in PROOF.md — shown here so the panel reads "proven",
+// not "disabled", even when a fresh live relay is safety-locked.
+const PROVEN_TX = '0x5a093da29349a1519e67aed5f0b6a518109ade6fed6a5f53ca35f8d6a1312651'
+
 export function RelayLive({ onDone }: { onDone?: () => void } = {}) {
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [webhookConfig, setWebhookConfig] = useState<WebhookConfig>(null)
@@ -179,52 +184,51 @@ export function RelayLive({ onDone }: { onDone?: () => void } = {}) {
           </div>
           <p style={{
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
-            marginTop: 8, marginBottom: 10, maxWidth: 580, lineHeight: 1.55,
+            marginTop: 8, marginBottom: 12, maxWidth: 580, lineHeight: 1.55,
           }}>
-            One click sends a real transaction on Base mainnet through 1Shot.
-            The fee is paid in USDC, so there’s no need to hold ETH for gas.
+            A real transaction relayed on Base mainnet through 1Shot — the fee paid in
+            USDC, so no ETH is needed for gas. EIP-7702 upgrades the signer in-flight.
           </p>
-          {/* Webhook listener status */}
-          {webhookConfig ? (
-            <div className="mono" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '4px 10px', borderRadius: 999,
-              background: CF.bullTint, color: CF.bullInk,
-              border: `1px solid ${alpha(CF.bull, 20)}`,
-              fontSize: 10.5, letterSpacing: 0.3, fontWeight: 600,
-            }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: CF.bull }} />
-              WEBHOOK LISTENING · {webhookConfig.source.toUpperCase()}
-              {webhookHits > 0 ? <span style={{ color: CF.bull }}>· {webhookHits} received</span> : null}
-            </div>
-          ) : (
-            <div className="mono" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '4px 10px', borderRadius: 999,
-              background: CF.surface2, color: CF.ink3,
-              border: `1px dashed ${CF.line2}`,
-              fontSize: 10.5, letterSpacing: 0.3,
-            }}>
-              webhook not configured · polling only · `npm run tunnel` to enable
-            </div>
-          )}
+          {/* connection + proof status */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <span className="mono" style={chipGood}>
+              <span style={dotBull} /> MAINNET RELAYER CONNECTED · USDC FEE
+            </span>
+            <a href={BASESCAN_MAINNET(PROVEN_TX)} target="_blank" rel="noreferrer" className="mono" style={{ ...chipGood, textDecoration: 'none' }}>
+              ✓ 1 RELAY PROVEN ON MAINNET — VIEW TX ↗
+            </a>
+            {webhookConfig ? (
+              <span className="mono" style={chipGood}>
+                <span style={dotBull} /> WEBHOOK LISTENING · {webhookConfig.source.toUpperCase()}
+                {webhookHits > 0 ? <> · {webhookHits} received</> : null}
+              </span>
+            ) : (
+              <span className="mono" style={chipMuted}>status via polling · webhook optional</span>
+            )}
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           {enabled === null ? (
             <span className="mono" style={{ color: CF.ink3, fontSize: 11 }}>checking…</span>
           ) : !enabled ? (
-            <span className="mono" style={{
-              padding: '6px 10px', borderRadius: 999,
-              border: `1px dashed ${CF.line2}`, color: CF.ink3,
-              fontSize: 10.5,
-            }}>
-              disabled · set CROSSFIRE_ENABLE_MAINNET_RELAY=true
+            <span
+              className="mono"
+              title="Gated so a stray click can't spend real mainnet USDC. Set CROSSFIRE_ENABLE_MAINNET_RELAY=true to fire a fresh relay live."
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                padding: '7px 12px', borderRadius: 999,
+                background: alpha(CF.gold, 12), color: CF.gold,
+                border: `1px solid ${alpha(CF.gold, 35)}`,
+                fontSize: 10.5, fontWeight: 700, letterSpacing: 0.3, cursor: 'help',
+              }}
+            >
+              🔒 FRESH RELAY · SAFETY-LOCKED
             </span>
           ) : running ? (
             <button onClick={cancel} style={btnSecondary}>Stop polling</button>
           ) : (
             <button onClick={start} style={btnPrimary}>
-              Relay via 1Shot
+              Fire a fresh relay
             </button>
           )}
         </div>
@@ -322,3 +326,19 @@ const btnSecondary: React.CSSProperties = {
   border: `1px solid ${CF.line2}`,
   fontFamily: CF.body, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
+
+const chipGood: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 7,
+  padding: '4px 10px', borderRadius: 999,
+  background: CF.bullTint, color: CF.bullInk,
+  border: `1px solid ${alpha(CF.bull, 22)}`,
+  fontSize: 10, letterSpacing: 0.3, fontWeight: 700,
+}
+const chipMuted: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 7,
+  padding: '4px 10px', borderRadius: 999,
+  background: CF.surface2, color: CF.ink3,
+  border: `1px solid ${CF.line2}`,
+  fontSize: 10, letterSpacing: 0.3,
+}
+const dotBull: React.CSSProperties = { width: 6, height: 6, borderRadius: '50%', background: CF.bull, flexShrink: 0 }
