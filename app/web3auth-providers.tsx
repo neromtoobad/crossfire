@@ -13,10 +13,17 @@ import { WagmiProvider } from '@web3auth/modal/react/wagmi'
 import { WEB3AUTH_NETWORK } from '@web3auth/modal'
 import { W3A_CLIENT_ID } from '../lib/web3auth'
 
+// Must MATCH the network of your Embedded Wallets dashboard project. Defaults to
+// Sapphire Devnet (the free/dev tier); set NEXT_PUBLIC_WEB3AUTH_NETWORK=
+// sapphire_mainnet once your project is on mainnet.
+const W3A_NETWORK = (process.env.NEXT_PUBLIC_WEB3AUTH_NETWORK as
+  | (typeof WEB3AUTH_NETWORK)[keyof typeof WEB3AUTH_NETWORK]
+  | undefined) ?? WEB3AUTH_NETWORK.SAPPHIRE_DEVNET
+
 const web3AuthContextConfig = {
   web3AuthOptions: {
     clientId: W3A_CLIENT_ID,
-    web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+    web3AuthNetwork: W3A_NETWORK,
     // Chains (Base Sepolia + Base) are configured in the Embedded Wallets
     // dashboard project; the SDK reads them from there.
   },
