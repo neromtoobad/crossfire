@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { DebateTranscript, type DebateMsg, type DebateRound } from './DebateTranscript'
 import { FadeFollow } from './FadeFollow'
-import { AgentAvatar } from './AgentAvatar'
+import { RoundTable } from './RoundTable'
 import { PUNDITS, PUNDIT_ROLES } from '../lib/pundits'
 import type { PublishedCall, AgentRole } from '../lib/calls-data'
 import { CF, alpha } from '../lib/theme'
@@ -20,22 +20,6 @@ const WINNER_ID = 'winner'
 const WINNER_TITLE = 'Who lifts the 2026 FIFA World Cup?'
 
 type Slot = { role: AgentRole; text: string; vote?: 'YES' | 'NO' | 'NEUTRAL'; confidence?: number }
-
-// an animated audio equalizer in the speaker's colour — the "fun" visual
-function Equalizer({ color, bars = 18 }: { color: string; bars?: number }) {
-  return (
-    <div aria-hidden style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 2.5, height: 20 }}>
-      {Array.from({ length: bars }).map((_, i) => (
-        <span key={i} style={{
-          width: 3, height: '100%', borderRadius: 2, background: color,
-          transformOrigin: 'bottom', display: 'inline-block',
-          animation: `cf-eq ${(0.5 + ((i * 7) % 9) * 0.07).toFixed(2)}s ease-in-out ${(i * 0.045).toFixed(2)}s infinite`,
-          boxShadow: `0 0 6px ${alpha(color, 60)}`,
-        }} />
-      ))}
-    </div>
-  )
-}
 
 export function WarRoom({ calls }: { calls: PublishedCall[] }) {
   const params = useSearchParams()
@@ -226,61 +210,19 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
     setRunning(false); setDone(true)
   }
 
-  const speakingPundit = speaking ? PUNDITS[speaking.role] : null
   // deliberating = generating but nothing revealed/spoken yet
   const deliberating = running && !speaking && messages.length === 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      {/* the table — five participants */}
-      <div style={{ background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, padding: '18px 20px', boxShadow: CF.shadow.card }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div className="mono" style={{ fontSize: 10.5, letterSpacing: 1.8, color: running ? CF.bear : CF.ink3, display: 'flex', alignItems: 'center', gap: 8 }}>
-            {speaking ? <><span className="cf-live-dot" aria-hidden /> ON AIR</>
-              : deliberating ? <>FORMING ARGUMENTS<span className="cf-think" style={{ display: 'inline-flex', gap: 3, marginLeft: 4 }}><span style={{ width: 4, height: 4, borderRadius: 9, background: 'currentColor' }} /><span style={{ width: 4, height: 4, borderRadius: 9, background: 'currentColor' }} /><span style={{ width: 4, height: 4, borderRadius: 9, background: 'currentColor' }} /></span></>
-              : done ? 'SESSION ADJOURNED' : 'THE PANEL'}
-          </div>
-          <span className="mono" style={{ fontSize: 10.5, color: CF.ink4 }}>5 agents · Venice voice</span>
-        </div>
-        <div className="cf-g5" style={{ gap: 10 }}>
-          {PUNDIT_ROLES.map((role) => {
-            const p = PUNDITS[role]
-            const pos = positions[role]
-            const isLive = speaking?.role === role
-            const vColor = pos?.vote === 'YES' ? CF.bull : pos?.vote === 'NO' ? CF.bear : CF.ink3
-            return (
-              <div key={role} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, textAlign: 'center', position: 'relative' }}>
-                <span style={{
-                  width: 52, height: 52, borderRadius: 10, display: 'inline-flex', overflow: 'hidden',
-                  border: `2px solid ${p.color}`,
-                  boxShadow: isLive ? `0 0 0 3px ${alpha(p.color, 45)}, 0 0 22px ${alpha(p.color, 85)}` : pos ? `0 0 16px ${alpha(p.color, 55)}` : `0 0 8px ${alpha(p.color, 20)}`,
-                  transform: isLive ? 'scale(1.13)' : 'scale(1)',
-                  transition: 'box-shadow 240ms ease, transform 240ms ease',
-                  animation: deliberating ? 'cf-breathe 1.6s ease-in-out infinite' : undefined,
-                }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
-                </span>
-                {isLive ? (
-                  <span className="mono" style={{ position: 'absolute', top: -7, fontSize: 7.5, fontWeight: 800, letterSpacing: 0.6, color: '#fff', background: CF.bear, padding: '2px 5px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                    <span className="cf-live-dot" style={{ width: 5, height: 5 }} aria-hidden /> ON AIR
-                  </span>
-                ) : null}
-                <span style={{ fontFamily: CF.body, fontWeight: 700, fontSize: 11.5, color: CF.ink, letterSpacing: 0.3 }}>{p.handle}</span>
-                {selectedId === WINNER_ID && winnerPicks[role] ? (
-                  <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: p.color, padding: '1px 6px', borderRadius: 999, background: alpha(p.color, 12), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <span>{winnerPicks[role].flag}</span>{winnerPicks[role].country}
-                  </span>
-                ) : pos ? (
-                  <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: vColor, padding: '1px 6px', borderRadius: 999, background: alpha(vColor, 12) }}>{pos.vote} {Math.round(pos.confidence * 100)}%</span>
-                ) : (
-                  <span className="mono" style={{ fontSize: 9, color: CF.ink4 }}>{p.persona}</span>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
+      {/* the round table — the broadcast set */}
+      <RoundTable
+        speaking={speaking}
+        positions={positions}
+        winnerPicks={winnerPicks}
+        isWinner={selectedId === WINNER_ID}
+        deliberating={deliberating}
+      />
 
       {/* topic + start + voice toggle */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -303,33 +245,6 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
       </div>
 
       {error ? <div className="mono" style={{ fontSize: 12.5, color: CF.bear, padding: '4px 2px' }}>× {error}</div> : null}
-
-      {/* broadcast caption — the speaking agent, lower-third with a live equalizer */}
-      {speaking && speakingPundit ? (
-        <div className="cf-rise" style={{
-          display: 'flex', gap: 14, alignItems: 'center',
-          background: `linear-gradient(90deg, ${alpha(speakingPundit.color, 18)}, ${CF.surface})`,
-          border: `1px solid ${alpha(speakingPundit.color, 45)}`, borderLeft: `3px solid ${speakingPundit.color}`,
-          borderRadius: CF.radius.lg, padding: '14px 18px', boxShadow: CF.shadow.card,
-        }}>
-          <span style={{ animation: 'cf-breathe 1.4s ease-in-out infinite', flexShrink: 0 }}>
-            <AgentAvatar role={speaking.role} size={54} radius={12} />
-          </span>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.8, color: speakingPundit.color, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <span className="cf-live-dot" style={{ width: 6, height: 6 }} aria-hidden /> {speakingPundit.handle} · SPEAKING
-              </span>
-              <Equalizer color={speakingPundit.color} />
-            </div>
-            <div style={{ fontFamily: CF.body, fontSize: 15, color: CF.ink, lineHeight: 1.5 }}>{speaking.text}</div>
-          </div>
-        </div>
-      ) : deliberating ? (
-        <div className="mono cf-rise" style={{ fontSize: 12.5, color: CF.ink3, padding: '10px 2px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="cf-live-dot" aria-hidden /> The panel is forming their arguments — they’ll take the floor one at a time…
-        </div>
-      ) : null}
 
       {/* the transcript — fills one speaker at a time, in sync with the voice */}
       {messages.length > 0 && (
