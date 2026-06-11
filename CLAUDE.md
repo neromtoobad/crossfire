@@ -33,9 +33,9 @@ The baseline of this hackathon — capped 7710 delegation + redelegation + x402 
 ## Hackathon: MetaMask Smart Accounts Kit x 1Shot API x Venice AI Dev Cook Off
 
 - Submissions close **June 15, 2026**.
-- Anchor track: **Best x402 + ERC-7710** ($3k).
-- Stacked: **Best use of Venice AI** ($3k) + **Best Use of 1Shot Permissionless Relayer** ($1k).
-- Headline track: **Best A2A coordination** ($3k) — the adversarial duel IS the A2A story.
+- Anchor track: **Best x402 + ERC-7710**.
+- Stacked: **Best use of Venice AI** + **Best Use of 1Shot Permissionless Relayer**.
+- Headline track: **Best A2A coordination** — the adversarial duel IS the A2A story.
 - Soft: **Social Media** (tag @MetaMaskDev, post from day one) + **Feedback**.
 
 ### Hard qualification rules (do not lose these)

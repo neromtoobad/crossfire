@@ -106,13 +106,13 @@ Two guarantees are enforced by the build, not by trust:
 
 ## Tracks targeted
 
-| Track | Prize | How CROSSFIRE earns it |
-|---|---|---|
-| **Best x402 + ERC-7710** | $3,000 | Agents pay evidence APIs via buyer-with-delegation; users place bets / unlock via the same capped-delegation primitive. Both metered on-chain. |
-| **Best A2A Coordination** | $3,000 | Redelegation chain: user → arena orchestrator → each agent's own keypair + budget. Real keypairs redeem through the full chain; `child.delegator == parent.delegate` verified on-chain. |
-| **Best Use of Venice AI** | $3,000 | Venice is the **only** model provider (`grep`-enforced). Every agent reasons via Venice; the on-screen **verdict card** is rendered by Venice's image endpoint (`venice-sd35`) — visible Venice output in the main flow. |
-| **Best Use of 1Shot Relayer** | $1,000 | One real Base-mainnet `relayer_send7710Transaction`, EIP-7702 in-flight upgrade, gas paid in USDC, webhook handler wired. |
-| **Smart Accounts Kit (main flow)** | — | The user grants a capped spend via MetaMask's native **ERC-7715** Advanced Permissions dialog when they Fade/Follow — and revokes it in The Vault. |
+| Track | How CROSSFIRE earns it |
+|---|---|
+| **Best x402 + ERC-7710** | Agents pay evidence APIs via buyer-with-delegation; users place bets / unlock via the same capped-delegation primitive. Both metered on-chain. |
+| **Best A2A Coordination** | Redelegation chain: user → arena orchestrator → each agent's own keypair + budget. Real keypairs redeem through the full chain; `child.delegator == parent.delegate` verified on-chain. |
+| **Best Use of Venice AI** | Venice is the **only** model provider (`grep`-enforced). Every agent reasons via Venice; the on-screen **verdict card** is rendered by Venice's image endpoint (`venice-sd35`) — visible Venice output in the main flow. |
+| **Best Use of 1Shot Relayer** | One real Base-mainnet `relayer_send7710Transaction`, EIP-7702 in-flight upgrade, gas paid in USDC, webhook handler wired. |
+| **Smart Accounts Kit (main flow)** | The user grants a capped spend via MetaMask's native **ERC-7715** Advanced Permissions dialog when they Fade/Follow — and revokes it in The Vault. |
 
 ---
 
