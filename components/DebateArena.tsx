@@ -34,7 +34,7 @@ export function DebateArena({
   deliberating: boolean
   analyserRef: React.MutableRefObject<AnalyserNode | null>
 }) {
-  const wrapRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const speakingRef = useRef<Speaking>(speaking)
   speakingRef.current = speaking
@@ -54,8 +54,8 @@ export function DebateArena({
   // the render loop
   useEffect(() => {
     const canvas = canvasRef.current
-    const wrap = wrapRef.current
-    if (!canvas || !wrap) return
+    const stage = stageRef.current
+    if (!canvas || !stage) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
@@ -63,13 +63,13 @@ export function DebateArena({
     let w = 0, h = 0, dpr = 1
     const resize = () => {
       dpr = Math.min(2, window.devicePixelRatio || 1)
-      w = wrap.clientWidth; h = wrap.clientHeight
+      w = stage.clientWidth; h = stage.clientHeight
       canvas.width = w * dpr; canvas.height = h * dpr
       canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     resize()
-    const ro = new ResizeObserver(resize); ro.observe(wrap)
+    const ro = new ResizeObserver(resize); ro.observe(stage)
 
     const freq = new Uint8Array(128)
     const bg: P[] = Array.from({ length: 54 }, () => ({
@@ -81,9 +81,10 @@ export function DebateArena({
     const render = (t: number) => {
       if (!t0) t0 = t
       const time = (t - t0) / 1000
-      const cx = w / 2, cy = h * 0.46
-      const R = Math.min(w, h * 1.25) * 0.32
-      const baseNode = Math.min(w, h * 1.25) * 0.064
+      const M = Math.min(w, h)
+      const cx = w / 2, cy = h * 0.49
+      const R = M * 0.30
+      const baseNode = M * 0.066
 
       // amplitude + spectrum from the real voice, else a synthetic pulse
       const an = analyserRef.current
@@ -128,8 +129,8 @@ export function DebateArena({
       PUNDIT_ROLES.forEach((role, i) => {
         const a = -Math.PI / 2 + (i / PUNDIT_ROLES.length) * Math.PI * 2
         let x = cx + Math.cos(a) * R
-        let y = cy + Math.sin(a) * R * 0.92
-        if (sp?.role === role) { x = x + (cx - x) * 0.22; y = y + (cy - y) * 0.22 } // speaker steps up
+        let y = cy + Math.sin(a) * R * 0.86
+        if (sp?.role === role) { x = x + (cx - x) * 0.20; y = y + (cy - y) * 0.20 } // speaker steps up
         pos[role] = { x, y }
       })
 
@@ -206,7 +207,7 @@ export function DebateArena({
         const isLive = sp?.role === role
         const dim = !!sp && !isLive
         const { x, y } = pos[role]
-        const nodeR = baseNode * (isLive ? 1.55 : 1)
+        const nodeR = baseNode * (isLive ? 1.4 : 1)
 
         // aura for the speaker, sized by amplitude
         if (isLive) {
@@ -217,11 +218,11 @@ export function DebateArena({
           ag.addColorStop(1, 'rgba(0,0,0,0)')
           ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(x, y, auraR, 0, Math.PI * 2); ctx.fill()
           // circular frequency spectrum
-          const innerR = nodeR * 1.28
+          const innerR = nodeR * 1.2
           ctx.lineWidth = 2.2; ctx.lineCap = 'round'
           for (let i = 0; i < bins; i++) {
             const ang = (i / bins) * Math.PI * 2 - Math.PI / 2 + time * 0.3
-            const len = innerR + spectrum[i] * nodeR * 1.6
+            const len = innerR + spectrum[i] * nodeR * 0.95
             ctx.strokeStyle = hexA(p.color, 0.35 + spectrum[i] * 0.6)
             ctx.beginPath()
             ctx.moveTo(x + Math.cos(ang) * innerR, y + Math.sin(ang) * innerR)
@@ -236,10 +237,12 @@ export function DebateArena({
         ctx.beginPath(); ctx.arc(x, y, nodeR, 0, Math.PI * 2); ctx.closePath(); ctx.clip()
         if (img && img.complete && img.naturalWidth) {
           ctx.globalAlpha = dim ? 0.5 : 1
-          // cover-fit, focus a touch high
-          const s = Math.max((nodeR * 2) / img.naturalWidth, (nodeR * 2) / img.naturalHeight)
+          // cover-fit the circle with a slight zoom (so there's overflow to crop,
+          // never a gap), biased toward the top of the portrait (the face)
+          const D = nodeR * 2
+          const s = Math.max(D / img.naturalWidth, D / img.naturalHeight) * 1.18
           const dw = img.naturalWidth * s, dh = img.naturalHeight * s
-          ctx.drawImage(img, x - dw / 2, y - dh / 2 - nodeR * 0.18, dw, dh)
+          ctx.drawImage(img, x - dw / 2, y - dh * 0.43, dw, dh)
           ctx.globalAlpha = 1
         } else {
           ctx.fillStyle = p.tint; ctx.fillRect(x - nodeR, y - nodeR, nodeR * 2, nodeR * 2)
@@ -277,35 +280,35 @@ export function DebateArena({
   const sp = speaking ? PUNDITS[speaking.role] : null
 
   return (
-    <div ref={wrapRef} style={{
-      position: 'relative', width: '100%', aspectRatio: '16 / 10', maxHeight: 480, minHeight: 360,
-      borderRadius: CF.radius.lg, overflow: 'hidden', background: '#080a0f',
-      border: `1px solid ${CF.line}`, boxShadow: CF.shadow.card,
-    }}>
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0 }} />
-
-      {/* readable caption overlay */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 16px 16px', pointerEvents: 'none' }}>
-        {speaking && sp ? (
-          <div className="cf-rise" style={{
-            background: `linear-gradient(180deg, rgba(8,10,15,0) 0%, rgba(8,10,15,0.78) 38%)`,
-            borderRadius: CF.radius.md, padding: '10px 14px 4px',
-          }}>
-            <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 5, fontSize: 10.5, fontWeight: 800, letterSpacing: 0.8, color: sp.color }}>
-              <span className="cf-live-dot" style={{ width: 6, height: 6 }} aria-hidden /> {sp.handle} · ON AIR
-              <Equalizer color={sp.color} bars={14} height={13} />
-            </div>
-            <div style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink, lineHeight: 1.45, maxWidth: 640 }}>“{speaking.text}”</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* the canvas stage — pure visualisation, nothing overlaps the agents */}
+      <div ref={stageRef} style={{
+        position: 'relative', width: '100%', aspectRatio: '16 / 10', maxHeight: 460, minHeight: 320,
+        borderRadius: CF.radius.lg, overflow: 'hidden', background: '#080a0f',
+        border: `1px solid ${CF.line}`, boxShadow: CF.shadow.card,
+      }}>
+        <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0 }} />
+        {!speaking ? (
+          <div style={{ position: 'absolute', left: 0, right: 0, top: 14, textAlign: 'center', pointerEvents: 'none' }}>
+            <span className="mono" style={{ fontSize: 10.5, letterSpacing: 1.6, color: deliberating ? CF.ink2 : CF.ink4 }}>
+              {deliberating ? <><span className="cf-live-dot" style={{ width: 6, height: 6, display: 'inline-block', marginRight: 6 }} aria-hidden /> THE PANEL IS DELIBERATING…</> : '▸ OPEN THE FLOOR TO BEGIN'}
+            </span>
           </div>
         ) : null}
       </div>
 
-      {/* idle / deliberating banner */}
-      {!speaking ? (
-        <div style={{ position: 'absolute', left: 0, right: 0, top: 14, textAlign: 'center', pointerEvents: 'none' }}>
-          <span className="mono" style={{ fontSize: 10.5, letterSpacing: 1.6, color: deliberating ? CF.ink2 : CF.ink4 }}>
-            {deliberating ? <><span className="cf-live-dot" style={{ width: 6, height: 6, display: 'inline-block', marginRight: 6 }} aria-hidden /> THE PANEL IS DELIBERATING…</> : '▸ OPEN THE FLOOR TO BEGIN'}
-          </span>
+      {/* readable caption — BELOW the stage, never over the agents */}
+      {speaking && sp ? (
+        <div className="cf-rise" style={{
+          background: `linear-gradient(90deg, ${hexA(sp.color, 0.16)}, ${CF.surface})`,
+          border: `1px solid ${hexA(sp.color, 0.4)}`, borderLeft: `3px solid ${sp.color}`,
+          borderRadius: CF.radius.lg, padding: '12px 16px', boxShadow: CF.shadow.card,
+        }}>
+          <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, fontSize: 10.5, fontWeight: 800, letterSpacing: 0.8, color: sp.color }}>
+            <span className="cf-live-dot" style={{ width: 6, height: 6 }} aria-hidden /> {sp.handle} · ON AIR
+            <Equalizer color={sp.color} bars={14} height={13} />
+          </div>
+          <div style={{ fontFamily: CF.body, fontSize: 14.5, color: CF.ink, lineHeight: 1.5 }}>“{speaking.text}”</div>
         </div>
       ) : null}
     </div>
