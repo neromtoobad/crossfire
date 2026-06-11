@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { A } from '../lib/arena'
 import { PUNDITS } from '../lib/pundits'
+import { SpeakButton } from './SpeakButton'
 
 type Pick = { role: string; handle: string; country: string; flag: string; reason: string }
 
@@ -125,8 +126,12 @@ export function WinnerPicks({ winRates = {} }: { winRates?: Record<string, numbe
                   <div className="mono" style={{ fontSize: 11, color: A.text, lineHeight: 1.55, fontStyle: 'italic', flex: 1 }}>
                     “{p.reason}”
                   </div>
+                  <div style={{ marginTop: 12 }}>
+                    <SpeakButton handle={p.handle} color={c} size="sm"
+                      text={`My pick is ${p.country} to win the World Cup. ${p.reason}`} />
+                  </div>
                   <div className="mono" style={{
-                    marginTop: 12, padding: '8px 0', textAlign: 'center',
+                    marginTop: 8, padding: '8px 0', textAlign: 'center',
                     border: `1px solid ${c}55`, borderRadius: 6, color: c,
                     fontSize: 10.5, fontWeight: 700, letterSpacing: 2,
                     background: `${c}0d`,

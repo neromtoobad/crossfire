@@ -11,6 +11,7 @@ export type Pundit = {
   archetype: string        // e.g. "Macro & Tactics Engine"
   persona: string          // HUD card label, e.g. "Logic Maximalist"
   portrait: string         // /agents/<handle>.webp — Venice-generated robot portrait
+  voiceId: string          // Venice TTS voice (kokoro) — each oracle speaks in its own
   blurb: string
   desk: string
   color: string
@@ -26,6 +27,7 @@ export const PUNDITS: Record<AgentRole, Pundit> = {
     archetype: 'Tactics Engine',
     persona: 'Logic Maximalist',
     portrait: '/agents/phoenix.webp',
+    voiceId: 'am_michael',
     blurb: 'Reads shape, matchups and game state. Backs the side built to control the match.',
     desk: 'tactics & game management',
     color: '#5B8DEF', tint: '#16233C', avatar: 'P',
@@ -37,6 +39,7 @@ export const PUNDITS: Record<AgentRole, Pundit> = {
     archetype: 'Team-News Scanner',
     persona: 'Risk Taker',
     portrait: '/agents/orion.webp',
+    voiceId: 'am_adam',
     blurb: 'Tracks lineups, injuries and fitness in real time. First to the team sheet.',
     desk: 'team news & fitness',
     color: '#E0A33A', tint: '#2A2210', avatar: 'O',
@@ -48,6 +51,7 @@ export const PUNDITS: Record<AgentRole, Pundit> = {
     archetype: 'Momentum Model',
     persona: 'System Analyst',
     portrait: '/agents/nexus.webp',
+    voiceId: 'bm_george',
     blurb: 'Reads form, belief and momentum. Fades a side that’s bottling it.',
     desk: 'momentum & sentiment',
     color: '#A06BFF', tint: '#241640', avatar: 'N',
@@ -59,6 +63,7 @@ export const PUNDITS: Record<AgentRole, Pundit> = {
     archetype: 'xG & Data Model',
     persona: 'Form Chaser',
     portrait: '/agents/echo.webp',
+    voiceId: 'af_sky',
     blurb: 'The numbers. Expected goals, shot quality, set pieces. No feelings.',
     desk: 'xG, shots & data',
     color: '#34D399', tint: '#0C2A1E', avatar: 'E',
@@ -70,6 +75,7 @@ export const PUNDITS: Record<AgentRole, Pundit> = {
     archetype: 'Contrarian Adversary',
     persona: 'Contrarian',
     portrait: '/agents/vega.webp',
+    voiceId: 'am_onyx',
     blurb: 'The adversary. Fades the favourites and calls out the bottlers.',
     desk: 'the contrarian take',
     color: '#F4727A', tint: '#2E1619', avatar: 'V',

@@ -6,6 +6,7 @@
 import { useEffect, useRef } from 'react'
 import { CF, alpha } from '../lib/theme'
 import { PUNDITS } from '../lib/pundits'
+import { SpeakButton } from './SpeakButton'
 
 export type DebateMsg = {
   id: string
@@ -130,6 +131,9 @@ export function DebateTranscript({
                   {a.desk}
                 </span>
                 {!m.streaming ? voteChip(m.vote, m.confidence, isSkeptic) : null}
+                {!m.streaming && m.text ? (
+                  <SpeakButton handle={a.name} text={m.text} color={a.color} size="sm" label="HEAR" />
+                ) : null}
               </div>
               <div style={{
                 fontFamily: CF.body, fontSize: 14, color: CF.ink, lineHeight: 1.55,
