@@ -114,6 +114,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           @keyframes cf-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes cf-blink { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
           @keyframes cf-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes cf-eq { 0%,100% { transform: scaleY(0.22); } 50% { transform: scaleY(1); } }
+          @keyframes cf-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
           .cf-live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 999px; background: #DC2626; animation: cf-pulse 1.5s ease-in-out infinite; }
           .cf-rise { animation: cf-rise 0.34s cubic-bezier(0.22,1,0.36,1) both; }
           .cf-think span { animation: cf-blink 1.1s infinite; }

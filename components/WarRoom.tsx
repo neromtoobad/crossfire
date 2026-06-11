@@ -1,10 +1,11 @@
 'use client'
 
-// THE WAR ROOM — a broadcast booth where the five agents debate a market live.
-// Pick a topic, hit "Open the floor", and watch them argue (Venice) — each
-// agent's line is SPOKEN ALOUD in its own voice, its seat lights up ON AIR, and
-// a broadcast caption shows the line. No clicking to hear them. Then back or
-// fade the lead agent.
+// THE WAR ROOM — a broadcast booth where the five agents debate a market.
+// The panel forms its arguments (Venice), then takes the floor ONE AT A TIME,
+// in order: PHOENIX, then ORION, then NEXUS, ECHO, VEGA. Each agent's line is
+// spoken aloud in its own voice, its seat lights up ON AIR with a live audio
+// equalizer, and its line is revealed in the transcript as it speaks. No
+// clicking. Then back or fade the lead agent.
 
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -17,6 +18,24 @@ import { CF, alpha } from '../lib/theme'
 
 const WINNER_ID = 'winner'
 const WINNER_TITLE = 'Who lifts the 2026 FIFA World Cup?'
+
+type Slot = { role: AgentRole; text: string; vote?: 'YES' | 'NO' | 'NEUTRAL'; confidence?: number }
+
+// an animated audio equalizer in the speaker's colour — the "fun" visual
+function Equalizer({ color, bars = 18 }: { color: string; bars?: number }) {
+  return (
+    <div aria-hidden style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 2.5, height: 20 }}>
+      {Array.from({ length: bars }).map((_, i) => (
+        <span key={i} style={{
+          width: 3, height: '100%', borderRadius: 2, background: color,
+          transformOrigin: 'bottom', display: 'inline-block',
+          animation: `cf-eq ${(0.5 + ((i * 7) % 9) * 0.07).toFixed(2)}s ease-in-out ${(i * 0.045).toFixed(2)}s infinite`,
+          boxShadow: `0 0 6px ${alpha(color, 60)}`,
+        }} />
+      ))}
+    </div>
+  )
+}
 
 export function WarRoom({ calls }: { calls: PublishedCall[] }) {
   const params = useSearchParams()
@@ -33,16 +52,17 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
 
   // ── voiced broadcast state ──────────────────────────────────────────────
   const [voiceOn, setVoiceOn] = useState(true)
-  const [speaking, setSpeaking] = useState<{ role: AgentRole; text: string } | null>(null)
+  const [speaking, setSpeaking] = useState<Slot | null>(null)
   const voiceOnRef = useRef(true)
-  // Turns are generated in parallel but SPOKEN in canonical role order — slots
-  // are indexed by PUNDIT_ROLES position, and the player walks them in order,
-  // waiting for the next one to be ready.
-  const slotsRef = useRef<({ role: AgentRole; text: string } | null)[]>([])
+  // Turns are generated mostly in parallel but REVEALED + spoken in canonical
+  // role order — slots are indexed by PUNDIT_ROLES position; the sequencer walks
+  // them in order, waiting for the next to be ready.
+  const slotsRef = useRef<(Slot | null)[]>([])
   const playIdxRef = useRef(0)
-  const drainingRef = useRef(false)
+  const seqRef = useRef(false)
   const streamDoneRef = useRef(false)
   const audioElRef = useRef<HTMLAudioElement | null>(null)
+  const audioResolveRef = useRef<(() => void) | null>(null)
   const audioCacheRef = useRef<Map<string, string>>(new Map())
   const turnTextRef = useRef<Record<string, string>>({})
   const runIdRef = useRef(0)
@@ -72,6 +92,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
     const a = audioElRef.current
     if (a) { a.pause(); a.onended = null; a.onerror = null }
     audioElRef.current = null
+    if (audioResolveRef.current) { const r = audioResolveRef.current; audioResolveRef.current = null; r() }
     setSpeaking(null)
   }
 
@@ -92,83 +113,84 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
     } catch { return null }
   }
 
-  async function playLine(role: AgentRole, text: string, myRun: number): Promise<void> {
+  // play a line; resolves true if it actually spoke to the end, false otherwise
+  async function playLine(role: AgentRole, text: string, myRun: number): Promise<boolean> {
     const url = await fetchAudio(role, text)
-    if (!url || myRun !== runIdRef.current || !voiceOnRef.current) return
-    await new Promise<void>((resolve) => {
+    if (!url || myRun !== runIdRef.current || !voiceOnRef.current) return false
+    return await new Promise<boolean>((resolve) => {
       const a = new Audio(url)
       audioElRef.current = a
-      const finish = () => resolve()
-      a.onended = finish
-      a.onerror = finish
-      a.play().catch(finish)
+      let settled = false
+      const finish = (ok: boolean) => { if (settled) return; settled = true; audioResolveRef.current = null; resolve(ok) }
+      audioResolveRef.current = () => finish(false)
+      a.onended = () => finish(true)
+      a.onerror = () => finish(false)
+      a.play().catch(() => finish(false))
     })
   }
 
-  async function kickDrain(myRun: number) {
-    if (drainingRef.current || !voiceOnRef.current) return
-    drainingRef.current = true
+  function readMs(text: string): number {
+    const words = text.trim().split(/\s+/).length
+    return Math.min(8000, Math.max(2600, words * 230))
+  }
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+
+  // the sequencer: reveal + voice each turn strictly in order
+  async function runSequencer(myRun: number) {
+    if (seqRef.current) return
+    seqRef.current = true
     try {
-      const slots = slotsRef.current
-      while (playIdxRef.current < slots.length) {
-        if (myRun !== runIdRef.current || !voiceOnRef.current) break
-        const item = slots[playIdxRef.current]
+      while (playIdxRef.current < slotsRef.current.length) {
+        if (myRun !== runIdRef.current) break
+        const item = slotsRef.current[playIdxRef.current]
         if (!item) {
-          // this speaker isn't ready yet. If the stream is finished, no more are
-          // coming — skip empties, else stop and resume when the turn arrives.
-          if (!streamDoneRef.current) break
-          if (!slots.slice(playIdxRef.current).some(Boolean)) break
+          // next speaker not ready yet
+          if (!streamDoneRef.current) return // wait — a later turn-end re-kicks us
+          if (!slotsRef.current.slice(playIdxRef.current).some(Boolean)) break
           playIdxRef.current++
           continue
         }
-        setSpeaking({ role: item.role, text: item.text })
-        await playLine(item.role, item.text, myRun)
+        // reveal this turn (transcript + caption + seat vote), in order
+        setSpeaking(item)
+        setMessages((cur) => [...cur, {
+          id: `m-${playIdxRef.current}-${item.role}`, round: 1, role: item.role,
+          text: item.text, vote: item.vote, confidence: item.confidence, streaming: false,
+        }])
+        if (item.vote) setPositions((p) => ({ ...p, [item.role]: { vote: item.vote!, confidence: item.confidence ?? 0.5 } }))
+
+        let spoke = false
+        if (voiceOnRef.current) spoke = await playLine(item.role, item.text, myRun)
+        if (myRun !== runIdRef.current) break
+        if (!spoke) await sleep(readMs(item.text)) // muted (or audio failed) → paced read
         playIdxRef.current++
       }
     } finally {
-      drainingRef.current = false
+      seqRef.current = false
       const slots = slotsRef.current
-      const allPlayed = playIdxRef.current >= slots.length || !slots.slice(playIdxRef.current).some(Boolean)
-      if (myRun === runIdRef.current && streamDoneRef.current && allPlayed) setSpeaking(null)
+      const allDone = streamDoneRef.current && (playIdxRef.current >= slots.length || !slots.slice(playIdxRef.current).some(Boolean))
+      if (myRun === runIdRef.current && allDone) setSpeaking(null)
     }
   }
 
-  function apply(e: { type: string; round?: number; title?: string; role?: AgentRole; token?: string; vote?: string; confidence?: number; message?: string }, myRun: number) {
+  function apply(e: { type: string; round?: number; title?: string; role?: AgentRole; token?: string; vote?: 'YES' | 'NO' | 'NEUTRAL'; confidence?: number; message?: string }, myRun: number) {
     const key = `${e.round}-${e.role}`
     switch (e.type) {
       case 'debate-round':
         setRounds((cur) => (cur.some((r) => r.round === e.round) ? cur : [...cur, { round: e.round!, title: e.title! }]))
         break
       case 'debate-turn-start':
-        turnTextRef.current[key] = ''
-        setMessages((cur) => [...cur, { id: `${e.round}-${e.role}-${cur.length}`, round: e.round!, role: e.role!, text: '', streaming: true }])
+        turnTextRef.current[key] = '' // start collecting this turn's text (not shown yet)
         break
       case 'debate-token':
         turnTextRef.current[key] = (turnTextRef.current[key] ?? '') + (e.token ?? '')
-        setMessages((cur) => {
-          const next = [...cur]
-          for (let i = next.length - 1; i >= 0; i--) {
-            if (next[i].role === e.role && next[i].round === e.round && next[i].streaming) { next[i] = { ...next[i], text: next[i].text + e.token }; break }
-          }
-          return next
-        })
         break
       case 'debate-turn-end': {
-        setMessages((cur) => {
-          const next = [...cur]
-          for (let i = next.length - 1; i >= 0; i--) {
-            if (next[i].role === e.role && next[i].round === e.round && next[i].streaming) { next[i] = { ...next[i], streaming: false, vote: e.vote, confidence: e.confidence }; break }
-          }
-          return next
-        })
-        if (e.role && e.vote) setPositions((p) => ({ ...p, [e.role!]: { vote: e.vote!, confidence: e.confidence ?? 0.5 } }))
-        // place this finished line in its canonical slot for the voiced broadcast
         const text = (turnTextRef.current[key] ?? '').trim()
-        if (e.role && text && voiceOnRef.current) {
+        if (e.role && text) {
           const idx = PUNDIT_ROLES.indexOf(e.role)
-          if (idx >= 0) slotsRef.current[idx] = { role: e.role, text }
-          void fetchAudio(e.role, text)   // prefetch so playback has no gap
-          void kickDrain(myRun)
+          if (idx >= 0) slotsRef.current[idx] = { role: e.role, text, vote: e.vote, confidence: e.confidence }
+          void fetchAudio(e.role, text) // prefetch so the broadcast has no gap
+          void runSequencer(myRun)
         }
         break
       }
@@ -180,12 +202,11 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
 
   async function start() {
     if (running) return
-    // reset everything, including the voice pipeline
     runIdRef.current += 1
     const myRun = runIdRef.current
     stopAudio()
     slotsRef.current = new Array(PUNDIT_ROLES.length).fill(null)
-    playIdxRef.current = 0; drainingRef.current = false; streamDoneRef.current = false; turnTextRef.current = {}
+    playIdxRef.current = 0; seqRef.current = false; streamDoneRef.current = false; turnTextRef.current = {}
     setMessages([]); setRounds([]); setPositions({}); setError(''); setDone(false); setRunning(true)
     try {
       const payload = selectedId === WINNER_ID ? { winner: true } : { marketTitle: topicTitle, impliedProbYes }
@@ -201,11 +222,13 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
       }
     } catch { setError('Lost the connection — try again.') }
     streamDoneRef.current = true
-    void kickDrain(myRun) // flush any lines still queued for the voiced broadcast
+    void runSequencer(myRun) // flush any remaining turns
     setRunning(false); setDone(true)
   }
 
   const speakingPundit = speaking ? PUNDITS[speaking.role] : null
+  // deliberating = generating but nothing revealed/spoken yet
+  const deliberating = running && !speaking && messages.length === 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -213,7 +236,9 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
       <div style={{ background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, padding: '18px 20px', boxShadow: CF.shadow.card }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div className="mono" style={{ fontSize: 10.5, letterSpacing: 1.8, color: running ? CF.bear : CF.ink3, display: 'flex', alignItems: 'center', gap: 8 }}>
-            {running ? <><span className="cf-live-dot" aria-hidden /> ON AIR</> : done ? 'SESSION ADJOURNED' : 'THE PANEL'}
+            {speaking ? <><span className="cf-live-dot" aria-hidden /> ON AIR</>
+              : deliberating ? <>FORMING ARGUMENTS<span className="cf-think" style={{ display: 'inline-flex', gap: 3, marginLeft: 4 }}><span style={{ width: 4, height: 4, borderRadius: 9, background: 'currentColor' }} /><span style={{ width: 4, height: 4, borderRadius: 9, background: 'currentColor' }} /><span style={{ width: 4, height: 4, borderRadius: 9, background: 'currentColor' }} /></span></>
+              : done ? 'SESSION ADJOURNED' : 'THE PANEL'}
           </div>
           <span className="mono" style={{ fontSize: 10.5, color: CF.ink4 }}>5 agents · Venice voice</span>
         </div>
@@ -228,9 +253,10 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
                 <span style={{
                   width: 52, height: 52, borderRadius: 10, display: 'inline-flex', overflow: 'hidden',
                   border: `2px solid ${p.color}`,
-                  boxShadow: isLive ? `0 0 0 3px ${alpha(p.color, 45)}, 0 0 22px ${alpha(p.color, 80)}` : pos ? `0 0 16px ${alpha(p.color, 55)}` : `0 0 8px ${alpha(p.color, 20)}`,
-                  transform: isLive ? 'scale(1.12)' : 'scale(1)',
+                  boxShadow: isLive ? `0 0 0 3px ${alpha(p.color, 45)}, 0 0 22px ${alpha(p.color, 85)}` : pos ? `0 0 16px ${alpha(p.color, 55)}` : `0 0 8px ${alpha(p.color, 20)}`,
+                  transform: isLive ? 'scale(1.13)' : 'scale(1)',
                   transition: 'box-shadow 240ms ease, transform 240ms ease',
+                  animation: deliberating ? 'cf-breathe 1.6s ease-in-out infinite' : undefined,
                 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
@@ -273,31 +299,40 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
         <button onClick={start} disabled={running} className="cf-press" style={{
           padding: '11px 22px', borderRadius: CF.radius.md, border: 'none', cursor: running ? 'wait' : 'pointer',
           background: running ? CF.surface2 : CF.ink, color: running ? CF.ink3 : CF.bg, fontFamily: CF.body, fontWeight: 700, fontSize: 13.5,
-        }}>{running ? 'Debating…' : done ? 'Debate again' : '▶ Open the floor'}</button>
+        }}>{running ? (speaking ? 'On air…' : 'Preparing…') : done ? 'Debate again' : '▶ Open the floor'}</button>
       </div>
 
       {error ? <div className="mono" style={{ fontSize: 12.5, color: CF.bear, padding: '4px 2px' }}>× {error}</div> : null}
 
-      {/* broadcast caption — the speaking agent's line, lower-third style */}
+      {/* broadcast caption — the speaking agent, lower-third with a live equalizer */}
       {speaking && speakingPundit ? (
         <div className="cf-rise" style={{
-          display: 'flex', gap: 13, alignItems: 'flex-start',
-          background: `linear-gradient(90deg, ${alpha(speakingPundit.color, 16)}, ${CF.surface})`,
+          display: 'flex', gap: 14, alignItems: 'center',
+          background: `linear-gradient(90deg, ${alpha(speakingPundit.color, 18)}, ${CF.surface})`,
           border: `1px solid ${alpha(speakingPundit.color, 45)}`, borderLeft: `3px solid ${speakingPundit.color}`,
-          borderRadius: CF.radius.lg, padding: '14px 16px', boxShadow: CF.shadow.card,
+          borderRadius: CF.radius.lg, padding: '14px 18px', boxShadow: CF.shadow.card,
         }}>
-          <AgentAvatar role={speaking.role} size={46} radius={10} />
-          <div style={{ minWidth: 0 }}>
-            <div className="mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.8, color: speakingPundit.color, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span className="cf-live-dot" style={{ width: 6, height: 6 }} aria-hidden /> {speakingPundit.handle} · SPEAKING
+          <span style={{ animation: 'cf-breathe 1.4s ease-in-out infinite', flexShrink: 0 }}>
+            <AgentAvatar role={speaking.role} size={54} radius={12} />
+          </span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.8, color: speakingPundit.color, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span className="cf-live-dot" style={{ width: 6, height: 6 }} aria-hidden /> {speakingPundit.handle} · SPEAKING
+              </span>
+              <Equalizer color={speakingPundit.color} />
             </div>
             <div style={{ fontFamily: CF.body, fontSize: 15, color: CF.ink, lineHeight: 1.5 }}>{speaking.text}</div>
           </div>
         </div>
+      ) : deliberating ? (
+        <div className="mono cf-rise" style={{ fontSize: 12.5, color: CF.ink3, padding: '10px 2px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="cf-live-dot" aria-hidden /> The panel is forming their arguments — they’ll take the floor one at a time…
+        </div>
       ) : null}
 
-      {/* the debate transcript */}
-      {(messages.length > 0 || running) && (
+      {/* the transcript — fills one speaker at a time, in sync with the voice */}
+      {messages.length > 0 && (
         <DebateTranscript messages={messages} rounds={rounds} />
       )}
 

@@ -201,15 +201,15 @@ export async function runDebate({
     return msg
   }
 
-  // ── The floor — all four role agents make their case. ──
-  // Generated CONCURRENTLY (each argues its own lane) so the whole panel lands
-  // in ~one turn's wall-clock instead of four; the voiced broadcast then plays
-  // them back IN ORDER, one at a time. ~3-4× faster than sequential.
-  await emit({ type: 'debate-round', round: 1, title: 'The floor — all four make their case' })
+  // ── The floor — the role agents make their case, ONE AT A TIME. ──
+  // The opener is generated first so the booth can start broadcasting it right
+  // away; the rest form their cases CONCURRENTLY in the background (each argues
+  // its own lane), but the booth still reveals + voices them strictly in order.
+  await emit({ type: 'debate-round', round: 1, title: 'The floor — one at a time' })
   const instruction = `Make your sharp, evidence-based case and state your position. You may name a rival pundit by handle (e.g. NEXUS, ECHO) and their lane, but lead with YOUR own concrete proof.`
-  const transcript: DebateMessage[] = await Promise.all(
-    ROLES.map((role) => roleTurn(role, 1, [], instruction)),
-  )
+  const opener = await roleTurn(ROLES[0]!, 1, [], instruction)
+  const rest = await Promise.all(ROLES.slice(1).map((role) => roleTurn(role, 1, [], instruction)))
+  const transcript: DebateMessage[] = [opener, ...rest]
 
   // Final role votes = each agent's single, evidence-backed position.
   const roleVotes: AgentVote[] = ROLES.map((role) => {
@@ -280,11 +280,12 @@ export async function runWinnerDebate({
 
   await emit({ type: 'debate-round', round: 1, title: 'Who lifts the trophy — make your case' })
 
-  // All agents argue CONCURRENTLY (each defends its own nation, referencing
-  // rivals by their known pick) so the panel lands in ~one turn's wall-clock;
-  // the voiced broadcast replays them in order. Each pick is fixed, so the
-  // arguments stay correlated without needing a serial transcript.
-  await Promise.all(ordered.map(async (pk) => {
+  // Each agent defends its own nation, referencing rivals by their known pick.
+  // The opener is generated first so the booth starts broadcasting immediately;
+  // the rest form their cases CONCURRENTLY in the background, but are revealed +
+  // voiced strictly in order. Each pick is fixed, so the arguments stay
+  // correlated without needing a serial transcript.
+  const turnFor = async (pk: WinnerPickInput) => {
     const me = PUNDITS[pk.role]
     await emit({ type: 'debate-turn-start', round: 1, role: pk.role })
 
@@ -304,7 +305,12 @@ Speak in the FIRST PERSON, fully in character, in 2-3 punchy sentences (this is 
 
     await streamTurn(system, user, (t) => emit({ type: 'debate-token', round: 1, role: pk.role, token: t }), 0.7)
     await emit({ type: 'debate-turn-end', round: 1, role: pk.role })
-  }))
+  }
+
+  if (ordered.length) {
+    await turnFor(ordered[0]!)
+    await Promise.all(ordered.slice(1).map(turnFor))
+  }
 }
 
 // Reduce a multi-sentence debate turn to a single public-facing one-liner:
