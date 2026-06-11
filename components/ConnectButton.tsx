@@ -6,8 +6,17 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { useEffect, useState } from 'react'
 import { CF, alpha } from '../lib/theme'
+import { W3A_ENABLED } from '../lib/web3auth'
+import { Web3AuthConnect } from './Web3AuthConnect'
 
+// When MetaMask Embedded Wallets is enabled, use the Web3Auth connect (email /
+// social / MetaMask → embedded smart account). Otherwise the wagmi/MetaMask one.
 export function ConnectButton({ variant = 'primary' }: { variant?: 'primary' | 'ghost' }) {
+  if (W3A_ENABLED) return <Web3AuthConnect variant={variant} />
+  return <WagmiConnectButton variant={variant} />
+}
+
+function WagmiConnectButton({ variant = 'primary' }: { variant?: 'primary' | 'ghost' }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
