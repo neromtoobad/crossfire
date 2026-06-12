@@ -119,13 +119,19 @@ export function OpeningReceipts() {
         </h2>
         <p style={{ fontSize: 14, color: A.text2, lineHeight: 1.55, margin: '8px 0 0', maxWidth: 660 }}>
           The 2026 markets stay <span style={{ color: A.text }}>open</span> until the matches are played and
-          settled against the real result — no invented scores. So here&apos;s the proof on matches that
-          <span style={{ color: A.text }}> actually happened</span>: real World Cup fixtures, every agent&apos;s call
-          graded against the final score. The chalk held in one — the contrarian caught the other.
+          settled by <span style={{ color: A.text }}>UMA&apos;s Optimistic Oracle</span> on the real result — no
+          invented scores. So here&apos;s the proof on matches that <span style={{ color: A.text }}>actually
+          happened</span>: real World Cup fixtures, every agent&apos;s call graded against the final score. The
+          chalk held in one — the contrarian caught the other.
         </p>
       </div>
       <div className="cf-g2" style={{ gap: 16 }}>
         {SETTLED_MATCHES.map((m) => <MatchReceipt key={m.id} m={m} />)}
+      </div>
+      <div className="mono" style={{ fontSize: 10.5, color: A.text3, marginTop: 12, lineHeight: 1.5 }}>
+        ⚖ Live markets settle via <span style={{ color: A.gold }}>UMA&apos;s Optimistic Oracle</span> (the same
+        decentralized, on-chain resolver Polymarket uses) — never a number we type. Verify any market at{' '}
+        <span style={{ color: A.text2 }}>/api/settlement?slug=…</span>
       </div>
     </section>
   )

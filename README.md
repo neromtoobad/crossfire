@@ -97,10 +97,11 @@ No coverage badge over mocked chain calls — every core claim is a script that 
 | `npm run council:test` | The 5-agent Venice panel: 4 votes + VEGA veto + quality gate. Venice only. | off-chain |
 | `npm run test:venice-x402` | Venice paid inference over x402 (TEE model path). | off-chain |
 
-Two guarantees are enforced by the build, not by trust:
+Three guarantees are enforced by the build, not by trust:
 
 - **Venice is the only model provider.** `grep -rniE "groq|api\.openai\.com|api\.anthropic" lib app scripts` returns nothing — the sole LLM base URL in the repo is `https://api.venice.ai/api/v1`. If Venice is down, the agents do not decide. There is no fallback.
 - **The cap is the contract's, not the code's.** There is no `if (amount > cap) reject` in the agent path. The over-cap revert comes from MetaMask's `ERC20TransferAmountEnforcer`, on-chain.
+- **The result is the oracle's, not ours.** We never type an outcome. The agents' record is graded on real, already-played matches; live markets settle against **UMA's Optimistic Oracle** (the decentralized, disputable, on-chain resolver Polymarket uses), read in `lib/polymarket.ts` and exposed at `GET /api/settlement?slug=…` (returns `status`, `umaStatus`, and the on-chain `resolvedBy`). Anything without a real result yet stays `PENDING`, forever.
 
 ---
 
