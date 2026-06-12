@@ -107,7 +107,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   useEffect(() => {
     let cancelled = false
     let prov: any
-    const toNum = (h: any) => (typeof h === 'string' ? parseInt(h, 16) : Number(h))
+    const toNum = (h: any) => { const n = typeof h === 'string' ? parseInt(h, 16) : Number(h); return Number.isFinite(n) && n > 0 ? n : null }
     const onChanged = (h: any) => setProviderChainId(toNum(h))
     ;(async () => {
       try {
@@ -120,12 +120,14 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
     })()
     return () => { cancelled = true; try { prov?.removeListener?.('chainChanged', onChanged) } catch {} }
   }, [connector, accountStatus])
-  // Effective chainId: prefer the live provider value when known.
-  const chainId = providerChainId ?? wagmiChainId
+  // A failed/NaN provider read must NOT override a good wagmi value (?? doesn't
+  // catch NaN), and we only flag wrong-chain on a CONFIRMED number ≠ Base
+  // Sepolia — never on an unknown read.
+  const wagmiOk = typeof wagmiChainId === 'number' && Number.isFinite(wagmiChainId) && wagmiChainId > 0
+  const chainId = providerChainId ?? (wagmiOk ? wagmiChainId : null)
   const isConnected = accountStatus === 'connected'
   const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
-  // Now correctly catches Ethereum mainnet / Polygon / any non-Base chain.
-  const wrongChain = isConnected && chainId !== PUBLIC.chainId
+  const wrongChain = isConnected && typeof chainId === 'number' && chainId !== PUBLIC.chainId
 
   const [state, setState] = useState<State>({ kind: 'idle' })
 

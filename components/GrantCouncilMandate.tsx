@@ -82,7 +82,7 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
   useEffect(() => {
     let cancelled = false
     let prov: any
-    const toNum = (h: any) => (typeof h === 'string' ? parseInt(h, 16) : Number(h))
+    const toNum = (h: any) => { const n = typeof h === 'string' ? parseInt(h, 16) : Number(h); return Number.isFinite(n) && n > 0 ? n : null }
     const onChange = (h: any) => setProviderChainId(toNum(h))
     ;(async () => {
       try {
@@ -95,8 +95,13 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
     })()
     return () => { cancelled = true; try { prov?.removeListener?.('chainChanged', onChange) } catch {} }
   }, [connector, status])
-  const chainId = providerChainId ?? wagmiChainId
-  const wrongChain = isConnected && chainId !== PUBLIC.chainId
+  // A failed/NaN provider read must NOT override a good wagmi value (?? doesn't
+  // catch NaN), and we only flag wrong-chain when the chain is a CONFIRMED real
+  // number that differs from Base Sepolia — never on an unknown read (that was
+  // the false "switch" with no chainId shown).
+  const wagmiOk = typeof wagmiChainId === 'number' && Number.isFinite(wagmiChainId) && wagmiChainId > 0
+  const chainId = providerChainId ?? (wagmiOk ? wagmiChainId : null)
+  const wrongChain = isConnected && typeof chainId === 'number' && chainId !== PUBLIC.chainId
 
   const [state, setState] = useState<State>({ kind: 'idle' })
 
