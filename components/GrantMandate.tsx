@@ -77,9 +77,8 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
     | { kind: 'error'; message: string }
   >({ kind: 'idle' })
 
-  // Don't fire "wrong chain" while wagmi is still resolving chain, only when
-  // it's definitely known to be something other than Base Sepolia.
-  const wrongChain = isConnected && chain !== undefined && chain.id !== PUBLIC.chainId
+  // Chain gate removed, the wallet handles its own network.
+  const wrongChain = false
 
   async function handleGrant() {
     if (!isConnected || !address) {

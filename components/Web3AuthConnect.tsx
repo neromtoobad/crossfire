@@ -36,7 +36,7 @@ export function Web3AuthConnect({ variant = 'primary' }: { variant?: 'primary' |
 
   if (isConnected && address) {
     const short = `${address.slice(0, 6)}…${address.slice(-4)}`
-    const wrongChain = chain !== undefined && chain.id !== 84532 && chain.id !== 8453
+    const wrongChain = false // chain gate removed, the wallet handles its own network
     return (
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         {wrongChain ? (
