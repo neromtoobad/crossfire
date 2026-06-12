@@ -13,7 +13,7 @@
 // and as the msg.sender of the redeemDelegations tx.
 
 import type { Hex } from 'viem'
-import { decodeFunctionData, encodeFunctionData, erc20Abi, getAddress, parseAbi, type Hex } from 'viem'
+import { encodeFunctionData, erc20Abi, getAddress, parseAbi, parseEventLogs } from 'viem'
 import { createExecution, ExecutionMode } from '@metamask/smart-accounts-kit'
 import { encodeSingleExecution } from '@metamask/smart-accounts-kit/utils'
 import {
@@ -183,12 +183,18 @@ export async function settlePayment(
  * with no smart-account / delegation friction. The seller verifies the
  * on-chain transfer landed and matches the requirement.
  *
- * Checks, in order:
- *   1. tx exists + confirmed + status success
- *   2. tx.to === the USDC asset contract
- *   3. calldata decodes as transfer(payTo, amount) with payTo === seller and
- *      amount >= required
- *   4. tx.from === the claimed buyer (so they can't replay someone else's tx)
+ * We verify the payment by its EFFECT, not its shape: find a USDC `Transfer`
+ * event in this tx's logs that sent >= the price to payTo, originating from the
+ * buyer. This works whether the buyer paid from a plain EOA (outer tx.to ===
+ * USDC) OR a MetaMask smart account (outer tx.to === DelegationManager and the
+ * USDC transfer is an inner call that still emits the Transfer event). Checking
+ * the raw outer tx.to/calldata would wrongly reject every smart-account payment.
+ *
+ * Checks:
+ *   1. tx confirmed + status success
+ *   2. a USDC Transfer(to=payTo, value>=required) exists in the receipt logs
+ *   3. that transfer (or the outer tx) originates from the connected wallet, so
+ *      a buyer can't claim a stranger's payment
  *
  * Replay across calls is prevented by the unlock-store (one tx → one unlock).
  */
@@ -201,42 +207,53 @@ export async function verifyDirectTransfer(params: {
 }): Promise<{ ok: true; amount: bigint } | { ok: false; reason: string }> {
   const { txHash, expectedFrom, payTo, asset, minAmount } = params
 
-  let tx
+  let receipt
   try {
-    tx = await sepoliaPublicClient.getTransaction({ hash: txHash })
+    receipt = await sepoliaPublicClient.waitForTransactionReceipt({ hash: txHash })
   } catch {
     return { ok: false, reason: `transaction ${txHash} not found on Base Sepolia` }
   }
-
-  const receipt = await sepoliaPublicClient.waitForTransactionReceipt({ hash: txHash })
   if (receipt.status !== 'success') {
     return { ok: false, reason: `transfer tx ${txHash} reverted on-chain` }
   }
 
-  if (!tx.to || getAddress(tx.to) !== getAddress(asset)) {
-    return { ok: false, reason: `tx.to (${tx.to}) is not the USDC asset (${asset})` }
+  // The outer tx sender (used as a fallback identity check for smart accounts
+  // whose Transfer.from is the account, not the connected EOA).
+  let txFrom: Hex | undefined
+  try { txFrom = (await sepoliaPublicClient.getTransaction({ hash: txHash })).from } catch { /* optional */ }
+
+  // USDC Transfer events emitted by the asset contract in this tx.
+  const transfers = parseEventLogs({ abi: erc20Abi, eventName: 'Transfer', logs: receipt.logs })
+    .filter((l) => getAddress(l.address) === getAddress(asset))
+  if (transfers.length === 0) {
+    return { ok: false, reason: `no USDC transfer event found in tx ${txHash}` }
   }
 
-  if (getAddress(tx.from) !== getAddress(expectedFrom)) {
-    return { ok: false, reason: `tx sender (${tx.from}) ≠ connected wallet (${expectedFrom})` }
+  const sameAddr = (a?: Hex) => a != null && getAddress(a) === getAddress(expectedFrom)
+  const toPayTo = transfers.filter((t) => {
+    const to = (t.args as { to?: Hex }).to
+    return to != null && getAddress(to) === getAddress(payTo)
+  })
+  if (toPayTo.length === 0) {
+    return { ok: false, reason: `no USDC transfer to payTo ${payTo} in tx ${txHash}` }
   }
 
-  let decoded
-  try {
-    decoded = decodeFunctionData({ abi: erc20Abi, data: tx.input })
-  } catch {
-    return { ok: false, reason: `tx is not a decodable ERC-20 call` }
-  }
-  if (decoded.functionName !== 'transfer') {
-    return { ok: false, reason: `tx is ${decoded.functionName}, expected transfer` }
-  }
-  const [to, amount] = decoded.args as [Hex, bigint]
-  if (getAddress(to) !== getAddress(payTo)) {
-    return { ok: false, reason: `transfer recipient (${to}) ≠ payTo (${payTo})` }
-  }
-  if (amount < minAmount) {
-    return { ok: false, reason: `transfer amount (${amount}) < required (${minAmount})` }
+  for (const t of toPayTo) {
+    const { from, value } = t.args as { from?: Hex; value?: bigint }
+    if ((value ?? 0n) < minAmount) continue
+    if (sameAddr(from) || sameAddr(txFrom)) {
+      return { ok: true, amount: value ?? minAmount }
+    }
   }
 
-  return { ok: true, amount }
+  // A correctly-sized transfer to payTo exists but we couldn't bind it to the
+  // buyer — surface the precise reason.
+  const best = toPayTo.reduce((m, t) => {
+    const v = (t.args as { value?: bigint }).value ?? 0n
+    return v > m ? v : m
+  }, 0n)
+  if (best < minAmount) {
+    return { ok: false, reason: `transfer amount (${best}) < required (${minAmount})` }
+  }
+  return { ok: false, reason: `transfer sender doesn't match the connected wallet (${expectedFrom})` }
 }
