@@ -10,6 +10,7 @@ import { RelayLive } from '../../components/RelayLive'
 import { RevertProof } from '../../components/RevertProof'
 import { BrandLogo } from '../../components/Logo'
 import { loadCalls } from '../../lib/calls-data'
+import { getWorldCupMarkets } from '../../lib/wc-results'
 import { CF } from '../../lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -28,8 +29,10 @@ const RECEIPTS = [
 ]
 
 export default async function WarRoomPage() {
-  // a varied slate of markets to debate (rich sample calls first, then fixtures)
-  const calls = loadCalls().slice(0, 36)
+  // REAL World Cup fixtures (live from ESPN) to debate — upcoming + recent.
+  // Falls back to the sample slate only if the feed is unreachable.
+  const live = await getWorldCupMarkets(Date.now())
+  const calls = live.length ? live : loadCalls().slice(0, 36)
 
   return (
     <main style={{ background: CF.bg, color: CF.ink, minHeight: '100vh', padding: '0 24px 96px' }}>

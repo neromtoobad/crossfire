@@ -4,7 +4,7 @@
 // shown; the agents are graded against the real score. If the feed is briefly
 // unreachable we fall back to the last verified snapshot, never a guess.
 
-import type { AgentRole } from './calls-data.js'
+import type { AgentRole, AgentVote, PublishedCall } from './calls-data.js'
 
 export type SettledCall = { role: AgentRole; vote: 'YES' | 'NO'; confidence: number }
 
@@ -36,7 +36,9 @@ const RANK: Record<string, number> = {
   Panama: 31, Egypt: 33, 'Ivory Coast': 34, Nigeria: 35, Norway: 36, Hungary: 37, Poland: 38,
   Paraguay: 40, Czechia: 41, Tunisia: 42, 'Costa Rica': 45, 'Saudi Arabia': 55, Qatar: 50,
   'South Africa': 60, 'Bosnia-Herzegovina': 70, 'Cape Verde': 72, Jordan: 65, Uzbekistan: 57,
-  'New Zealand': 80, Haiti: 85, Curaçao: 88,
+  'New Zealand': 80, Haiti: 85, Curaçao: 88, Türkiye: 26, Turkey: 26, Scotland: 44, Algeria: 43,
+  Iraq: 58, 'Congo DR': 56, 'DR Congo': 56, Serbia: 33, Cameroon: 52, Peru: 48, Ghana: 53,
+  Jamaica: 64, Sweden: 38, Ukraine: 28, Panama: 41,
 }
 const FLAG: Record<string, string> = {
   Argentina: '🇦🇷', France: '🇫🇷', Spain: '🇪🇸', England: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', Brazil: '🇧🇷', Portugal: '🇵🇹',
@@ -142,6 +144,79 @@ function formatDay(iso?: string): string {
   if (!m) return 'Group stage'
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   return `${months[Number(m[2]) - 1]} ${Number(m[3])}`
+}
+
+// ── War Room markets: REAL upcoming + recent fixtures (debate topics) ───────
+// Pulled live from ESPN so the room debates actual World Cup matches, not a
+// fictional group draw. Each is a PublishedCall so Fade/Follow works.
+
+const MKT_ADDR = '0xc2384369ad925fe5570e1b6311d84be21a7ac7a7' as const
+const NOW = 1780_700_000_000
+
+function oneLiner(role: AgentRole, fav: string, dog: string): string {
+  switch (role) {
+    case 'MacroScout': return `${fav} control the shape — they dictate tempo and make ${dog} chase the game.`
+    case 'NewsHawk': return `${fav} go in the fitter, fuller side; ${dog}'s team-news is the worry, not theirs.`
+    case 'CrowdPulse': return `${fav} carry the belief and the momentum here — ${dog} tend to fold when it tightens.`
+    case 'BookWatcher': return `The numbers favour ${fav}: better xG profile and chance quality than ${dog}.`
+    default: return `Everyone's on ${fav}. That's exactly when they slip — I'll take ${dog} to make it awkward.`
+  }
+}
+
+function makeMarketCall(fav: string, dog: string, favProb: number, dayLabel: string, id: string): PublishedCall {
+  const votes: AgentVote[] = ROLES.map((role) => role === 'Skeptic'
+    ? { role, vote: 'NO', confidence: 0.56, oneLiner: oneLiner(role, fav, dog) }
+    : { role, vote: 'YES', confidence: Math.min(0.9, Math.max(0.5, Math.round((favProb - 0.04) * 100) / 100)), oneLiner: oneLiner(role, fav, dog) })
+  const bond = Math.round((2 + favProb * 4) * 100) / 100
+  const implied = Math.round((favProb - 0.05) * 100) / 100
+  return {
+    id, marketId: id, marketTitle: `${fav} to beat ${dog}? · ${dayLabel}`, marketAddress: MKT_ADDR,
+    side: 'YES', selectedSideProb: Math.round(favProb * 100) / 100, marketImpliedYes: implied,
+    edge: Math.round((favProb - implied) * 100) / 100, bondUsdc: bond, unlockUsdc: 0.1,
+    publishedAt: NOW, publishedBy: 'The Panel', votes, skepticVerdict: 'APPROVED',
+    locked: {
+      thesis: `${fav} vs ${dog}, 2026 World Cup. The panel backs ${fav} at ${Math.round(favProb * 100)}% against a ${Math.round(implied * 100)}% line — control, quality and squad depth. A live market; it settles via UMA's Optimistic Oracle on the real result.`,
+      evidenceUrls: [{ label: `${fav} vs ${dog} preview`, url: 'https://www.espn.com/soccer/', signal: 'YES' }],
+      sizingRationale: `Bond ${bond} USDC — scaled to the edge over the line.`,
+      counterarguments: `${dog}'s upset path: a fast start that forces ${fav} to chase the game late.`,
+    },
+  }
+}
+
+let mktCache: { at: number; value: PublishedCall[] } | null = null
+
+// Real World Cup fixtures (upcoming first, then recent) as debate markets.
+export async function getWorldCupMarkets(nowMs: number, maxN = 30): Promise<PublishedCall[]> {
+  if (mktCache && nowMs - mktCache.at < TTL) return mktCache.value
+  const days: { ymd: string; offset: number }[] = []
+  for (let i = -1; i <= 6; i++) days.push({ ymd: ymd(new Date(nowMs + i * 86400_000)), offset: i })
+
+  const upcoming: PublishedCall[] = []
+  const recent: PublishedCall[] = []
+  try {
+    const pages = await Promise.all(days.map((d) =>
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${d.ymd}`,
+        { headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' }, signal: AbortSignal.timeout(6000) })
+        .then((r) => (r.ok ? r.json() : null)).catch(() => null)))
+
+    for (let di = 0; di < pages.length; di++) {
+      const evs = (pages[di]?.events ?? []) as EspnEvent[]
+      for (const e of evs) {
+        const comp = e.competitions?.[0]
+        const cs = comp?.competitors ?? []
+        const an = cs[0]?.team?.displayName, bn = cs[1]?.team?.displayName
+        if (!an || !bn) continue
+        const [fav, dog] = rankOf(an) <= rankOf(bn) ? [an, bn] : [bn, an]
+        const favProb = Math.min(0.85, Math.max(0.52, 0.5 + (rankOf(dog) - rankOf(fav)) * 0.006))
+        const call = makeMarketCall(fav, dog, favProb, formatDay(e.date), `wc-${e.id ?? `${fav}-${dog}-${days[di].ymd}`}`)
+        if (comp?.status?.type?.completed) recent.push(call); else upcoming.push(call)
+      }
+    }
+  } catch { /* fall through */ }
+
+  const value = [...upcoming, ...recent].slice(0, maxN)
+  mktCache = { at: nowMs, value }
+  return value
 }
 
 // Last-verified fallback (real ESPN results, used only if the feed is down).
