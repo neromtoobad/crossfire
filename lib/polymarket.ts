@@ -5,7 +5,10 @@
 // slug is unknown / the market is closed / the API misbehaves, so callers
 // can fall back to the chain-implied price without crashing.
 
-import { setTimeout as sleep } from 'node:timers/promises'
+// bundle-safe sleep (no node: imports — this module reaches client bundles
+// via resolutions/calls-data import chains, and Turbopack can't externalize
+// node:timers/promises there)
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 export type PolymarketPrice = {
   slug: string
