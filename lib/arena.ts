@@ -3,22 +3,22 @@
 // surfaces always render in the broadcast look.
 
 export const A = {
-  bg:        '#03070C', // deep blue-black page
-  bg2:       '#070E16',
-  panel:     '#0B121B', // dark slate panel
-  panel2:    '#0F1822',
-  border:    'rgba(232,194,84,0.16)', // faint gold hairline
-  borderDim: '#1A2430',
+  bg:        '#0A0806', // stadium-night warm black (matches --cf-bg)
+  bg2:       '#110D08',
+  panel:     '#14110B', // warm slate panel
+  panel2:    '#1B1710',
+  border:    'rgba(232,194,84,0.18)', // faint gold hairline
+  borderDim: '#2A2417',
 
-  gold:       '#E8C254',
-  goldBright: '#F4DA82',
+  gold:       '#EFC75A',
+  goldBright: '#F7DE8A',
   goldDim:    '#9A7B2E',
-  goldTint:   'rgba(232,194,84,0.08)',
+  goldTint:   'rgba(239,199,90,0.09)',
 
-  cream: '#F0E9D7', // primary heading text
-  text:  '#CFC9BB', // body
-  text2: '#8E8979', // secondary
-  text3: '#5F5B4E', // faint/labels
+  cream: '#F7EFDA', // primary heading text
+  text:  '#D9CEB3', // body
+  text2: '#A39879', // secondary
+  text3: '#6C6452', // faint/labels
 
   green:     '#2BD46E',
   greenTint: 'rgba(43,212,110,0.12)',

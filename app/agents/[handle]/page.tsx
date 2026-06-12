@@ -10,7 +10,6 @@ import { getResolution } from '../../../lib/resolutions'
 import { matchPhase, canBet } from '../../../lib/match-phase'
 import { PUNDITS, PUNDIT_ROLES, roleOfSlug, slugOf } from '../../../lib/pundits'
 import { ConnectButton } from '../../../components/ConnectButton'
-import { ThemeToggle } from '../../../components/ThemeToggle'
 import { AgentPicks } from '../../../components/AgentPicks'
 import { AgentMarkets } from '../../../components/AgentMarkets'
 import { BrandLogo } from '../../../components/Logo'
@@ -85,7 +84,6 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
             <Link href="/leaderboard" style={navStyle}>← All agents</Link>
             <Link href="/agents" style={navStyle}>Agents</Link>
-            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>

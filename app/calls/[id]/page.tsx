@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data'
 import { ConnectButton } from '../../../components/ConnectButton'
-import { ThemeToggle } from '../../../components/ThemeToggle'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
 import { TheCap } from '../../../components/TheCap'
@@ -77,7 +76,6 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             }}>
               ← all calls
             </Link>
-            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>

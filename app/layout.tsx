@@ -12,7 +12,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const initialState = cookieToInitialState(getConfig(), (await headers()).get('cookie'))
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -24,51 +24,27 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
-        {/* No-flash theme: set data-theme before first paint from the saved
-            choice. Content pages default LIGHT (the "matchday paper"); the home
-            arena + the debate stage stay dark by design. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var t;try{t=localStorage.getItem('cf-theme');}catch(e){}document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light');})();`,
-          }}
-        />
         <style>{`
-          /* ── theme variables ─────────────────────────────────────────── */
-          :root, :root[data-theme="light"] {
-            /* the "matchday paper" — warm ivory, ink-on-cream, gold brand */
-            --cf-bg: #FAF6EE; --cf-surface: #FFFDF8; --cf-surface-2: #F4EEDF; --cf-surface-3: #EDE5D2;
-            --cf-ink: #1C1917; --cf-ink-2: #57534E; --cf-ink-3: #8A8478; --cf-ink-4: #ABA496;
-            --cf-line: #E7DFCC; --cf-line-2: #D5CBB2; --cf-line-dark: #1C1917;
-            --cf-bull: #1D4ED8; --cf-bull-tint: #EEF3FF; --cf-bull-ink: #1E3A8A;
-            --cf-bear: #BC2424; --cf-bear-tint: #FCEFEC; --cf-bear-ink: #7F1D1D;
-            --cf-amber: #B45309; --cf-amber-tint: #FBEFCB; --cf-gold: #9C7510; --cf-gold-tint: #F8EFD4;
-            --cf-positive: #15803D; --cf-positive-tint: #E9F7EC;
-            --cf-shadow-card: 0 1px 2px rgba(60,48,22,0.06);
-            --cf-shadow-hover: 0 4px 14px rgba(60,48,22,0.09);
-            --cf-shadow-pop: 0 8px 28px rgba(60,48,22,0.12);
-            --cf-noise: rgba(60,48,22,0.03);
-            --cf-noise-opacity: 0.55;
-            --cf-selection-bg: #1C1917; --cf-selection-fg: #FAF6EE;
-            --cf-underline: rgba(156,117,16,0.4);
-            color-scheme: light;
-          }
-          :root[data-theme="dark"] {
-            /* arena broadcast-gold — matches lib/arena.ts so the whole app reads
-               like the Live World Cup Arena landing */
-            --cf-bg: #03070C; --cf-surface: #0B121B; --cf-surface-2: #0F1822; --cf-surface-3: #141E2A;
-            --cf-ink: #F0E9D7; --cf-ink-2: #CFC9BB; --cf-ink-3: #8E8979; --cf-ink-4: #5F5B4E;
-            --cf-line: #1A2430; --cf-line-2: #2A3645; --cf-line-dark: #E8C254;
-            --cf-bull: #5B8DEF; --cf-bull-tint: #16233C; --cf-bull-ink: #BBD4FF;
-            --cf-bear: #F05A5A; --cf-bear-tint: #2E1619; --cf-bear-ink: #FECDD3;
-            --cf-amber: #E8C254; --cf-amber-tint: #2A2210; --cf-gold: #E8C254; --cf-gold-tint: #2A2410;
-            --cf-positive: #2BD46E; --cf-positive-tint: #0C2A1E;
-            --cf-shadow-card: 0 1px 2px rgba(0,0,0,0.6);
-            --cf-shadow-hover: 0 8px 22px rgba(0,0,0,0.65);
-            --cf-shadow-pop: 0 12px 34px rgba(0,0,0,0.7);
-            --cf-noise: rgba(232,194,84,0.018);
+          /* ── CROSSFIRE "Trophy Gold" — one theme, no toggle ──────────────
+             Stadium-night warm black lit by World Cup gold. Pitch-green YES,
+             red NO, gold for the brand + every call-to-action. Defined on :root
+             and ANY data-theme value so a stale saved preference can never
+             surface a light mode again. */
+          :root, :root[data-theme] {
+            --cf-bg: #0A0806; --cf-surface: #14110B; --cf-surface-2: #1B1710; --cf-surface-3: #221D14;
+            --cf-ink: #F7EFDA; --cf-ink-2: #D9CEB3; --cf-ink-3: #A39879; --cf-ink-4: #6C6452;
+            --cf-line: #2A2417; --cf-line-2: #3D341F; --cf-line-dark: #E8C254;
+            --cf-bull: #2FCB7E; --cf-bull-tint: #0E2A1C; --cf-bull-ink: #A6ECC9;
+            --cf-bear: #F0584F; --cf-bear-tint: #2C1411; --cf-bear-ink: #FFC9C2;
+            --cf-amber: #F0C75E; --cf-amber-tint: #2A2210; --cf-gold: #EFC75A; --cf-gold-tint: #2A2410;
+            --cf-positive: #2FCB7E; --cf-positive-tint: #0E2A1C;
+            --cf-shadow-card: 0 1px 2px rgba(0,0,0,0.5);
+            --cf-shadow-hover: 0 10px 28px rgba(0,0,0,0.6), 0 0 0 1px rgba(232,194,84,0.10);
+            --cf-shadow-pop: 0 16px 42px rgba(0,0,0,0.72);
+            --cf-noise: rgba(232,194,84,0.022);
             --cf-noise-opacity: 0.5;
-            --cf-selection-bg: #E8C254; --cf-selection-fg: #03070C;
-            --cf-underline: rgba(232,194,84,0.35);
+            --cf-selection-bg: #EFC75A; --cf-selection-fg: #0A0806;
+            --cf-underline: rgba(239,199,90,0.42);
             color-scheme: dark;
           }
 
@@ -82,7 +58,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             text-rendering: optimizeLegibility;
             font-feature-settings: 'ss01', 'cv11';
           }
-          html { transition: background-color 0.25s ease; }
+          /* the gold: a spotlit trophy glow pooled at the top, a faint warm
+             wash from the right — fixed so it sits behind the whole scroll. */
+          body {
+            background:
+              radial-gradient(120% 72% at 50% -10%, rgba(239,199,90,0.13), transparent 56%),
+              radial-gradient(70% 48% at 100% 2%, rgba(239,199,90,0.06), transparent 60%),
+              var(--cf-bg);
+            background-attachment: fixed;
+          }
           body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             font-size: 15px;
