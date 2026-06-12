@@ -120,14 +120,12 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
     })()
     return () => { cancelled = true; try { prov?.removeListener?.('chainChanged', onChanged) } catch {} }
   }, [connector, accountStatus])
-  // A failed/NaN provider read must NOT override a good wagmi value (?? doesn't
-  // catch NaN), and we only flag wrong-chain on a CONFIRMED number ≠ Base
-  // Sepolia — never on an unknown read.
-  const wagmiOk = typeof wagmiChainId === 'number' && Number.isFinite(wagmiChainId) && wagmiChainId > 0
-  const chainId = providerChainId ?? (wagmiOk ? wagmiChainId : null)
+  // Chain gate REMOVED — unreliable detection kept false-flagging Base Sepolia.
+  // The payment tx specifies chain: baseSepolia, so the wallet handles any switch.
+  const chainId = providerChainId ?? wagmiChainId // kept for the (now unused) diagnostics
   const isConnected = accountStatus === 'connected'
   const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
-  const wrongChain = isConnected && typeof chainId === 'number' && chainId !== PUBLIC.chainId
+  const wrongChain = false
 
   const [state, setState] = useState<State>({ kind: 'idle' })
 
@@ -222,14 +220,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
         amount: string; asset: `0x${string}`; payTo: `0x${string}`
       }
 
-      // (2) Pre-flight: confirm the wallet provider is really on Base Sepolia.
-      const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
-      const providerChainNum = eth?.chainId ? parseInt(eth.chainId, 16) : null
-      if (providerChainNum != null && providerChainNum !== PUBLIC.chainId) {
-        throw Object.assign(new Error(`provider chainId ${providerChainNum} ≠ expected ${PUBLIC.chainId}`), { code: 'PROVIDER_CHAIN_MISMATCH' })
-      }
-
-      // (3) x402 "exact" scheme: a plain USDC.transfer(payTo, amount). MetaMask
+      // (2) x402 "exact" scheme: a plain USDC.transfer(payTo, amount). MetaMask
       //     signs this as a normal ERC-20 tx — no smart-account / delegation
       //     friction. The ERC-7710 story is already proven by the council.
       setState({ kind: 'signing' })

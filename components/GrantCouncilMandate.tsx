@@ -95,13 +95,11 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
     })()
     return () => { cancelled = true; try { prov?.removeListener?.('chainChanged', onChange) } catch {} }
   }, [connector, status])
-  // A failed/NaN provider read must NOT override a good wagmi value (?? doesn't
-  // catch NaN), and we only flag wrong-chain when the chain is a CONFIRMED real
-  // number that differs from Base Sepolia — never on an unknown read (that was
-  // the false "switch" with no chainId shown).
-  const wagmiOk = typeof wagmiChainId === 'number' && Number.isFinite(wagmiChainId) && wagmiChainId > 0
-  const chainId = providerChainId ?? (wagmiOk ? wagmiChainId : null)
-  const wrongChain = isConnected && typeof chainId === 'number' && chainId !== PUBLIC.chainId
+  // Chain gate REMOVED. Client-side chain detection was unreliable and kept
+  // false-flagging Base Sepolia. The grant request itself specifies
+  // chainId: PUBLIC.chainId, so MetaMask handles any real switch on its own.
+  const chainId = providerChainId ?? wagmiChainId // kept for the (now unused) diagnostics
+  const wrongChain = false
 
   const [state, setState] = useState<State>({ kind: 'idle' })
 
