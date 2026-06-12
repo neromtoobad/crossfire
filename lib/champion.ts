@@ -10,8 +10,10 @@
 // the Vault to show a backed agent's live standing.
 
 import type { AgentStats } from './leaderboard.js'
+import { ALL_ROLES } from './leaderboard.js'
 import { PUNDITS } from './pundits.js'
 import type { AgentRole } from './calls-data.js'
+import type { SettledMatch } from './wc-results.js' // type only — no fetch dragged in
 
 export type ChampionStanding = {
   role: AgentRole
@@ -78,4 +80,63 @@ export function championStandings(stats: AgentStats[]): ChampionStanding[] {
 // Convenience: look up one agent's standing by handle (for the Vault).
 export function standingOf(standings: ChampionStanding[], handle: string): ChampionStanding | undefined {
   return standings.find((s) => s.handle.toLowerCase() === handle.toLowerCase())
+}
+
+// ── THIS WORLD CUP (2026) only ──────────────────────────────────────────────
+// Career standings (above) grade every call ever, including the backtest. These
+// grade ONLY the 2026 fixtures actually played, against the real ESPN result —
+// the agents' record in the tournament happening right now. Pure: the caller
+// passes in getPlayedMatches() (server-only fetch).
+
+export type WCRecord = {
+  role: AgentRole
+  handle: string
+  portrait: string
+  color: string
+  persona: string
+  rank: number
+  played: number
+  won: number
+  lost: number
+  winRate: number
+}
+
+export function worldCupRecords(matches: SettledMatch[]): WCRecord[] {
+  const rows = ALL_ROLES.map((role) => {
+    let played = 0, won = 0
+    for (const m of matches) {
+      const c = m.calls.find((cc) => cc.role === role)
+      if (!c) continue
+      played += 1
+      if (c.vote === m.outcome) won += 1
+    }
+    const p = PUNDITS[role]
+    return {
+      role, handle: p.handle, portrait: p.portrait, color: p.color, persona: p.persona,
+      played, won, lost: played - won, winRate: played ? won / played : 0,
+    }
+  })
+  // rank by this-tournament win rate, then volume of correct calls
+  return rows
+    .sort((a, b) => b.winRate - a.winRate || b.won - a.won || b.played - a.played)
+    .map((r, i) => ({ ...r, rank: i + 1 }))
+}
+
+// One agent's 2026 scoreboard — the fixtures it called, with HIT/MISS, for the
+// agent page.
+export type WCMatchResult = {
+  id: string; home: string; away: string; score: string; stage: string; favorite: string
+  vote: 'YES' | 'NO'; outcome: 'YES' | 'NO'; hit: boolean
+}
+export function agentWorldCup(matches: SettledMatch[], role: AgentRole): { played: number; won: number; results: WCMatchResult[] } {
+  const results: WCMatchResult[] = []
+  for (const m of matches) {
+    const c = m.calls.find((cc) => cc.role === role)
+    if (!c) continue
+    results.push({
+      id: m.id, home: m.home, away: m.away, score: m.score, stage: m.stage, favorite: m.favorite,
+      vote: c.vote, outcome: m.outcome, hit: c.vote === m.outcome,
+    })
+  }
+  return { played: results.length, won: results.filter((r) => r.hit).length, results }
 }

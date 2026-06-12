@@ -7,6 +7,8 @@ import { notFound } from 'next/navigation'
 import { loadCalls } from '../../../lib/calls-data'
 import { computeAgentStats } from '../../../lib/leaderboard'
 import { getResolution } from '../../../lib/resolutions'
+import { getPlayedMatches } from '../../../lib/wc-results'
+import { agentWorldCup } from '../../../lib/champion'
 import { matchPhase, canBet } from '../../../lib/match-phase'
 import { PUNDITS, PUNDIT_ROLES, roleOfSlug, slugOf } from '../../../lib/pundits'
 import { ConnectButton } from '../../../components/ConnectButton'
@@ -28,6 +30,11 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
   const me = stats.find((s) => s.role === role)!
   const rank = [...stats].sort((a, b) => b.winRate - a.winRate).findIndex((s) => s.role === role) + 1
   const winPct = me.callsResolved ? Math.round(me.winRate * 100) : null
+
+  // this agent's record in THE 2026 World Cup — the fixtures actually played
+  const myWC = agentWorldCup(await getPlayedMatches(Date.now()), role)
+  const myWCrate = myWC.played ? myWC.won / myWC.played : 0
+  const wcWinColor = myWCrate >= 0.66 ? CF.bull : myWCrate >= 0.34 ? CF.amber : CF.bear
 
   // this agent's track record: its vote + reasoning per call, with outcome
   const record = calls
@@ -149,6 +156,43 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
               </span>
             )
           })}
+        </section>
+
+        {/* THIS WORLD CUP — the agent's scoreboard on the 2026 fixtures played */}
+        <section style={{ marginBottom: 34 }}>
+          <div className="mono" style={{ fontSize: 11, letterSpacing: 2.2, color: CF.gold, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="cf-live-dot" aria-hidden /> THIS WORLD CUP · 2026
+          </div>
+          {myWC.played === 0 ? (
+            <p style={{ fontFamily: CF.body, fontSize: 13.5, color: CF.ink3, lineHeight: 1.55, margin: '4px 0 0', maxWidth: 620 }}>
+              {p.handle} hasn’t had a fixture settle yet — the scoreboard fills in as the
+              2026 matches are played and graded on the real result.
+            </p>
+          ) : (
+            <>
+              <p style={{ fontFamily: CF.body, fontSize: 13.5, color: CF.ink3, lineHeight: 1.55, margin: '4px 0 14px', maxWidth: 620 }}>
+                {p.handle}’s record on the fixtures already played at the 2026 World Cup —
+                graded live against the real result. <strong style={{ color: wcWinColor }}>{myWC.won}/{myWC.played} right</strong>.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {myWC.results.map((m) => (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', background: CF.surface, border: `1px solid ${CF.line}`, borderLeft: `3px solid ${m.hit ? CF.positive : CF.bear}`, borderRadius: CF.radius.md }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: CF.body, fontSize: 13.5, fontWeight: 600, color: CF.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {m.home} <span style={{ color: CF.ink4 }}>{m.score}</span> {m.away}
+                      </div>
+                      <div className="mono" style={{ fontSize: 10.5, color: CF.ink3, marginTop: 2 }}>
+                        {m.stage} · called <span style={{ color: m.vote === 'YES' ? CF.bull : CF.bear, fontWeight: 600 }}>{m.vote === 'YES' ? `${m.favorite} win` : `not ${m.favorite}`}</span>
+                      </div>
+                    </div>
+                    <span className="mono" style={{ fontSize: 10.5, fontWeight: 700, color: m.hit ? CF.positive : CF.bear, whiteSpace: 'nowrap' }}>
+                      {m.hit ? '✓ HIT' : '✗ MISS'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
         {/* live markets — back or fade THIS agent */}
