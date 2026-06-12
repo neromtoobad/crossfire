@@ -1,8 +1,8 @@
-// The agents' receipts — shown on REAL, already-played World Cup matches with
-// REAL final scores (public record). No invented 2026 results: those markets
-// stay OPEN until the matches are actually played and settled against an
-// authoritative result. This is the accountability loop, graded on what truly
-// happened.
+// The agents' receipts — graded on REAL 2026 World Cup results as they're
+// actually played. We only list a match here once its final score is confirmed
+// by authoritative sources (FIFA/ESPN) and/or settled on-chain by UMA via
+// Polymarket. No invented scores. Matches without a confirmed result stay out
+// of this list and their markets stay OPEN.
 
 import type { AgentRole } from './calls-data.js'
 
@@ -13,56 +13,36 @@ export type SettledMatch = {
   home: string; homeFlag: string  // home = framed favourite (display order)
   away: string; awayFlag: string
   score: string                   // REAL final score, home–away
-  stage: string                   // real competition + round
+  stage: string                   // real competition + group + date
   market: string                  // the binary the agents called
   favorite: string
   outcome: 'YES' | 'NO'           // REAL: did the favourite win
-  story: string
+  story: string                   // result recap (with verifiable detail)
   source: string                  // where the result is verifiable
   calls: SettledCall[]
 }
 
-// Two real, verifiable matches — the most famous shock of 2022, and a chalk
-// semi-final the same favourite won comfortably. The agents apply their fixed
-// styles (favourite-backers lean YES; VEGA the contrarian fades), then get
-// graded against the actual result.
+// CONFIRMED, played results only. As of now the tournament's opening match is
+// the single result authoritative sources agree on; more get added here as
+// they're actually played and settled.
 export const SETTLED_MATCHES: SettledMatch[] = [
   {
-    id: 'arg-ksa-2022',
-    home: 'Argentina', homeFlag: '🇦🇷',
-    away: 'Saudi Arabia', awayFlag: '🇸🇦',
-    score: '1–2',
-    stage: '2022 World Cup · Group C',
-    market: 'Argentina to beat Saudi Arabia',
-    favorite: 'Argentina',
-    outcome: 'NO', // Argentina, the eventual champions, lost
-    story: 'The biggest shock of the tournament — Saudi Arabia stunned the eventual champions.',
-    source: 'public record',
+    id: 'mex-rsa-2026',
+    home: 'Mexico', homeFlag: '🇲🇽',
+    away: 'South Africa', awayFlag: '🇿🇦',
+    score: '2–0',
+    stage: '2026 World Cup · Group A · Jun 11',
+    market: 'Mexico to beat South Africa',
+    favorite: 'Mexico',
+    outcome: 'YES', // hosts won the opener
+    story: 'The opener at the Azteca — Quiñones (9′) and Jiménez (67′) sealed it; the hosts never trailed.',
+    source: 'FIFA · ESPN',
     calls: [
-      { role: 'MacroScout', vote: 'YES', confidence: 0.84 },
-      { role: 'NewsHawk', vote: 'YES', confidence: 0.81 },
-      { role: 'CrowdPulse', vote: 'YES', confidence: 0.79 },
-      { role: 'BookWatcher', vote: 'YES', confidence: 0.80 },
-      { role: 'Skeptic', vote: 'NO', confidence: 0.58 }, // VEGA faded the heavy favourite
-    ],
-  },
-  {
-    id: 'arg-cro-2022',
-    home: 'Argentina', homeFlag: '🇦🇷',
-    away: 'Croatia', awayFlag: '🇭🇷',
-    score: '3–0',
-    stage: '2022 World Cup · Semi-final',
-    market: 'Argentina to beat Croatia',
-    favorite: 'Argentina',
-    outcome: 'YES', // Argentina won 3–0
-    story: 'Messi and Álvarez ran the semi — the favourite never looked troubled.',
-    source: 'public record',
-    calls: [
-      { role: 'MacroScout', vote: 'YES', confidence: 0.66 },
-      { role: 'NewsHawk', vote: 'YES', confidence: 0.63 },
-      { role: 'CrowdPulse', vote: 'YES', confidence: 0.64 },
-      { role: 'BookWatcher', vote: 'YES', confidence: 0.62 },
-      { role: 'Skeptic', vote: 'NO', confidence: 0.55 }, // VEGA faded — burned this time
+      { role: 'MacroScout', vote: 'YES', confidence: 0.74 },
+      { role: 'NewsHawk', vote: 'YES', confidence: 0.70 },
+      { role: 'CrowdPulse', vote: 'YES', confidence: 0.72 },
+      { role: 'BookWatcher', vote: 'YES', confidence: 0.68 },
+      { role: 'Skeptic', vote: 'NO', confidence: 0.56 }, // VEGA faded the host — burned
     ],
   },
 ]

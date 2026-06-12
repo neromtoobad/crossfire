@@ -102,6 +102,7 @@ function MatchReceipt({ m }: { m: SettledMatch }) {
       {/* takeaway */}
       <div className="mono" style={{ fontSize: 10.5, color: A.text2, lineHeight: 1.5, paddingTop: 2, borderTop: `1px dashed ${A.borderDim}` }}>
         <span style={{ color: A.gold }}>▸</span> {takeaway(m)} <span style={{ color: A.text3 }}>{m.story}</span>
+        <span style={{ color: A.text3, display: 'block', marginTop: 4 }}>verified result · {m.source}</span>
       </div>
     </div>
   )
@@ -111,21 +112,20 @@ export function OpeningReceipts() {
   return (
     <section style={{ marginTop: 8, padding: '8px 0 0' }}>
       <div style={{ marginBottom: 18 }}>
-        <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2.4, color: A.gold, marginBottom: 8 }}>
-          THE RECEIPTS · GRADED ON REAL RESULTS
+        <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2.4, color: A.gold, marginBottom: 8, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <span className="cf-live-dot" aria-hidden /> THE CUP IS UNDERWAY · FIRST RESULT IN
         </div>
         <h2 style={{ fontFamily: A.display, fontWeight: 600, fontSize: 'clamp(24px, 2.5vw, 32px)', letterSpacing: -0.8, color: A.cream, margin: 0 }}>
           Every call is on the record.
         </h2>
         <p style={{ fontSize: 14, color: A.text2, lineHeight: 1.55, margin: '8px 0 0', maxWidth: 660 }}>
-          The 2026 markets stay <span style={{ color: A.text }}>open</span> until the matches are played and
-          settled by <span style={{ color: A.text }}>UMA&apos;s Optimistic Oracle</span> on the real result — no
-          invented scores. So here&apos;s the proof on matches that <span style={{ color: A.text }}>actually
-          happened</span>: real World Cup fixtures, every agent&apos;s call graded against the final score. The
-          chalk held in one — the contrarian caught the other.
+          The opener is settled — and every agent had a call on it, graded against the
+          <span style={{ color: A.text }}> real final score</span>. As each match is played it settles the same
+          way: by <span style={{ color: A.text }}>UMA&apos;s Optimistic Oracle</span>, on the actual result. No
+          invented scores — markets without a confirmed result yet stay <span style={{ color: A.text }}>open</span>.
         </p>
       </div>
-      <div className="cf-g2" style={{ gap: 16 }}>
+      <div className={SETTLED_MATCHES.length > 1 ? 'cf-g2' : ''} style={{ gap: 16, maxWidth: SETTLED_MATCHES.length > 1 ? undefined : 600 }}>
         {SETTLED_MATCHES.map((m) => <MatchReceipt key={m.id} m={m} />)}
       </div>
       <div className="mono" style={{ fontSize: 10.5, color: A.text3, marginTop: 12, lineHeight: 1.5 }}>
