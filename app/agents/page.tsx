@@ -3,6 +3,7 @@
 
 import Link from 'next/link'
 import { ConnectButton } from '../../components/ConnectButton'
+import { ThemeToggle } from '../../components/ThemeToggle'
 import { BrandLogo } from '../../components/Logo'
 import { loadCalls } from '../../lib/calls-data'
 import { computeAgentStats } from '../../lib/leaderboard'
@@ -27,6 +28,7 @@ export default function AgentsIndex() {
             <Link href="/" style={navStyle}>← Arena</Link>
             <Link href="/leaderboard" style={navStyle}>Standings</Link>
             <Link href="/lab" style={navStyle}>War Room</Link>
+            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>

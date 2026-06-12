@@ -5,6 +5,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { ConnectButton } from '../../components/ConnectButton'
+import { ThemeToggle } from '../../components/ThemeToggle'
 import { WarRoom } from '../../components/WarRoom'
 import { RelayLive } from '../../components/RelayLive'
 import { RevertProof } from '../../components/RevertProof'
@@ -49,6 +50,7 @@ export default async function WarRoomPage() {
             <Link href="/agents" style={navLinkStyle}>Agents</Link>
             <Link href="/leaderboard" style={navLinkStyle}>Standings</Link>
             <span style={{ width: 8 }} />
+            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>

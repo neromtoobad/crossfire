@@ -4,6 +4,7 @@
 
 import Link from 'next/link'
 import { ConnectButton } from '../../components/ConnectButton'
+import { ThemeToggle } from '../../components/ThemeToggle'
 import { CouncilFeedSection } from '../../components/CouncilFeedSection'
 import { BrandLogo } from '../../components/Logo'
 import { loadCallsWithPolymarket } from '../../lib/calls-data'
@@ -33,6 +34,7 @@ export default async function Markets() {
             <Link href="/" style={navStyle}>← Arena</Link>
             <Link href="/leaderboard" style={navStyle}>Standings</Link>
             <Link href="/lab" style={navStyle}>War Room</Link>
+            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>

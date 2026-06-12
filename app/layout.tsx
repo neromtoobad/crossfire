@@ -24,33 +24,32 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
-        {/* No-flash theme: set data-theme before first paint from saved choice
-            or the OS preference, so dark never flashes light on load. */}
+        {/* No-flash theme: set data-theme before first paint from the saved
+            choice. Content pages default LIGHT (the "matchday paper"); the home
+            arena + the debate stage stay dark by design. */}
         <script
           dangerouslySetInnerHTML={{
-            // The arena is a committed dark design — force dark everywhere and
-            // clear any stale light preference so the landing and inner pages
-            // never diverge.
-            __html: `(function(){try{localStorage.removeItem('cf-theme');}catch(e){}document.documentElement.setAttribute('data-theme','dark');})();`,
+            __html: `(function(){var t;try{t=localStorage.getItem('cf-theme');}catch(e){}document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light');})();`,
           }}
         />
         <style>{`
           /* ── theme variables ─────────────────────────────────────────── */
           :root, :root[data-theme="light"] {
-            --cf-bg: #FAFAF7; --cf-surface: #FFFFFF; --cf-surface-2: #F4F4EE; --cf-surface-3: #EDEBE3;
-            --cf-ink: #0B0C0F; --cf-ink-2: #52525B; --cf-ink-3: #8B8B92; --cf-ink-4: #A1A1AA;
-            --cf-line: #E7E5E0; --cf-line-2: #D4D4CE; --cf-line-dark: #0B0C0F;
-            --cf-bull: #1D4ED8; --cf-bull-tint: #EFF4FF; --cf-bull-ink: #1E3A8A;
-            --cf-bear: #B91C1C; --cf-bear-tint: #FEF2F2; --cf-bear-ink: #7F1D1D;
-            --cf-amber: #B45309; --cf-amber-tint: #FEF3C7; --cf-gold: #A16207; --cf-gold-tint: #FEF7E0;
-            --cf-positive: #15803D; --cf-positive-tint: #ECFDF5;
-            --cf-shadow-card: 0 1px 2px rgba(11,12,15,0.04);
-            --cf-shadow-hover: 0 4px 12px rgba(11,12,15,0.06);
-            --cf-shadow-pop: 0 6px 24px rgba(11,12,15,0.08);
-            --cf-noise: rgba(11,12,15,0.025);
+            /* the "matchday paper" — warm ivory, ink-on-cream, gold brand */
+            --cf-bg: #FAF6EE; --cf-surface: #FFFDF8; --cf-surface-2: #F4EEDF; --cf-surface-3: #EDE5D2;
+            --cf-ink: #1C1917; --cf-ink-2: #57534E; --cf-ink-3: #8A8478; --cf-ink-4: #ABA496;
+            --cf-line: #E7DFCC; --cf-line-2: #D5CBB2; --cf-line-dark: #1C1917;
+            --cf-bull: #1D4ED8; --cf-bull-tint: #EEF3FF; --cf-bull-ink: #1E3A8A;
+            --cf-bear: #BC2424; --cf-bear-tint: #FCEFEC; --cf-bear-ink: #7F1D1D;
+            --cf-amber: #B45309; --cf-amber-tint: #FBEFCB; --cf-gold: #9C7510; --cf-gold-tint: #F8EFD4;
+            --cf-positive: #15803D; --cf-positive-tint: #E9F7EC;
+            --cf-shadow-card: 0 1px 2px rgba(60,48,22,0.06);
+            --cf-shadow-hover: 0 4px 14px rgba(60,48,22,0.09);
+            --cf-shadow-pop: 0 8px 28px rgba(60,48,22,0.12);
+            --cf-noise: rgba(60,48,22,0.03);
             --cf-noise-opacity: 0.55;
-            --cf-selection-bg: #0B0C0F; --cf-selection-fg: #FAFAF7;
-            --cf-underline: rgba(11,12,15,0.25);
+            --cf-selection-bg: #1C1917; --cf-selection-fg: #FAF6EE;
+            --cf-underline: rgba(156,117,16,0.4);
             color-scheme: light;
           }
           :root[data-theme="dark"] {

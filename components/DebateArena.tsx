@@ -116,7 +116,8 @@ export function DebateArena({
         for (let i = 0; i < bins; i++) spectrum[i] = 0.3 + 0.5 * Math.abs(Math.sin(time * 6 + i * 0.5)) * (1 - i / bins)
       }
       const spPundit = sp ? PUNDITS[sp.role] : null
-      const accent = spPundit?.color ?? CF.gold
+      // literal hex — canvas fillStyle can't resolve var() tokens
+      const accent = spPundit?.color ?? '#E8C254'
 
       // motion-blur clear (trails)
       ctx.fillStyle = 'rgba(8,10,15,0.34)'
@@ -271,7 +272,7 @@ export function DebateArena({
 
         // label + pick/vote chip
         ctx.globalAlpha = dim ? 0.55 : 1
-        ctx.fillStyle = isLive ? p.color : CF.ink
+        ctx.fillStyle = isLive ? p.color : '#EFE7D2' // literal — canvas can't resolve var()
         ctx.font = `700 ${Math.round(tileW * 0.2)}px ui-monospace, monospace`
         ctx.textAlign = 'center'; ctx.textBaseline = 'top'
         ctx.fillText(p.handle, x, ty + th + 7)
@@ -306,7 +307,8 @@ export function DebateArena({
         <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0 }} />
         {!speaking ? (
           <div style={{ position: 'absolute', left: 0, right: 0, top: 14, textAlign: 'center', pointerEvents: 'none' }}>
-            <span className="mono" style={{ fontSize: 10.5, letterSpacing: 1.6, color: deliberating ? CF.ink2 : CF.ink4 }}>
+            {/* literal colors — this banner sits on the always-dark stage */}
+            <span className="mono" style={{ fontSize: 10.5, letterSpacing: 1.6, color: deliberating ? '#CFC9BB' : '#8E8979' }}>
               {deliberating ? <><span className="cf-live-dot" style={{ width: 6, height: 6, display: 'inline-block', marginRight: 6 }} aria-hidden /> THE PANEL IS DELIBERATING…</> : '▸ OPEN THE FLOOR TO BEGIN'}
             </span>
           </div>

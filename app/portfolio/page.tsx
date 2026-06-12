@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ConnectButton } from '../../components/ConnectButton'
+import { ThemeToggle } from '../../components/ThemeToggle'
 import { Portfolio } from '../../components/Portfolio'
 import { BrandLogo } from '../../components/Logo'
 import { CF } from '../../lib/theme'
@@ -20,6 +21,7 @@ export default function PortfolioPage() {
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
             <Link href="/agents" style={navStyle}>Agents</Link>
             <Link href="/leaderboard" style={navStyle}>Standings</Link>
+            <ThemeToggle />
             <ConnectButton variant="primary" />
           </div>
         </header>
