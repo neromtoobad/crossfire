@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ConnectButton } from '../components/ConnectButton'
 import { VideoBackground } from '../components/VideoBackground'
 import { WinnerPicks } from '../components/WinnerPicks'
+import { OpeningReceipts } from '../components/OpeningReceipts'
 import { BrandLogo } from '../components/Logo'
 import { loadCalls } from '../lib/calls-data'
 import { computeAgentStats } from '../lib/leaderboard'
@@ -44,12 +45,6 @@ export default function Arena() {
       return { handle: p.handle, avatar: p.avatar, color: p.color, archetype: p.archetype, persona: p.persona, portrait: p.portrait, winRate: s.winRate, won: s.callsWon, resolved: s.callsResolved }
     })
     .sort((a, b) => b.winRate - a.winRate)
-
-  // the agents' highest-conviction live calls (real %)
-  const marquee = calls
-    .sort((a, b) => b.selectedSideProb - a.selectedSideProb)
-    .slice(0, 6)
-    .map((c) => ({ title: c.marketTitle.replace(/\?.*$/, '?'), pct: Math.round(c.selectedSideProb * 100), side: c.side, id: c.id }))
 
   const settled = calls.filter((c) => getResolution(c.marketId) !== 'PENDING').length
   const fixtures = calls.filter((c) => /group/i.test(c.marketId)).length
@@ -177,23 +172,8 @@ export default function Arena() {
           </div>
         </Section>
 
-        {/* ── live markets ── */}
-        <section style={{ marginTop: 8 }}>
-          <Panel title="LIVE MARKETS" action="All markets" href="/markets">
-            <div className="cf-g2" style={{ columnGap: 28, rowGap: 0 }}>
-              {marquee.map((m, i) => (
-                <Link key={m.id} href={`/calls/${m.id}`} style={{
-                  display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0',
-                  borderBottom: `1px solid ${A.borderDim}`,
-                }}>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, color: A.text, lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</span>
-                  <span className="mono" style={{ fontSize: 9.5, fontWeight: 700, color: m.side === 'YES' ? A.green : A.red, width: 26, textAlign: 'right' }}>{m.side}</span>
-                  <span className="mono tnum" style={{ fontSize: 13, fontWeight: 700, color: A.gold, width: 38, textAlign: 'right' }}>{m.pct}%</span>
-                </Link>
-              ))}
-            </div>
-          </Panel>
-        </section>
+        {/* ── opening weekend: the first results + the agents' receipts ── */}
+        <OpeningReceipts />
 
         {/* ── how it works ── */}
         <Section eyebrow="HOW IT WORKS" title="On-chain. Transparent. Trustless.">
@@ -255,18 +235,6 @@ function Section({ eyebrow, title, action, href, children }: { eyebrow: string; 
             {action} <Icon name="arrow" size={13} />
           </Link>
         ) : null}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-function Panel({ title, action, href, children }: { title: string; action?: string; href?: string; children: React.ReactNode }) {
-  return (
-    <section style={{ background: A.panel, border: `1px solid ${A.borderDim}`, borderRadius: A.radius.lg, padding: '20px 22px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2, color: A.gold, fontWeight: 600 }}>{title}</div>
-        {action && href ? <Link href={href} className="mono" style={{ fontSize: 9.5, letterSpacing: 1, color: A.gold }}>{action} →</Link> : null}
       </div>
       {children}
     </section>
