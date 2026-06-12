@@ -7,9 +7,11 @@ import { ConnectButton } from '../components/ConnectButton'
 import { VideoBackground } from '../components/VideoBackground'
 import { WinnerPicks } from '../components/WinnerPicks'
 import { OpeningReceipts } from '../components/OpeningReceipts'
+import { DraftBoard } from '../components/DraftBoard'
 import { BrandLogo } from '../components/Logo'
 import { loadCalls } from '../lib/calls-data'
 import { computeAgentStats } from '../lib/leaderboard'
+import { championStandings } from '../lib/champion'
 import { getResolution } from '../lib/resolutions'
 import { PUNDITS } from '../lib/pundits'
 import { A } from '../lib/arena'
@@ -46,6 +48,7 @@ export default function Arena() {
     })
     .sort((a, b) => b.winRate - a.winRate)
 
+  const standings = championStandings(stats)
   const settled = calls.filter((c) => getResolution(c.marketId) !== 'PENDING').length
   const fixtures = calls.filter((c) => /group/i.test(c.marketId)).length
 
@@ -100,7 +103,10 @@ export default function Arena() {
 
         </section>
 
-        {/* ── the core: the agents' World Cup picks + their debate ── */}
+        {/* ── THE CORE MECHANIC: draft the champion oracle ── */}
+        <DraftBoard standings={standings} />
+
+        {/* ── the agents' actual World Cup picks + their debate (the scorecard) ── */}
         <WinnerPicks winRates={Object.fromEntries(agents.filter((a) => a.resolved > 0).map((a) => [a.handle, Math.round(a.winRate * 100)]))} />
 
         {/* ── metric strip ── */}
@@ -141,36 +147,6 @@ export default function Arena() {
             See the cap hold →
           </span>
         </Link>
-
-        {/* ── top agents ── */}
-        <Section eyebrow="THE AGENTS" title="Ranked by win rate" action="Full standings" href="/leaderboard">
-          <div className="cf-g5 cf-stagger">
-            {agents.map((a, i) => (
-              <Link key={a.handle} href={`/agents/${a.handle.toLowerCase()}`} className="cf-card" style={{
-                display: 'block', background: A.panel, border: `1px solid ${A.borderDim}`,
-                borderTop: `2px solid ${a.color}`, borderRadius: A.radius.lg, padding: '18px 16px',
-                transition: 'transform 160ms ease, border-color 160ms ease',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <span style={{
-                    width: 42, height: 42, borderRadius: 9, display: 'inline-flex', overflow: 'hidden',
-                    border: `1.5px solid ${a.color}`, boxShadow: `0 0 12px ${a.color}40`, flexShrink: 0,
-                  }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={a.portrait} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
-                  </span>
-                  <span className="mono" style={{ fontSize: 10, color: A.text3 }}>#{i + 1}</span>
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: A.cream, letterSpacing: 0.4 }}>AGENT {a.handle}</div>
-                <div className="mono" style={{ fontSize: 9.5, color: a.color, margin: '3px 0 14px' }}>{a.persona}</div>
-                <div className="mono tnum" style={{ fontSize: 20, fontWeight: 700, color: a.winRate >= 0.6 ? A.green : a.winRate >= 0.4 ? A.gold : A.red }}>
-                  {a.resolved ? `${Math.round(a.winRate * 100)}%` : '—'}
-                </div>
-                <div className="mono" style={{ fontSize: 9.5, color: A.text3, marginTop: 3 }}>{a.won}/{a.resolved} calls right</div>
-              </Link>
-            ))}
-          </div>
-        </Section>
 
         {/* ── opening weekend: the first results + the agents' receipts ── */}
         <OpeningReceipts />

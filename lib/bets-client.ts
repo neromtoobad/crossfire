@@ -9,6 +9,7 @@
 // wallet returned) is stored alongside each bet, so the Vault can show it.
 
 import { getResolution } from './resolutions.js'
+import type { AgentRole } from './calls-data.js'
 
 export type BetProof = {
   context: string                 // the ERC-7715 permission context (the receipt)
@@ -21,7 +22,7 @@ export type BetProof = {
 
 export type StoredBet = {
   user: string                    // wallet address, lowercased
-  callId: string
+  callId: string                  // for champion bets: `champion:<role>`
   marketId: string
   marketTitle: string
   agentHandle: string
@@ -30,6 +31,10 @@ export type StoredBet = {
   amountUsdc: number
   ts: number
   proof?: BetProof
+  // Champion Draft: you backed an AGENT to win the tournament, not a match call.
+  kind?: 'call' | 'champion'
+  agentRole?: AgentRole
+  oddsX?: number                  // decimal odds locked in at bet time
 }
 
 export type EnrichedBet = StoredBet & {

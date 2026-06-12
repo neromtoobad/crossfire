@@ -20,6 +20,7 @@ type Proof = {
 type Bet = {
   user: string; callId: string; marketId: string; marketTitle: string; agentHandle: string
   choice: 'follow' | 'fade'; side: 'YES' | 'NO'; amountUsdc: number; ts: number; proof?: Proof
+  kind?: 'call' | 'champion'; agentRole?: string; oddsX?: number
 }
 
 const keyFor = (user: string) => `cf:bets:${user.toLowerCase()}`
@@ -59,6 +60,9 @@ export async function POST(req: NextRequest) {
     amountUsdc: Number(b.amountUsdc) || 0,
     ts: Date.now(),
     proof: (b.proof && typeof b.proof === 'object') ? (b.proof as Proof) : undefined,
+    kind: b.kind === 'champion' ? 'champion' : 'call',
+    agentRole: b.agentRole ? String(b.agentRole) : undefined,
+    oddsX: b.oddsX != null ? Number(b.oddsX) : undefined,
   }
   // one bet per user+call; re-backing updates it
   const kept = existing.filter((x) => x.callId !== bet.callId)

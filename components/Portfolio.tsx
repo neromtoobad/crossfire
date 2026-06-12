@@ -10,12 +10,13 @@ import Link from 'next/link'
 import { ConnectButton } from './ConnectButton'
 import { listBetsLocal, type EnrichedBet } from '../lib/bets-client'
 import { listMandatesLocal, revokeMandateLocal, type StoredMandate } from '../lib/mandate-client'
+import { standingOf, type ChampionStanding } from '../lib/champion'
 import { CF, alpha } from '../lib/theme'
 
 type Bet = EnrichedBet
 type Mandate = StoredMandate
 
-export function Portfolio() {
+export function Portfolio({ standings = [] }: { standings?: ChampionStanding[] }) {
   const { address, isConnected } = useAccount()
   const [bets, setBets] = useState<Bet[]>([])
   const [mandates, setMandates] = useState<Mandate[]>([])
@@ -98,16 +99,42 @@ export function Portfolio() {
         ))}
       </div>
 
-      {/* backed calls */}
+      {/* backed agents + calls */}
       <section>
-        <SectionLabel>YOUR BACKED CALLS</SectionLabel>
+        <SectionLabel>WHO YOU’VE BACKED</SectionLabel>
         {loading && !bets.length ? <Muted>Loading…</Muted>
           : bets.length === 0 ? (
-            <Muted>You haven’t backed a call yet. <Link href="/markets" style={{ color: CF.gold }}>Fade or follow an agent →</Link></Muted>
+            <Muted>You haven’t backed an agent yet. <Link href="/" style={{ color: CF.gold }}>Draft a champion oracle →</Link></Muted>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {bets.map((b) => {
-                const col = b.side === 'YES' ? CF.bull : CF.bear
+                // Champion Draft bet: you backed an AGENT to win the tournament.
+                if (b.kind === 'champion') {
+                  const st = standingOf(standings, b.agentHandle)
+                  const odds = b.oddsX ?? st?.oddsX ?? 1
+                  const payout = b.amountUsdc * odds
+                  const standLabel = st ? (st.leading ? '👑 leading' : `currently #${st.rank}`) : 'in the race'
+                  return (
+                    <Link key={b.callId} href={`/agents/${b.agentHandle.toLowerCase()}`} className="cf-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: CF.surface, border: `1px solid ${CF.line}`, borderLeft: `3px solid ${CF.gold}`, borderRadius: CF.radius.lg, boxShadow: CF.shadow.card }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: CF.body, fontWeight: 600, fontSize: 14.5, color: CF.ink }}>
+                          Backed <span style={{ color: CF.gold, fontWeight: 800 }}>{b.agentHandle}</span> for the title
+                        </div>
+                        <div className="mono" style={{ fontSize: 11, color: CF.ink3, marginTop: 3 }}>
+                          {standLabel} · odds <span style={{ color: CF.gold, fontWeight: 600 }}>{odds.toFixed(1)}×</span> · wins ${payout.toFixed(2)} if crowned
+                        </div>
+                        {b.proof?.context ? (
+                          <div className="mono" style={{ fontSize: 10, color: CF.bull, marginTop: 5 }}>
+                            ✓ ERC-7715 mandate · {b.proof.context.slice(0, 14)}…{b.proof.context.slice(-6)}
+                          </div>
+                        ) : null}
+                      </div>
+                      <span className="mono tnum" style={{ fontSize: 13, color: CF.ink, width: 64, textAlign: 'right' }}>{b.amountUsdc} USDC</span>
+                      <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: CF.gold, width: 50, textAlign: 'right' }}>OPEN</span>
+                    </Link>
+                  )
+                }
+                // Match-call bet (fade/follow).
                 const oc = b.outcome === 'won' ? CF.positive : b.outcome === 'lost' ? CF.bear : CF.ink3
                 const ocLabel = b.outcome === 'won' ? '✓ WON' : b.outcome === 'lost' ? '✗ LOST' : 'OPEN'
                 return (

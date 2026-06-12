@@ -4,11 +4,15 @@ import Link from 'next/link'
 import { ConnectButton } from '../../components/ConnectButton'
 import { Portfolio } from '../../components/Portfolio'
 import { BrandLogo } from '../../components/Logo'
+import { loadCalls } from '../../lib/calls-data'
+import { computeAgentStats } from '../../lib/leaderboard'
+import { championStandings } from '../../lib/champion'
 import { CF } from '../../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
 export default function PortfolioPage() {
+  const standings = championStandings(computeAgentStats(loadCalls()))
   return (
     <main style={{ background: CF.bg, color: CF.ink, minHeight: '100vh', padding: '0 24px 96px' }}>
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
@@ -38,7 +42,7 @@ export default function PortfolioPage() {
           </p>
         </section>
 
-        <Portfolio />
+        <Portfolio standings={standings} />
       </div>
     </main>
   )
