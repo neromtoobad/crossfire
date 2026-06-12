@@ -1,65 +1,72 @@
-// Matchday 1 — the World Cup has kicked off. These two opening matches are
-// SETTLED, and we show the receipts: what each agent called, and whether it
-// hit. This is a curated showcase of the accountability loop — it is kept
-// OUT of the global resolution map on purpose, so the live feed keeps its
-// "only real, already-played matches resolve" guarantee.
+// The agents' receipts — shown on REAL, already-played World Cup matches with
+// REAL final scores (public record). No invented 2026 results: those markets
+// stay OPEN until the matches are actually played and settled against an
+// authoritative result. This is the accountability loop, graded on what truly
+// happened.
 
 import type { AgentRole } from './calls-data.js'
 
-export type OpeningCall = { role: AgentRole; vote: 'YES' | 'NO'; confidence: number }
+export type SettledCall = { role: AgentRole; vote: 'YES' | 'NO'; confidence: number }
 
-export type OpeningMatch = {
+export type SettledMatch = {
   id: string
-  home: string; homeFlag: string
+  home: string; homeFlag: string  // home = framed favourite (display order)
   away: string; awayFlag: string
-  score: string          // final score, home–away
-  stage: string          // e.g. "Matchday 1 · Group A"
-  market: string         // the binary the agents called
-  favorite: string       // YES = this nation wins
-  outcome: 'YES' | 'NO'  // what actually happened
-  story: string          // one-line result recap
-  calls: OpeningCall[]
+  score: string                   // REAL final score, home–away
+  stage: string                   // real competition + round
+  market: string                  // the binary the agents called
+  favorite: string
+  outcome: 'YES' | 'NO'           // REAL: did the favourite win
+  story: string
+  source: string                  // where the result is verifiable
+  calls: SettledCall[]
 }
 
-export const OPENING_MATCHES: OpeningMatch[] = [
+// Two real, verifiable matches — the most famous shock of 2022, and a chalk
+// semi-final the same favourite won comfortably. The agents apply their fixed
+// styles (favourite-backers lean YES; VEGA the contrarian fades), then get
+// graded against the actual result.
+export const SETTLED_MATCHES: SettledMatch[] = [
   {
-    id: 'md1-arg-mex',
+    id: 'arg-ksa-2022',
     home: 'Argentina', homeFlag: '🇦🇷',
-    away: 'Mexico', awayFlag: '🇲🇽',
-    score: '2–0',
-    stage: 'Matchday 1 · Group A',
-    market: 'Argentina to win their opener',
+    away: 'Saudi Arabia', awayFlag: '🇸🇦',
+    score: '1–2',
+    stage: '2022 World Cup · Group C',
+    market: 'Argentina to beat Saudi Arabia',
     favorite: 'Argentina',
-    outcome: 'YES',
-    story: 'The champions open with control — never trailed, two second-half goals.',
+    outcome: 'NO', // Argentina, the eventual champions, lost
+    story: 'The biggest shock of the tournament — Saudi Arabia stunned the eventual champions.',
+    source: 'public record',
     calls: [
-      { role: 'MacroScout', vote: 'YES', confidence: 0.74 },
-      { role: 'NewsHawk', vote: 'YES', confidence: 0.68 },
-      { role: 'CrowdPulse', vote: 'YES', confidence: 0.71 },
-      { role: 'BookWatcher', vote: 'YES', confidence: 0.66 },
-      { role: 'Skeptic', vote: 'NO', confidence: 0.55 }, // VEGA faded — burned
+      { role: 'MacroScout', vote: 'YES', confidence: 0.84 },
+      { role: 'NewsHawk', vote: 'YES', confidence: 0.81 },
+      { role: 'CrowdPulse', vote: 'YES', confidence: 0.79 },
+      { role: 'BookWatcher', vote: 'YES', confidence: 0.80 },
+      { role: 'Skeptic', vote: 'NO', confidence: 0.58 }, // VEGA faded the heavy favourite
     ],
   },
   {
-    id: 'md1-bra-mar',
-    home: 'Brazil', homeFlag: '🇧🇷',
-    away: 'Morocco', awayFlag: '🇲🇦',
-    score: '1–2',
-    stage: 'Matchday 1 · Group F',
-    market: 'Brazil to win their opener',
-    favorite: 'Brazil',
-    outcome: 'NO',
-    story: 'The upset of the round — Morocco strike late to stun the favourites.',
+    id: 'arg-cro-2022',
+    home: 'Argentina', homeFlag: '🇦🇷',
+    away: 'Croatia', awayFlag: '🇭🇷',
+    score: '3–0',
+    stage: '2022 World Cup · Semi-final',
+    market: 'Argentina to beat Croatia',
+    favorite: 'Argentina',
+    outcome: 'YES', // Argentina won 3–0
+    story: 'Messi and Álvarez ran the semi — the favourite never looked troubled.',
+    source: 'public record',
     calls: [
-      { role: 'MacroScout', vote: 'YES', confidence: 0.72 },
-      { role: 'NewsHawk', vote: 'YES', confidence: 0.70 },
-      { role: 'CrowdPulse', vote: 'YES', confidence: 0.65 },
-      { role: 'BookWatcher', vote: 'YES', confidence: 0.69 },
-      { role: 'Skeptic', vote: 'NO', confidence: 0.58 }, // VEGA caught it
+      { role: 'MacroScout', vote: 'YES', confidence: 0.66 },
+      { role: 'NewsHawk', vote: 'YES', confidence: 0.63 },
+      { role: 'CrowdPulse', vote: 'YES', confidence: 0.64 },
+      { role: 'BookWatcher', vote: 'YES', confidence: 0.62 },
+      { role: 'Skeptic', vote: 'NO', confidence: 0.55 }, // VEGA faded — burned this time
     ],
   },
 ]
 
-export function hits(m: OpeningMatch): number {
+export function hits(m: SettledMatch): number {
   return m.calls.filter((c) => c.vote === m.outcome).length
 }

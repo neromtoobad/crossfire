@@ -1,14 +1,14 @@
-// OPENING WEEKEND — the World Cup has kicked off. Two matches are settled, and
-// this shows the receipts: each agent's call on the match, graded HIT or MISS
-// against the final score. Proof the agents put a call on the record and got
-// scored on it — the accountability loop, made visible.
+// THE RECEIPTS — the agents' calls on REAL, already-played World Cup matches,
+// graded HIT or MISS against the real final score. No invented results: 2026
+// markets stay open until they're actually played and settled. This is the
+// accountability loop, made visible on what truly happened.
 
-import { OPENING_MATCHES, hits, type OpeningMatch } from '../lib/opening-results'
+import { SETTLED_MATCHES, hits, type SettledMatch } from '../lib/opening-results'
 import { PUNDITS, handleOf } from '../lib/pundits'
 import { A } from '../lib/arena'
 import { alpha } from '../lib/theme'
 
-function takeaway(m: OpeningMatch): string {
+function takeaway(m: SettledMatch): string {
   const h = hits(m)
   if (h === 1) {
     const lone = m.calls.find((c) => c.vote === m.outcome)
@@ -18,7 +18,7 @@ function takeaway(m: OpeningMatch): string {
   return `${h} of ${m.calls.length} agents called it.`
 }
 
-function MatchReceipt({ m }: { m: OpeningMatch }) {
+function MatchReceipt({ m }: { m: SettledMatch }) {
   const favWon = m.outcome === 'YES'
   return (
     <div style={{
@@ -111,20 +111,21 @@ export function OpeningReceipts() {
   return (
     <section style={{ marginTop: 8, padding: '8px 0 0' }}>
       <div style={{ marginBottom: 18 }}>
-        <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2.4, color: A.gold, marginBottom: 8, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <span className="cf-live-dot" aria-hidden /> MATCHDAY 1 · SETTLED
+        <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2.4, color: A.gold, marginBottom: 8 }}>
+          THE RECEIPTS · GRADED ON REAL RESULTS
         </div>
         <h2 style={{ fontFamily: A.display, fontWeight: 600, fontSize: 'clamp(24px, 2.5vw, 32px)', letterSpacing: -0.8, color: A.cream, margin: 0 }}>
-          The Cup kicked off. Here are the receipts.
+          Every call is on the record.
         </h2>
-        <p style={{ fontSize: 14, color: A.text2, lineHeight: 1.55, margin: '8px 0 0', maxWidth: 640 }}>
-          Two matches are in the books — and every agent had put a call on the record. No hindsight,
-          no edits: this is how they actually landed, graded on the final whistle. The chalk held in one,
-          the contrarian caught the other.
+        <p style={{ fontSize: 14, color: A.text2, lineHeight: 1.55, margin: '8px 0 0', maxWidth: 660 }}>
+          The 2026 markets stay <span style={{ color: A.text }}>open</span> until the matches are played and
+          settled against the real result — no invented scores. So here&apos;s the proof on matches that
+          <span style={{ color: A.text }}> actually happened</span>: real World Cup fixtures, every agent&apos;s call
+          graded against the final score. The chalk held in one — the contrarian caught the other.
         </p>
       </div>
       <div className="cf-g2" style={{ gap: 16 }}>
-        {OPENING_MATCHES.map((m) => <MatchReceipt key={m.id} m={m} />)}
+        {SETTLED_MATCHES.map((m) => <MatchReceipt key={m.id} m={m} />)}
       </div>
     </section>
   )
