@@ -67,7 +67,7 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  const { address, status } = useAccount()
+  const { address, status, connector } = useAccount()
   const wagmiChainId = useChainId()
   const { switchChainAsync, isPending: switching } = useSwitchChain()
   const { data: walletClient } = useWalletClient()
@@ -75,16 +75,26 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
   const isConnected = status === 'connected'
   const isReconnecting = status === 'reconnecting' || status === 'connecting'
 
-  // Provider chain (ground truth — wagmi can be stale).
+  // Read the chain from the ACTUAL connected wallet's provider — NOT
+  // window.ethereum, which can be a different installed wallet (or absent for an
+  // embedded wallet) and falsely report the wrong chain. Falls back to wagmi.
   const [providerChainId, setProviderChainId] = useState<number | null>(null)
   useEffect(() => {
-    const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
-    if (!eth) return
-    eth.request({ method: 'eth_chainId' }).then((h: string) => setProviderChainId(h ? parseInt(h, 16) : null)).catch(() => {})
-    const on = (h: string) => setProviderChainId(parseInt(h, 16))
-    eth.on?.('chainChanged', on)
-    return () => { eth.removeListener?.('chainChanged', on) }
-  }, [])
+    let cancelled = false
+    let prov: any
+    const toNum = (h: any) => (typeof h === 'string' ? parseInt(h, 16) : Number(h))
+    const onChange = (h: any) => setProviderChainId(toNum(h))
+    ;(async () => {
+      try {
+        prov = (await (connector as any)?.getProvider?.()) ?? (typeof window !== 'undefined' ? (window as any).ethereum : undefined)
+        if (!prov?.request) return
+        const h = await prov.request({ method: 'eth_chainId' })
+        if (!cancelled) setProviderChainId(toNum(h))
+        prov.on?.('chainChanged', onChange)
+      } catch { /* fall back to wagmiChainId */ }
+    })()
+    return () => { cancelled = true; try { prov?.removeListener?.('chainChanged', onChange) } catch {} }
+  }, [connector, status])
   const chainId = providerChainId ?? wagmiChainId
   const wrongChain = isConnected && chainId !== PUBLIC.chainId
 
@@ -98,21 +108,29 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
   }, [state.kind])
 
   async function handleSwitch() {
-    const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
+    // 1) wagmi's cross-connector switch (works for MetaMask, embedded, WC…).
+    try {
+      await switchChainAsync({ chainId: PUBLIC.chainId })
+      setProviderChainId(PUBLIC.chainId)
+      setState({ kind: 'idle' })
+      return
+    } catch { /* fall through to the raw provider (handles add-chain) */ }
+    // 2) Raw provider on the CONNECTED connector, with add-chain fallback.
     const hex = `0x${PUBLIC.chainId.toString(16)}`
     try {
-      if (eth) {
-        try { await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hex }] }) }
-        catch (e: any) {
-          if (e?.code === 4902) {
-            await eth.request({ method: 'wallet_addEthereumChain', params: [{
-              chainId: hex, chainName: 'Base Sepolia',
-              nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-              rpcUrls: ['https://sepolia.base.org'], blockExplorerUrls: ['https://sepolia.basescan.org'],
-            }] })
-          } else throw e
-        }
-      } else { await switchChainAsync({ chainId: PUBLIC.chainId }) }
+      const prov: any = (await (connector as any)?.getProvider?.()) ?? (typeof window !== 'undefined' ? (window as any).ethereum : undefined)
+      if (!prov?.request) throw new Error('No wallet provider available to switch chains.')
+      try { await prov.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hex }] }) }
+      catch (e: any) {
+        if (e?.code === 4902) {
+          await prov.request({ method: 'wallet_addEthereumChain', params: [{
+            chainId: hex, chainName: 'Base Sepolia',
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+            rpcUrls: ['https://sepolia.base.org'], blockExplorerUrls: ['https://sepolia.basescan.org'],
+          }] })
+        } else throw e
+      }
+      setProviderChainId(PUBLIC.chainId)
       setState({ kind: 'idle' })
     } catch (e) {
       const { message, detail } = classify(e)

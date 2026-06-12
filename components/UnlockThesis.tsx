@@ -94,29 +94,32 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  const { address, status: accountStatus } = useAccount()
+  const { address, status: accountStatus, connector } = useAccount()
   const wagmiChainId = useChainId() // wagmi's view — can be stale vs the actual provider
   const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain()
   const { data: walletClient } = useWalletClient()
 
   // ── Live provider chain (ground truth) ────────────────────────────────
-  // Track the wallet provider's chainId directly. wagmi can be cookie-hydrated
-  // to a stale value while the actual MetaMask network is something else.
+  // Read from the ACTUAL connected wallet's provider — not window.ethereum,
+  // which can be a different installed wallet (or absent for an embedded wallet)
+  // and falsely report the wrong chain. Falls back to wagmi.
   const [providerChainId, setProviderChainId] = useState<number | null>(null)
   useEffect(() => {
-    const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
-    if (!eth) return
-    const sync = async () => {
+    let cancelled = false
+    let prov: any
+    const toNum = (h: any) => (typeof h === 'string' ? parseInt(h, 16) : Number(h))
+    const onChanged = (h: any) => setProviderChainId(toNum(h))
+    ;(async () => {
       try {
-        const hex = await eth.request({ method: 'eth_chainId' })
-        setProviderChainId(hex ? parseInt(hex, 16) : null)
-      } catch { setProviderChainId(null) }
-    }
-    sync()
-    const onChanged = (chainHex: string) => setProviderChainId(parseInt(chainHex, 16))
-    eth.on?.('chainChanged', onChanged)
-    return () => { eth.removeListener?.('chainChanged', onChanged) }
-  }, [])
+        prov = (await (connector as any)?.getProvider?.()) ?? (typeof window !== 'undefined' ? (window as any).ethereum : undefined)
+        if (!prov?.request) return
+        const h = await prov.request({ method: 'eth_chainId' })
+        if (!cancelled) setProviderChainId(toNum(h))
+        prov.on?.('chainChanged', onChanged)
+      } catch { /* fall back to wagmiChainId */ }
+    })()
+    return () => { cancelled = true; try { prov?.removeListener?.('chainChanged', onChanged) } catch {} }
+  }, [connector, accountStatus])
   // Effective chainId: prefer the live provider value when known.
   const chainId = providerChainId ?? wagmiChainId
   const isConnected = accountStatus === 'connected'
@@ -150,36 +153,38 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   // Switch chains. Reads the provider directly because wagmi's switchChain
   // can short-circuit if its (stale) state says we're already on the target.
   async function handleSwitchChain() {
-    const eth = (typeof window !== 'undefined' ? (window as any).ethereum : null)
     const targetHex = `0x${PUBLIC.chainId.toString(16)}` // 0x14a34
+    // 1) wagmi's cross-connector switch (MetaMask, embedded, WalletConnect…).
     try {
-      if (eth) {
-        try {
-          await eth.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: targetHex }],
+      await switchChainAsync({ chainId: PUBLIC.chainId })
+      setProviderChainId(PUBLIC.chainId)
+      setState({ kind: 'idle' })
+      return
+    } catch { /* fall through to the raw provider (handles add-chain) */ }
+    // 2) Raw provider on the CONNECTED connector, with add-chain fallback.
+    try {
+      const prov: any = (await (connector as any)?.getProvider?.()) ?? (typeof window !== 'undefined' ? (window as any).ethereum : undefined)
+      if (!prov?.request) throw new Error('No wallet provider available to switch chains.')
+      try {
+        await prov.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: targetHex }] })
+      } catch (switchErr: any) {
+        // 4902 = chain unknown to wallet → add it, then user can switch.
+        if (switchErr?.code === 4902) {
+          await prov.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: targetHex,
+              chainName: 'Base Sepolia',
+              nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+              rpcUrls: ['https://sepolia.base.org'],
+              blockExplorerUrls: ['https://sepolia.basescan.org'],
+            }],
           })
-        } catch (switchErr: any) {
-          // 4902 = chain unknown to wallet → add it, then user can switch.
-          if (switchErr?.code === 4902) {
-            await eth.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: targetHex,
-                chainName: 'Base Sepolia',
-                nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-                rpcUrls: ['https://sepolia.base.org'],
-                blockExplorerUrls: ['https://sepolia.basescan.org'],
-              }],
-            })
-          } else {
-            throw switchErr
-          }
+        } else {
+          throw switchErr
         }
-      } else {
-        // Fallback to wagmi if window.ethereum isn't present (rare in browsers).
-        await switchChainAsync({ chainId: PUBLIC.chainId })
       }
+      setProviderChainId(PUBLIC.chainId)
       setState({ kind: 'idle' })
     } catch (e) {
       // eslint-disable-next-line no-console
