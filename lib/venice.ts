@@ -14,12 +14,12 @@ import OpenAI from 'openai'
 import { env as envVars } from './env.js'
 import type { EvidenceItem } from './x402-types.js'
 
-if (!envVars.VENICE_API_KEY) {
-  throw new Error('VENICE_API_KEY missing — Venice is the only decision engine; fund it.')
-}
-
+// Construct without throwing at import (a top-level throw breaks `next build`
+// before the key is set on the deploy). If VENICE_API_KEY is genuinely missing,
+// the placeholder makes the real Venice call fail loudly at runtime (401) —
+// still NO fallback engine, just the failure deferred from build to request.
 export const venice = new OpenAI({
-  apiKey: envVars.VENICE_API_KEY,
+  apiKey: envVars.VENICE_API_KEY ?? 'VENICE_API_KEY-not-set',
   baseURL: 'https://api.venice.ai/api/v1',
 })
 
