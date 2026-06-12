@@ -471,7 +471,17 @@ export function getCallById(id: string): PublishedCall | undefined {
 // the market has a slug — so the detail page references the SAME real-world
 // price the feed card shows (no 50%-vs-7% contradiction). Falls back cleanly.
 export async function getCallByIdWithPolymarket(id: string): Promise<PublishedCall | undefined> {
-  const call = getCallById(id)
+  let call = getCallById(id)
+  // War Room markets are LIVE ESPN fixtures (ids like `wc-760416`) generated at
+  // render time — they're never in the static lists. Resolve them server-side so
+  // their detail pages (and the Vault's deep-links into them) don't 404.
+  if (!call && typeof window === 'undefined' && id.startsWith('wc-')) {
+    try {
+      const { getWorldCupMarkets } = await import('./wc-results.js')
+      const markets = await getWorldCupMarkets(Date.now())
+      call = markets.find((m) => m.id === id)
+    } catch { /* fall through to undefined → notFound() */ }
+  }
   if (!call || typeof window !== 'undefined') return call
   try {
     const [{ loadMarketsMeta }, { getPolymarketPrices }] = await Promise.all([

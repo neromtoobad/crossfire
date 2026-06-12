@@ -14,6 +14,9 @@ import { punditOf, handleOf } from '../lib/pundits'
 import { AgentAvatar } from './AgentAvatar'
 import type { PublishedCall, AgentRole } from '../lib/calls-data'
 import { GrantCouncilMandate } from './GrantCouncilMandate'
+import { recordBetLocal } from '../lib/bets-client'
+import { recordMandateLocal } from '../lib/mandate-client'
+import { PUBLIC } from '../lib/public-config'
 import { CF, alpha } from '../lib/theme'
 
 const STAKE_OPTIONS = [1, 2, 5] // USDC
@@ -157,16 +160,38 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
           </div>
 
           {/* the on-chain bet = the capped ERC-7715 mandate, reframed. On grant,
-              record the backed call so it shows up in The Vault. */}
+              record the backed call + its mandate in the browser so The Vault
+              keeps them (Vercel's /tmp is per-instance + ephemeral) and can show
+              the real permission context as on-chain proof. */}
           <GrantCouncilMandate
-            onDone={() => {
+            onDone={(granted) => {
               if (!address) return
+              const agentHandle = agentRole ? handleOf(agentRole) : lead ? handleOf(lead.role) : 'THE DESK'
+              const proof = granted ? {
+                context: granted.context,
+                delegationManager: granted.delegationManager,
+                capUsdc: granted.capUsdc,
+                expiry: granted.expiry,
+                redeemer: granted.redeemer,
+                chainId: PUBLIC.chainId,
+              } : undefined
+              recordBetLocal({
+                user: address, callId: call.id, marketId: call.marketId, marketTitle: call.marketTitle,
+                agentHandle, choice: choice ?? 'follow', side: betSide, amountUsdc: amount,
+                ts: Date.now(), proof,
+              })
+              recordMandateLocal({
+                user: address, marketId: call.marketId, marketTitle: call.marketTitle,
+                capUsdc: granted?.capUsdc ?? 5,
+                expiresAt: granted?.expiry ? granted.expiry * 1000 : Date.now() + 3600_000,
+                context: granted?.context, redeemer: granted?.redeemer, ts: Date.now(),
+              })
+              // best-effort server mirror (harmless; not relied on for the Vault)
               fetch('/api/bets', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   user: address, callId: call.id, marketId: call.marketId, marketTitle: call.marketTitle,
-                  agentHandle: agentRole ? handleOf(agentRole) : lead ? handleOf(lead.role) : 'THE DESK',
-                  choice: choice ?? 'follow', side: betSide, amountUsdc: amount,
+                  agentHandle, choice: choice ?? 'follow', side: betSide, amountUsdc: amount,
                 }),
               }).catch(() => {})
             }}

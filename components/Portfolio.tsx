@@ -8,14 +8,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { useAccount } from 'wagmi'
 import Link from 'next/link'
 import { ConnectButton } from './ConnectButton'
+import { listBetsLocal, type EnrichedBet } from '../lib/bets-client'
+import { listMandatesLocal, revokeMandateLocal, type StoredMandate } from '../lib/mandate-client'
 import { CF, alpha } from '../lib/theme'
 
-type Bet = {
-  callId: string; marketId: string; marketTitle: string; agentHandle: string
-  choice: 'follow' | 'fade'; side: 'YES' | 'NO'; amountUsdc: number; ts: number
-  resolution: 'YES' | 'NO' | 'PENDING'; outcome: 'won' | 'lost' | 'pending'
-}
-type Mandate = { user: string; marketId: string; capUsdc: number; expiresAt: number; revoked?: boolean }
+type Bet = EnrichedBet
+type Mandate = StoredMandate
 
 export function Portfolio() {
   const { address, isConnected } = useAccount()
@@ -24,16 +22,15 @@ export function Portfolio() {
   const [loading, setLoading] = useState(false)
   const [revoking, setRevoking] = useState<string | null>(null)
 
+  // The Vault reads the user's own browser store — durable across Vercel's
+  // ephemeral serverless instances, where a server file store silently loses
+  // bets. Each bet/mandate carries its real ERC-7715 permission context.
   const load = useCallback(async () => {
     if (!address) return
     setLoading(true)
     try {
-      const [b, m] = await Promise.all([
-        fetch(`/api/bets?user=${address}`).then((r) => r.json()).catch(() => ({})),
-        fetch(`/api/mandate?user=${address}`).then((r) => r.json()).catch(() => ({})),
-      ])
-      setBets((b.bets ?? []) as Bet[])
-      setMandates((m.mandates ?? []).filter((x: Mandate) => !x.revoked))
+      setBets(listBetsLocal(address))
+      setMandates(listMandatesLocal(address))
     } finally {
       setLoading(false)
     }
@@ -45,10 +42,12 @@ export function Portfolio() {
     if (!address) return
     setRevoking(marketId)
     try {
-      await fetch('/api/mandate/revoke', {
+      revokeMandateLocal(address, marketId)
+      // best-effort server mirror (not relied on for the Vault)
+      fetch('/api/mandate/revoke', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user: address, marketId }),
-      })
+      }).catch(() => {})
       await load()
     } finally { setRevoking(null) }
   }
@@ -104,6 +103,13 @@ export function Portfolio() {
                       <div className="mono" style={{ fontSize: 11, color: CF.ink3, marginTop: 3 }}>
                         {b.choice === 'fade' ? 'faded' : 'followed'} <span style={{ color: CF.ink2, fontWeight: 600 }}>{b.agentHandle}</span> · bet {b.side}
                       </div>
+                      {b.proof?.context ? (
+                        <div className="mono" style={{ fontSize: 10, color: CF.bull, marginTop: 5, display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <span>✓ ERC-7715 mandate</span>
+                          <span style={{ color: CF.ink4 }}>·</span>
+                          <span style={{ color: CF.ink3, wordBreak: 'break-all' }}>{b.proof.context.slice(0, 14)}…{b.proof.context.slice(-6)}</span>
+                        </div>
+                      ) : null}
                     </div>
                     <span className="mono tnum" style={{ fontSize: 13, color: CF.ink, width: 64, textAlign: 'right' }}>{b.amountUsdc} USDC</span>
                     <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: oc, width: 50, textAlign: 'right' }}>{ocLabel}</span>
@@ -126,9 +132,9 @@ export function Portfolio() {
               return (
                 <div key={m.marketId} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, boxShadow: CF.shadow.card }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: CF.body, fontWeight: 600, fontSize: 14, color: CF.ink }}>{m.marketId}</div>
+                    <div style={{ fontFamily: CF.body, fontWeight: 600, fontSize: 14, color: CF.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.marketTitle ?? m.marketId}</div>
                     <div className="mono" style={{ fontSize: 11, color: CF.ink3, marginTop: 3 }}>
-                      cap <span style={{ color: CF.gold, fontWeight: 600 }}>{m.capUsdc} USDC</span> · expires in {hrs}h
+                      cap <span style={{ color: CF.gold, fontWeight: 600 }}>{m.capUsdc} USDC</span> · expires in {hrs}h{m.context ? ` · ${m.context.slice(0, 10)}…` : ''}
                     </div>
                   </div>
                   <button onClick={() => revoke(m.marketId)} disabled={revoking === m.marketId} style={{

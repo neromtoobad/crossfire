@@ -19,7 +19,7 @@ import { ConnectButton } from './ConnectButton'
 import { PUBLIC } from '../lib/public-config'
 import { CF, alpha } from '../lib/theme'
 
-type Granted = {
+export type Granted = {
   context: `0x${string}`
   delegationManager?: `0x${string}`
   capUsdc: number
@@ -63,7 +63,7 @@ export type GrantContext = {
   cta?: string
 }
 
-export function GrantCouncilMandate({ onDone, context }: { onDone?: () => void; context?: GrantContext } = {}) {
+export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Granted) => void; context?: GrantContext } = {}) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
@@ -90,9 +90,10 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: () => void; 
 
   const [state, setState] = useState<State>({ kind: 'idle' })
 
-  // Spine hook: notify a parent once the mandate is granted.
+  // Spine hook: notify a parent once the mandate is granted, handing over the
+  // real permission context so the bet can be recorded with its on-chain proof.
   useEffect(() => {
-    if (state.kind === 'granted') onDone?.()
+    if (state.kind === 'granted') onDone?.(state.data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.kind])
 
