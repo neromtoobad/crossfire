@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
+import { baseSepolia } from 'wagmi/chains'
 import { erc20Abi } from 'viem'
 import { ConnectButton } from './ConnectButton'
 import { PUBLIC } from '../lib/public-config'
@@ -227,7 +228,12 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       setState({ kind: 'signing' })
       const txHash = await walletClient.writeContract({
         account: address,
-        chain: walletClient.chain,
+        // Target Base Sepolia explicitly. walletClient.chain can resolve to the
+        // wrong network (e.g. Ethereum Sepolia 11155111) when the wallet client
+        // is cookie-hydrated or an embedded provider seeds a different default —
+        // viem then rejects the tx as a chain mismatch even though the wallet is
+        // on 84532. The pre-flight above already confirmed the provider is here.
+        chain: baseSepolia,
         address: accepted.asset,
         abi: erc20Abi,
         functionName: 'transfer',

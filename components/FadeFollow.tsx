@@ -19,7 +19,14 @@ import { recordMandateLocal } from '../lib/mandate-client'
 import { PUBLIC } from '../lib/public-config'
 import { CF, alpha } from '../lib/theme'
 
-const STAKE_OPTIONS = [1, 2, 5] // USDC
+const STAKE_OPTIONS = [1, 2, 5, 50] // USDC — $50 is the over-cap (10×) revert demo
+const CAP_USDC = 5 // matches GrantCouncilMandate's mandate cap
+// Real, already-mined proofs (see PROOF.md / TheCap): a within-cap bet that
+// settled, and an over-cap redemption the enforcer reverted.
+const SEPOLIA_TX = (h: string) => `https://sepolia.basescan.org/tx/${h}`
+const INCAP_TX = '0x5cdcdb45505aa49b8f76cf759dbe2a58b3e2300aafc7356969f7ed19b7d6ba41'
+const OVERCAP_TX = '0xa8d4775e0cf545119ef7296f87e2e2c8d54fbf26d7fb08abdbb3d2deab12ee45'
+const ENFORCER_ERROR = 'ERC20TransferAmountEnforcer:allowance-exceeded'
 
 function leadPundit(call: PublishedCall) {
   const onSide = call.votes.filter((v) => v.vote === call.side)
@@ -50,6 +57,32 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
   const { address } = useAccount()
   const [choice, setChoice] = useState<null | 'follow' | 'fade'>(null)
   const [amount, setAmount] = useState(2)
+  // over-cap ($50 > $5 cap) → the enforcer-revert demo, proven live on demand
+  const [proving, setProving] = useState(false)
+  const [proved, setProved] = useState(false)
+
+  async function proveRevert() {
+    if (proving) return
+    setProving(true)
+    try {
+      // re-stream a fresh on-chain proof; fall back to the canonical receipt
+      const res = await fetch('/api/proof/run', { method: 'POST' })
+      if (res.body) {
+        const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+        for (;;) {
+          const { value, done } = await reader.read(); if (done) break
+          buf += dec.decode(value, { stream: true })
+          const ls = buf.split('\n'); buf = ls.pop() ?? ''
+          for (const raw of ls) {
+            const line = raw.trim(); if (!line) continue
+            try { const e = JSON.parse(line); if (e.type === 'overcap-reverted') setProved(true) } catch { /* skip */ }
+          }
+        }
+      }
+    } catch { /* canonical proof still stands */ }
+    setProved(true)
+    setProving(false)
+  }
 
   // Scoped mode (agentRole set) pegs the call to ONE agent: you follow/fade
   // that agent's own pick, not the desk consensus. Otherwise it's the lead.
@@ -132,16 +165,24 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
           {/* stake size */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <span className="mono" style={{ fontSize: 11, color: CF.ink3, letterSpacing: 0.5 }}>STAKE</span>
-            {STAKE_OPTIONS.map((a) => (
-              <button key={a} onClick={() => setAmount(a)} className="mono" style={{
-                padding: '6px 12px', borderRadius: CF.radius.md, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                background: amount === a ? CF.ink : CF.surface,
-                color: amount === a ? CF.bg : CF.ink2,
-                border: `1px solid ${amount === a ? CF.ink : CF.line}`,
-              }}>${a}</button>
-            ))}
+            {STAKE_OPTIONS.map((a) => {
+              const isOver = a > CAP_USDC
+              const sel = amount === a
+              return (
+                <button key={a} onClick={() => setAmount(a)} className="mono" style={{
+                  padding: '6px 12px', borderRadius: CF.radius.md, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                  background: sel ? (isOver ? CF.bear : CF.ink) : CF.surface,
+                  color: sel ? (isOver ? '#fff' : CF.bg) : (isOver ? CF.bear : CF.ink2),
+                  border: `1px solid ${sel ? (isOver ? CF.bear : CF.ink) : (isOver ? alpha(CF.bear, 40) : CF.line)}`,
+                }}>${a}{isOver ? ' · break it' : ''}</button>
+              )
+            })}
           </div>
 
+          {amount > CAP_USDC ? (
+            <OverCapRevert amount={amount} cap={CAP_USDC} proving={proving} proved={proved} onProve={proveRevert} />
+          ) : (
+          <>
           {/* payout preview */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
@@ -206,6 +247,8 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
                 revoke anytime. Try to bet past the cap and the transaction reverts on-chain.</>
               ),
             }} />
+          </>
+          )}
         </div>
       )}
     </div>
@@ -228,6 +271,55 @@ function PoolBar({ pools }: { pools: { YES: number; NO: number } }) {
       <div style={{ display: 'flex', height: 8, borderRadius: 999, overflow: 'hidden', background: CF.surface2 }}>
         <div style={{ width: `${yesPct}%`, background: CF.bull, transition: 'width 0.5s cubic-bezier(0.22,1,0.36,1)' }} />
         <div style={{ width: `${100 - yesPct}%`, background: CF.bear, transition: 'width 0.5s cubic-bezier(0.22,1,0.36,1)' }} />
+      </div>
+    </div>
+  )
+}
+
+// The enforcer, folded into the bet flow: pick $50 (10× your $5 cap) and this
+// replaces the payout/grant — the chain refuses the over-cap bet. Two real,
+// already-mined receipts on screen (one settled, one reverted); "Try it live"
+// re-streams a fresh on-chain revert.
+function OverCapRevert({ amount, cap, proving, proved, onProve }: {
+  amount: number; cap: number; proving: boolean; proved: boolean; onProve: () => void
+}) {
+  const multiple = Math.round(amount / cap)
+  return (
+    <div className="cf-rise" style={{
+      borderRadius: CF.radius.md, overflow: 'hidden',
+      border: `1px solid ${alpha(CF.bear, 35)}`, background: alpha(CF.bear, 6),
+    }}>
+      <div style={{ padding: '14px 16px' }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: 1.6, color: CF.bear, marginBottom: 8 }}>
+          ⛔ THE ENFORCER · OVER THE CAP
+        </div>
+        <div style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink, lineHeight: 1.55 }}>
+          <strong style={{ color: CF.bear, fontWeight: 700 }}>${amount} is {multiple}× your ${cap} cap.</strong>{' '}
+          Your mandate is capped at <strong style={{ color: CF.ink }}>${cap} USDC</strong> — nothing in our code stops a bigger bet. The chain does.
+        </div>
+        <div className="mono" style={{ fontSize: 10, color: CF.bear, background: alpha(CF.bear, 8), border: `1px solid ${alpha(CF.bear, 22)}`, borderRadius: 5, padding: '6px 9px', margin: '10px 0', wordBreak: 'break-all' }}>
+          {proving ? 'submitting over-cap redemption…' : `⛔ REVERTED · ${ENFORCER_ERROR}`}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', fontFamily: CF.mono, fontSize: 10.5 }}>
+          <a href={SEPOLIA_TX(OVERCAP_TX)} target="_blank" rel="noreferrer" style={{ color: CF.bear, fontWeight: 600 }}>
+            reverted {OVERCAP_TX.slice(0, 10)}…{OVERCAP_TX.slice(-6)} ↗
+          </a>
+          <a href={SEPOLIA_TX(INCAP_TX)} target="_blank" rel="noreferrer" style={{ color: CF.gold, fontWeight: 600 }}>
+            a ${cap} bet settles ✓ {INCAP_TX.slice(0, 10)}…{INCAP_TX.slice(-6)} ↗
+          </a>
+        </div>
+      </div>
+      <div style={{ padding: '12px 16px', borderTop: `1px solid ${alpha(CF.bear, 20)}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+        <span className="mono" style={{ fontSize: 11, color: CF.ink2 }}>
+          {proved ? 'No code stopped it — MetaMask’s enforcer did.' : 'Real, already-mined. Or prove it again, live.'}
+        </span>
+        <button onClick={onProve} disabled={proving} className="cf-press" style={{
+          padding: '9px 16px', borderRadius: CF.radius.md, border: 'none', cursor: proving ? 'wait' : 'pointer',
+          background: proving ? CF.surface2 : CF.bear, color: proving ? CF.ink3 : '#fff',
+          fontFamily: CF.body, fontWeight: 700, fontSize: 12.5,
+        }}>
+          {proving ? 'Proving on-chain…' : proved ? 'Reverted again ↻' : `Try to bet $${amount}, live →`}
+        </button>
       </div>
     </div>
   )

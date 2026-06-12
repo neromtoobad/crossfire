@@ -6,7 +6,6 @@ import { getCallByIdWithPolymarket, relativeTime } from '../../../lib/calls-data
 import { ConnectButton } from '../../../components/ConnectButton'
 import { UnlockThesis } from '../../../components/UnlockThesis'
 import { FadeFollow } from '../../../components/FadeFollow'
-import { TheCap } from '../../../components/TheCap'
 import { PhaseBadge, MatchLifecycle } from '../../../components/PhaseBadge'
 import { matchPhase, canBet, PHASE_META } from '../../../lib/match-phase'
 import { VerdictCard } from '../../../components/VerdictCard'
@@ -250,15 +249,10 @@ BACKED WITH
         {/* ── fade or follow: only while the market is OPEN (locks at kickoff) ──
                locked reasoning stripped — client components never see it unpaid */}
         {bettingOpen ? (
-          <>
-            <section style={{ padding: '12px 0' }}>
-              <FadeFollow call={{ ...call, locked: undefined } as unknown as typeof call} />
-            </section>
-            {/* ── THE IT MOMENT: the cap is the chain's, not our code ── */}
-            <section style={{ padding: '12px 0' }}>
-              <TheCap capUsdc={5} agentHandle={`AGENT ${leadHandle}`} />
-            </section>
-          </>
+          // the enforcer-revert proof now lives INSIDE Fade or Follow ($50 = over-cap)
+          <section style={{ padding: '12px 0' }}>
+            <FadeFollow call={{ ...call, locked: undefined } as unknown as typeof call} />
+          </section>
         ) : (
           <section style={{ padding: '12px 0' }}>
             <div style={{ padding: '18px 20px', background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
