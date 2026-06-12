@@ -29,7 +29,8 @@
     "test:unlock": "tsx scripts/test-unlock.ts",
     "test:unlock:direct": "tsx scripts/test-unlock-direct.ts",
     "dev": "next dev",
-    "test:venice-x402": "tsx scripts/test-venice-x402.ts"
+    "test:venice-x402": "tsx scripts/test-venice-x402.ts",
+    "deploy:full": "bash scripts/push-env-to-vercel.sh"
   },
   "license": "MIT",
   "devDependencies": {
