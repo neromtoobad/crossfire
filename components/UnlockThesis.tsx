@@ -15,7 +15,7 @@
 import { useEffect, useState } from 'react'
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
-import { erc20Abi } from 'viem'
+import { erc20Abi, encodeFunctionData } from 'viem'
 import { ConnectButton } from './ConnectButton'
 import { PUBLIC } from '../lib/public-config'
 import type { PublishedCall } from '../lib/calls-data'
@@ -220,23 +220,34 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
         amount: string; asset: `0x${string}`; payTo: `0x${string}`
       }
 
-      // (2) x402 "exact" scheme: a plain USDC.transfer(payTo, amount). MetaMask
-      //     signs this as a normal ERC-20 tx, no smart-account / delegation
-      //     friction. The ERC-7710 story is already proven by the council.
+      // (2) The user may be on Ethereum Sepolia (11155111) - a DIFFERENT "Sepolia".
+      //     Switch the wallet to Base Sepolia, then send the USDC.transfer through
+      //     the connector's provider (this avoids viem's stale-walletClient chain
+      //     assertion, which is what threw the "wallet 11155111 != target 84532"
+      //     error). x402 "exact" scheme: a plain USDC.transfer(payTo, amount).
       setState({ kind: 'signing' })
-      const txHash = await walletClient.writeContract({
-        account: address,
-        // Target Base Sepolia explicitly. walletClient.chain can resolve to the
-        // wrong network (e.g. Ethereum Sepolia 11155111) when the wallet client
-        // is cookie-hydrated or an embedded provider seeds a different default -
-        // viem then rejects the tx as a chain mismatch even though the wallet is
-        // on 84532. The pre-flight above already confirmed the provider is here.
-        chain: baseSepolia,
-        address: accepted.asset,
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [accepted.payTo, BigInt(accepted.amount)],
-      })
+      const prov: any = (await (connector as any)?.getProvider?.()) ?? (typeof window !== 'undefined' ? (window as any).ethereum : undefined)
+      if (!prov?.request) throw new Error('Wallet provider not available - reconnect and try again.')
+      const targetHex = `0x${PUBLIC.chainId.toString(16)}`
+      try {
+        const cur = await prov.request({ method: 'eth_chainId' })
+        if (parseInt(cur, 16) !== PUBLIC.chainId) {
+          try { await prov.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: targetHex }] }) }
+          catch (e: any) {
+            if (e?.code === 4902) {
+              await prov.request({ method: 'wallet_addEthereumChain', params: [{
+                chainId: targetHex, chainName: 'Base Sepolia',
+                nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+                rpcUrls: ['https://sepolia.base.org'], blockExplorerUrls: ['https://sepolia.basescan.org'],
+              }] })
+            } else throw e
+          }
+        }
+      } catch {
+        throw new Error('Approve the switch to Base Sepolia in your wallet to pay 0.10 USDC.')
+      }
+      const data = encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [accepted.payTo, BigInt(accepted.amount)] })
+      const txHash = (await prov.request({ method: 'eth_sendTransaction', params: [{ from: address, to: accepted.asset, data }] })) as `0x${string}`
 
       // (4) Hand the tx hash to the server. It waits for the receipt, verifies
       //     the transfer matches (to, amount, sender), and returns the thesis.

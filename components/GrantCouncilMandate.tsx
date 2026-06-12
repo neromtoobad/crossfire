@@ -149,6 +149,28 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
     }
     setState({ kind: 'granting' })
     try {
+      // Make sure the wallet is on Base Sepolia first. The user may be on
+      // Ethereum Sepolia (11155111) - a different "Sepolia" - and the grant must
+      // land on 84532. Switch via the connector's provider before requesting.
+      try {
+        const prov: any = (await (connector as any)?.getProvider?.()) ?? (typeof window !== 'undefined' ? (window as any).ethereum : undefined)
+        const targetHex = `0x${PUBLIC.chainId.toString(16)}`
+        if (prov?.request) {
+          const cur = await prov.request({ method: 'eth_chainId' })
+          if (parseInt(cur, 16) !== PUBLIC.chainId) {
+            try { await prov.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: targetHex }] }) }
+            catch (e: any) {
+              if (e?.code === 4902) {
+                await prov.request({ method: 'wallet_addEthereumChain', params: [{
+                  chainId: targetHex, chainName: 'Base Sepolia',
+                  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+                  rpcUrls: ['https://sepolia.base.org'], blockExplorerUrls: ['https://sepolia.basescan.org'],
+                }] })
+              } else throw e
+            }
+          }
+        }
+      } catch { /* if the switch is declined, let the grant attempt anyway */ }
       const expiry = Math.floor(Date.now() / 1000) + EXPIRY_HOURS * 3600
       const erc7715 = walletClient.extend(erc7715ProviderActions())
       const granted = await erc7715.requestExecutionPermissions([{
