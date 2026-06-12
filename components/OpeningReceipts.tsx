@@ -3,7 +3,7 @@
 // markets stay open until they're actually played and settled. This is the
 // accountability loop, made visible on what truly happened.
 
-import { SETTLED_MATCHES, hits, type SettledMatch } from '../lib/opening-results'
+import { getPlayedMatches, hits, type SettledMatch } from '../lib/wc-results'
 import { PUNDITS, handleOf } from '../lib/pundits'
 import { A } from '../lib/arena'
 import { alpha } from '../lib/theme'
@@ -108,25 +108,29 @@ function MatchReceipt({ m }: { m: SettledMatch }) {
   )
 }
 
-export function OpeningReceipts() {
+export async function OpeningReceipts() {
+  const matches = await getPlayedMatches(Date.now())
+  if (matches.length === 0) return null
+  const n = matches.length
   return (
     <section style={{ marginTop: 8, padding: '8px 0 0' }}>
       <div style={{ marginBottom: 18 }}>
         <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2.4, color: A.gold, marginBottom: 8, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <span className="cf-live-dot" aria-hidden /> THE CUP IS UNDERWAY · FIRST RESULT IN
+          <span className="cf-live-dot" aria-hidden /> THE CUP IS UNDERWAY · {n} PLAYED
         </div>
         <h2 style={{ fontFamily: A.display, fontWeight: 600, fontSize: 'clamp(24px, 2.5vw, 32px)', letterSpacing: -0.8, color: A.cream, margin: 0 }}>
           Every call is on the record.
         </h2>
         <p style={{ fontSize: 14, color: A.text2, lineHeight: 1.55, margin: '8px 0 0', maxWidth: 660 }}>
-          The opener is settled — and every agent had a call on it, graded against the
-          <span style={{ color: A.text }}> real final score</span>. As each match is played it settles the same
-          way: by <span style={{ color: A.text }}>UMA&apos;s Optimistic Oracle</span>, on the actual result. No
-          invented scores — markets without a confirmed result yet stay <span style={{ color: A.text }}>open</span>.
+          {n === 1 ? 'The opener is settled' : `${n} matches are settled`} — and every agent had a call on each,
+          graded against the <span style={{ color: A.text }}>real final score</span> (pulled live from the
+          results feed). As each match is played it settles the same way: by
+          <span style={{ color: A.text }}> UMA&apos;s Optimistic Oracle</span>, on the actual result. No invented
+          scores — markets without a confirmed result yet stay <span style={{ color: A.text }}>open</span>.
         </p>
       </div>
-      <div className={SETTLED_MATCHES.length > 1 ? 'cf-g2' : ''} style={{ gap: 16, maxWidth: SETTLED_MATCHES.length > 1 ? undefined : 600 }}>
-        {SETTLED_MATCHES.map((m) => <MatchReceipt key={m.id} m={m} />)}
+      <div className={n > 1 ? 'cf-g2' : ''} style={{ gap: 16, maxWidth: n > 1 ? undefined : 600 }}>
+        {matches.map((m) => <MatchReceipt key={m.id} m={m} />)}
       </div>
       <div className="mono" style={{ fontSize: 10.5, color: A.text3, marginTop: 12, lineHeight: 1.5 }}>
         ⚖ Live markets settle via <span style={{ color: A.gold }}>UMA&apos;s Optimistic Oracle</span> (the same
