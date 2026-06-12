@@ -10,8 +10,9 @@
 
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 
-const FILE = resolve(process.cwd(), '.crossfire', 'webhook-url')
+const FILE = resolve(STATE_BASE, 'webhook-url')
 
 function normalize(base: string): string {
   const trimmed = base.replace(/\/+$/, '')

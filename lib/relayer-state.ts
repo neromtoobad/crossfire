@@ -5,8 +5,9 @@
 
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 
-const STATE_DIR = resolve(process.cwd(), '.crossfire')
+const STATE_DIR = STATE_BASE
 const STATE_FILE = resolve(STATE_DIR, 'state.json')
 
 export type RelayerEvent = {

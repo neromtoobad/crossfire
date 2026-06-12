@@ -8,11 +8,12 @@ import { PUNDITS, PUNDIT_ROLES, type Pundit } from './pundits.js'
 import type { AgentRole } from './calls-data.js'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 
 // A fast Venice model for this generative task (the heavy qwen3-235b decision
 // model is frequently overloaded). Still Venice — the only provider.
 const MODEL = 'zai-org-glm-4.7-flash'
-const DIR = resolve(process.cwd(), '.crossfire')
+const DIR = STATE_BASE
 const FILE = resolve(DIR, 'winner-picks.json')
 
 export type WinnerPick = { role: AgentRole; handle: string; country: string; flag: string; reason: string }

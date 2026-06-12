@@ -6,9 +6,10 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 import { env } from './env.js'
 
-const DIR = resolve(process.cwd(), '.crossfire/verdict-cards')
+const DIR = resolve(STATE_BASE, 'verdict-cards')
 const IMAGE_MODEL = 'venice-sd35' // fast, reliable Venice image model
 
 function cachePath(callId: string): string {

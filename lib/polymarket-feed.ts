@@ -2,6 +2,7 @@
 
 import { readFileSync, existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 
 export type WatchMarket = {
   id: string
@@ -29,7 +30,7 @@ export type WatchSnapshot = {
   markets: WatchMarket[]
 }
 
-const FILE = resolve(process.cwd(), '.crossfire', 'polymarket-cache.json')
+const FILE = resolve(STATE_BASE, 'polymarket-cache.json')
 
 let cached: WatchSnapshot | null = null
 let cachedMtime = 0

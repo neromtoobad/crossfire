@@ -4,8 +4,9 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 
-const STATE_DIR = resolve(process.cwd(), '.crossfire')
+const STATE_DIR = STATE_BASE
 const FILE = resolve(STATE_DIR, 'mandates.json')
 
 export type StoredMandate = {

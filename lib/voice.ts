@@ -4,9 +4,10 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 import { env } from './env.js'
 
-const DIR = resolve(process.cwd(), '.crossfire/voice')
+const DIR = resolve(STATE_BASE, 'voice')
 const MODEL = 'tts-kokoro'
 
 function hash(s: string): string {
@@ -35,7 +36,10 @@ export async function generateVoice(voiceId: string, text: string): Promise<{ ke
   })
   if (!res.ok) throw new Error(`Venice TTS ${res.status}`)
   const audio = Buffer.from(await res.arrayBuffer())
-  if (!existsSync(DIR)) mkdirSync(DIR, { recursive: true })
-  writeFileSync(pathFor(key), audio)
+  // caching is best-effort — a read-only FS must never fail the request
+  try {
+    if (!existsSync(DIR)) mkdirSync(DIR, { recursive: true })
+    writeFileSync(pathFor(key), audio)
+  } catch { /* skip cache; still return the audio */ }
   return { key, audio }
 }

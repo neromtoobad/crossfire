@@ -4,8 +4,9 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 
-const DIR = resolve(process.cwd(), '.crossfire')
+const DIR = STATE_BASE
 const FILE = resolve(DIR, 'bets.json')
 
 export type Bet = {

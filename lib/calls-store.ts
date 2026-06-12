@@ -3,9 +3,10 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { STATE_BASE } from './state-dir.js'
 import type { PublishedCall } from './calls-data.js'
 
-const DIR = resolve(process.cwd(), '.crossfire')
+const DIR = STATE_BASE
 const FILE = resolve(DIR, 'calls.json')
 
 type Store = { calls: PublishedCall[] }
