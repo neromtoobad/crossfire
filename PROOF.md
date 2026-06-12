@@ -5,7 +5,7 @@ Every claim that wins a track has a tx hash, error string, or webhook payload he
 ## Phase 0 — sanity
 
 - Venice API key: authenticates ✓ (credits funded)
-- 1Shot API key: authenticates ✓ (relayer provisioning pending)
+- 1Shot API key: authenticates ✓ · Base mainnet relayer provisioned ✓ (one real mainnet relay completed — see Phase 5.3)
 - EOAs derived and funded:
   - USER `0xE7aa82bD4659B5Af2B16D0Af5dCab42fe8089b40` — 0.82 Sepolia ETH · 20 Sepolia USDC · 5.07 mainnet USDC
   - ORCH `0x58a17A308431e7C56A92Df78cEeBeB6a99D5301f` — 0.019 Sepolia ETH · 20 Sepolia USDC
@@ -218,8 +218,13 @@ What landed on Base mainnet:
 - **Executions batch (2 calls)**:
   1. `USDC.transfer(feeCollector, 2_000_000)` — fee transfer
   2. `USDC.transfer(USER, 1_000)` — the work (0.001 USDC self-transfer)
-- **Gas used:** 353,845
+- **Gas used:** 338,540
 - **Required fee:** $0.01 (10,000 USDC atoms). We over-included a 2 USDC fee transfer for safety margin — fixable in tighter v2 by using `est.requiredPaymentAmount` directly.
+
+**Independently verified on-chain (re-checked against Base mainnet RPC):**
+- `eth_getTransactionByHash` → **type `0x4` (EIP-7702)**, `authorizationList` = 1 entry authorizing impl `0x63c0…e32B`; `from` = 1Shot relayer `0x7338ffc0…cc9b8`, `to` = DelegationManager `0xdb9b1e94…047dB3`; block 46,979,700.
+- `eth_getTransactionReceipt` → **status `0x1` (success)**; two USDC `Transfer` logs: `2.000000 USDC → feeCollector 0xE936…7604` (gas paid in USDC) + `0.001 USDC → USER 0xE7aa…9b40` (the metered work).
+- Live `relayer_getCapabilities` → Base mainnet (8453) relayer provisioned, accepts USDC + USDT. Re-runnable via `npm run relayer:caps`.
 
 ### 5.4 — Dashboard ✓
 `app/page.tsx` — a Next.js server component that reads real on-chain state and persisted duel/relayer snapshots. Six panels:
