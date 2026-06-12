@@ -186,12 +186,13 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
                 expiresAt: granted?.expiry ? granted.expiry * 1000 : Date.now() + 3600_000,
                 context: granted?.context, redeemer: granted?.redeemer, ts: Date.now(),
               })
-              // best-effort server mirror (harmless; not relied on for the Vault)
+              // durable mirror — persists to KV when one is provisioned, giving
+              // cross-device Vault sync; a no-op otherwise (localStorage holds it).
               fetch('/api/bets', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   user: address, callId: call.id, marketId: call.marketId, marketTitle: call.marketTitle,
-                  agentHandle, choice: choice ?? 'follow', side: betSide, amountUsdc: amount,
+                  agentHandle, choice: choice ?? 'follow', side: betSide, amountUsdc: amount, proof,
                 }),
               }).catch(() => {})
             }}

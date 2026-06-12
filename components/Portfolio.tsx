@@ -22,15 +22,29 @@ export function Portfolio() {
   const [loading, setLoading] = useState(false)
   const [revoking, setRevoking] = useState<string | null>(null)
 
-  // The Vault reads the user's own browser store — durable across Vercel's
-  // ephemeral serverless instances, where a server file store silently loses
-  // bets. Each bet/mandate carries its real ERC-7715 permission context.
+  // The Vault reads the user's own browser store first (instant, durable across
+  // Vercel's ephemeral instances), then merges any cross-device bets from the
+  // KV-backed API when a KV is provisioned. Each bet carries its real ERC-7715
+  // permission context as on-chain proof.
   const load = useCallback(async () => {
     if (!address) return
     setLoading(true)
     try {
-      setBets(listBetsLocal(address))
+      const local = listBetsLocal(address)
+      setBets(local)
       setMandates(listMandatesLocal(address))
+      // cross-device merge (no-op when no KV is configured)
+      try {
+        const r = await fetch(`/api/bets?user=${address}`).then((x) => x.json())
+        if (r?.kv && Array.isArray(r.bets) && r.bets.length) {
+          const byCall = new Map(local.map((b) => [b.callId, b]))
+          for (const sb of r.bets as Bet[]) {
+            const ex = byCall.get(sb.callId)
+            if (!ex || sb.ts > ex.ts) byCall.set(sb.callId, sb)
+          }
+          setBets([...byCall.values()].sort((a, b) => b.ts - a.ts))
+        }
+      } catch { /* offline / no KV — local store already shown */ }
     } finally {
       setLoading(false)
     }
