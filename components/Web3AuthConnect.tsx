@@ -1,8 +1,8 @@
 'use client'
 
 // Embedded-wallet connect button (MetaMask Embedded Wallets / Web3Auth v10).
-// "Sign in or connect" opens the Web3Auth modal — email, Google, social, OR
-// MetaMask — and yields an embedded smart account. Same look + variant API as
+// "Sign in or connect" opens the Web3Auth modal, email, Google, social, OR
+// MetaMask, and yields an embedded smart account. Same look + variant API as
 // the RainbowKit ConnectButton, so it's a drop-in when the feature is enabled.
 
 import { useAccount } from 'wagmi'
@@ -24,7 +24,7 @@ export function Web3AuthConnect({ variant = 'primary' }: { variant?: 'primary' |
       ? { padding: '10px 16px', borderRadius: CF.radius.md, background: CF.ink, color: CF.bg, fontFamily: CF.body, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }
       : { padding: '8px 12px', borderRadius: CF.radius.md, background: 'transparent', color: CF.ink2, fontFamily: CF.body, fontSize: 13, fontWeight: 500, border: `1px solid ${CF.line}`, cursor: 'pointer' }
 
-  // placeholder during SSR / SDK init — keeps the layout from jumping
+  // placeholder during SSR / SDK init, keeps the layout from jumping
   if (!mounted || !isInitialized) {
     return (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: CF.radius.md, background: CF.surface, color: CF.ink3, fontFamily: CF.body, fontSize: 13, fontWeight: 500, border: `1px solid ${CF.line}` }}>
@@ -41,7 +41,7 @@ export function Web3AuthConnect({ variant = 'primary' }: { variant?: 'primary' |
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         {wrongChain ? (
           <span className="mono" style={{ padding: '5px 10px', borderRadius: 999, border: `1px solid ${alpha(CF.bear, 25)}`, background: CF.bearTint, color: CF.bearInk, fontSize: 11, fontWeight: 600 }}>
-            wrong chain — switch to Base Sepolia
+            wrong chain, switch to Base Sepolia
           </span>
         ) : null}
         <button onClick={() => disconnect()} style={{ padding: '8px 12px', borderRadius: CF.radius.md, background: CF.surface, color: CF.ink, border: `1px solid ${CF.line2}`, fontFamily: CF.body, fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>

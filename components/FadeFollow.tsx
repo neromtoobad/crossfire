@@ -1,12 +1,12 @@
 'use client'
 
-// FADE OR FOLLOW — the core mechanic.
+// FADE OR FOLLOW, the core mechanic.
 //
 // The forecasters disagree, and each stakes real, chain-capped USDC by how sure
 // it is. That disagreement IS the pot: the YES-voters' stakes vs the NO-voters'.
 // You FOLLOW the lead forecaster (bet its side) or FADE it (bet the opposite),
 // and the winning side splits the pot, pro-rata. Your bet is placed via the
-// ERC-7715 capped mandate (the kit moment) — the chain won't let it overspend.
+// ERC-7715 capped mandate (the kit moment), the chain won't let it overspend.
 
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
@@ -20,7 +20,7 @@ import { recordMandateLocal } from '../lib/mandate-client'
 import { PUBLIC } from '../lib/public-config'
 import { CF, alpha } from '../lib/theme'
 
-const STAKE_OPTIONS = [1, 2, 5, 50] // USDC — $50 is the over-cap (10×) revert demo
+const STAKE_OPTIONS = [1, 2, 5, 50] // USDC, $50 is the over-cap (10×) revert demo
 
 function leadPundit(call: PublishedCall) {
   const onSide = call.votes.filter((v) => v.vote === call.side)
@@ -97,7 +97,7 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
         </div>
       </div>
 
-      {/* the pot — the forecasters' own disagreement */}
+      {/* the pot, the forecasters' own disagreement */}
       <PoolBar pools={pools} />
 
       {choice === null ? (
@@ -122,7 +122,7 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
             <div style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink }}>
               You’re <strong style={{ color: betColor, fontWeight: 700 }}>
                 {choice === 'fade' ? `fading ${lead?.handle ?? 'the desk'}` : `following ${lead?.handle ?? 'the desk'}`}
-              </strong>{' '}— betting <strong style={{ color: betColor }}>{betSide}</strong>.
+              </strong>{' '}- betting <strong style={{ color: betColor }}>{betSide}</strong>.
             </div>
             <button onClick={() => setChoice(null)} className="mono" style={{
               background: 'none', border: 'none', cursor: 'pointer',
@@ -195,7 +195,7 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
                 expiresAt: granted?.expiry ? granted.expiry * 1000 : Date.now() + 3600_000,
                 context: granted?.context, redeemer: granted?.redeemer, ts: Date.now(),
               })
-              // durable mirror — persists to KV when one is provisioned, giving
+              // durable mirror, persists to KV when one is provisioned, giving
               // cross-device Vault sync; a no-op otherwise (localStorage holds it).
               fetch('/api/bets', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -211,7 +211,7 @@ export function FadeFollow({ call, agentRole }: { call: PublishedCall; agentRole
               cta: `Bet ${betSide} · up to $5`,
               blurb: (
                 <>Authorize up to <strong style={{ color: CF.ink, fontWeight: 600 }}>$5</strong> in MetaMask to place this bet.
-                It’s a capped, expiring permission (ERC-7715) — the chain won’t let your bet exceed the limit, and you can
+                It’s a capped, expiring permission (ERC-7715), the chain won’t let your bet exceed the limit, and you can
                 revoke anytime. Try to bet past the cap and the transaction reverts on-chain.</>
               ),
             }} />

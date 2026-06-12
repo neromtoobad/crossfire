@@ -1,4 +1,4 @@
-// /markets — the full market feed (all 82 World Cup markets + fixtures, tabbed).
+// /markets, the full market feed (all 82 World Cup markets + fixtures, tabbed).
 // Renders in the arena dark/gold theme via the CF tokens. This is where the
 // landing's "VIEW ALL MARKETS" lands.
 
@@ -54,7 +54,7 @@ export default async function Markets() {
             Every match. Every call.
           </h1>
           <p style={{ fontFamily: CF.body, fontSize: 15, color: CF.ink2, lineHeight: 1.55, maxWidth: 620, margin: 0 }}>
-            All the fixtures the five agents are calling. Fade or follow any of them —
+            All the fixtures the five agents are calling. Fade or follow any of them -
             filter by stage, or jump to live matches and settled results.
           </p>
         </section>

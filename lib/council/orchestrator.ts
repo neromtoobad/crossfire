@@ -1,7 +1,7 @@
-// Phase 8.2 — orchestrator. Runs the 5-role council against a market and
+// Phase 8.2, orchestrator. Runs the 5-role council against a market and
 // either returns a PublishedCall (gate passed) or null (refused).
 //
-// Phase 8.2 is Venice-only — no x402 evidence buys, no on-chain bond
+// Phase 8.2 is Venice-only, no x402 evidence buys, no on-chain bond
 // (the gate just GATES; persistence + on-chain bond is Phase 8.3).
 //
 // Inputs are deliberately small so we can swap in real evidence (x402)
@@ -36,7 +36,7 @@ import { erc7710WalletActions } from '@metamask/smart-accounts-kit/actions'
 import { encodeDelegations } from '@metamask/smart-accounts-kit/utils'
 import { getSmartAccountsEnvironment } from '@metamask/smart-accounts-kit'
 
-// Quality gate thresholds — same shape as the README documents.
+// Quality gate thresholds, same shape as the README documents.
 const MIN_AGREE = 3
 const MAX_SKEPTIC_VETO_CONF = 0.5
 const MIN_EDGE = 0.05
@@ -56,7 +56,7 @@ export type CouncilEvent =
   | { type: 'published'; call: PublishedCall }
   | { type: 'refused'; reason: string }
   | { type: 'error'; message: string }
-  // Phase 9.1 — live debate events (only emitted when opts.debate is on)
+  // Phase 9.1, live debate events (only emitted when opts.debate is on)
   | DebateEvent
 
 export type RunCouncilOptions = {
@@ -69,7 +69,7 @@ export type RunCouncilOptions = {
   bondUsdc?: number
   // Persist the PublishedCall to .crossfire/calls.json on success.
   persist?: boolean
-  // Phase 9.1 — run the agents as a streamed multi-round debate instead of
+  // Phase 9.1, run the agents as a streamed multi-round debate instead of
   // parallel one-shot votes. Slower + more Venice calls, but it's the show.
   debate?: boolean
 }
@@ -118,7 +118,7 @@ export async function runCouncil(
 
   // ── 2. Buy evidence per role via x402 (or use stubs) ──────────────────
   // The buyer is BULL EOA (treasury sub-budget); each evidence purchase
-  // redeems through the council's ERC-7710 chain — real USDC moves from
+  // redeems through the council's ERC-7710 chain, real USDC moves from
   // USER SA → facilitator. 4 buys × 0.5 USDC = 2 USDC per council run.
   const evidenceByRole: Partial<Record<(typeof ROLES)[number], EvidenceItem>> = {}
   const evidenceTxs: string[] = []
@@ -187,9 +187,9 @@ export async function runCouncil(
 
   // ── 3+4. Role agents + Skeptic ────────────────────────────────────────
   // Two modes:
-  //   debate (opt-in) — sequential multi-round streamed debate; agents read
+  //   debate (opt-in), sequential multi-round streamed debate; agents read
   //                     each other and react. The show.
-  //   default         — parallel one-shot votes + a Skeptic pass. Fast +
+  //   default        , parallel one-shot votes + a Skeptic pass. Fast +
   //                     cheap; used by the auto-cron.
   let roleVotes: AgentVote[]
   // Definite-assignment: set in the debate branch OR the !debate Skeptic block.
@@ -236,7 +236,7 @@ export async function runCouncil(
   const yesCount = roleVotes.filter((v) => v.vote === 'YES').length
   const noCount = roleVotes.filter((v) => v.vote === 'NO').length
   if (yesCount === 0 && noCount === 0) {
-    await emit({ type: 'refused', reason: 'every role voted NEUTRAL — no signal' })
+    await emit({ type: 'refused', reason: 'every role voted NEUTRAL, no signal' })
     return null
   }
   const majoritySide: 'YES' | 'NO' = yesCount > noCount ? 'YES' : 'NO'
@@ -248,7 +248,7 @@ export async function runCouncil(
     total: ROLES.length,
   })
 
-  // ── Skeptic (default mode only — debate already ran the Skeptic) ──────
+  // ── Skeptic (default mode only, debate already ran the Skeptic) ──────
   if (!opts.debate) {
     try {
       skepticVote = await runSkeptic({
@@ -340,7 +340,7 @@ export async function runCouncil(
 
       // Re-sign the chain for the bond redemption (we already have signedRoot
       // and bullBudget from the evidence step, but salts are fresh per
-      // delegation in our pattern — we can reuse the same signed chain since
+      // delegation in our pattern, we can reuse the same signed chain since
       // the kit allows multiple redemptions against the same delegation
       // until the cap is exhausted).
       const env = getSmartAccountsEnvironment(84532 as any)
@@ -369,7 +369,7 @@ export async function runCouncil(
       })
     } catch (e) {
       await emit({ type: 'error', message: `bond posting failed: ${(e as Error).message}` })
-      // Don't return null — we still publish the call, just without bondTxHash.
+      // Don't return null, we still publish the call, just without bondTxHash.
       // The narrative downgrades from "bond posted on-chain" to "bond pending".
     }
   }

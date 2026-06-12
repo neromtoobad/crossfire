@@ -1,6 +1,6 @@
 'use client'
 
-// Phase 7.4 — the kit-in-main-flow moment.
+// Phase 7.4, the kit-in-main-flow moment.
 //
 // The user picks a cap, picks an expiry, clicks Grant. We build an
 // ERC-7710 delegation via the MetaMask Smart Accounts Kit, ask the
@@ -41,7 +41,7 @@ type Props = {
 }
 
 export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
-  // wagmi state hydrates AFTER first render in Next.js SSR — without these
+  // wagmi state hydrates AFTER first render in Next.js SSR, without these
   // flags we briefly show "Connect wallet" even for users with a session in
   // localStorage, because the server has no idea about their wallet.
   const [mounted, setMounted] = useState(false)
@@ -52,7 +52,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
   const isConnected = accountStatus === 'connected'
   const isReconnecting = accountStatus === 'reconnecting' || accountStatus === 'connecting'
 
-  // ── debug panel — shown in every state until we confirm wagmi works ──
+  // ── debug panel, shown in every state until we confirm wagmi works ──
   const debugBox = (
     <div style={{
       padding: '10px 14px', marginBottom: 12, borderRadius: 8,
@@ -77,7 +77,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
     | { kind: 'error'; message: string }
   >({ kind: 'idle' })
 
-  // Don't fire "wrong chain" while wagmi is still resolving chain — only when
+  // Don't fire "wrong chain" while wagmi is still resolving chain, only when
   // it's definitely known to be something other than Base Sepolia.
   const wrongChain = isConnected && chain !== undefined && chain.id !== PUBLIC.chainId
 
@@ -208,7 +208,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
           CHECKING WALLET…
         </div>
         <p style={{ fontFamily: CF.display, color: CF.dim, lineHeight: 1.6, fontSize: 14, margin: 0 }}>
-          One moment — restoring your wallet session.
+          One moment, restoring your wallet session.
         </p>
       </div>
     )
@@ -220,7 +220,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
       <div style={panelStyle()}>
         {debugBox}
         <div style={{ fontFamily: CF.mono, fontSize: 10.5, letterSpacing: 1.6, color: CF.dim, marginBottom: 14 }}>
-          STEP 1 — CONNECT WALLET
+          STEP 1, CONNECT WALLET
         </div>
         <p style={{ fontFamily: CF.display, color: CF.dim, lineHeight: 1.6, fontSize: 14, margin: '0 0 22px' }}>
           Connect a wallet to grant the agents a capped budget. Your private key never leaves your wallet.
@@ -234,7 +234,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
     <div style={panelStyle()}>
       {debugBox}
       <div style={{ fontFamily: CF.mono, fontSize: 10.5, letterSpacing: 1.6, color: CF.bull, marginBottom: 14 }}>
-        STEP 2 — GRANT MANDATE
+        STEP 2, GRANT MANDATE
       </div>
 
       {/* CAP */}
@@ -290,7 +290,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
         borderRadius: 8, marginBottom: 18, fontFamily: CF.mono, fontSize: 11.5, color: CF.dim, lineHeight: 1.7,
       }}>
         <div>you sign <span style={{ color: CF.text }}>once</span> for {capUsdc} USDC over {hours}h</div>
-        <div>agents may only call <span style={{ color: CF.bull }}>USDC</span> and this market — nothing else</div>
+        <div>agents may only call <span style={{ color: CF.bull }}>USDC</span> and this market, nothing else</div>
         <div>over-cap attempts are <span style={{ color: CF.bear }}>refused by the chain</span></div>
         <div>revoke anytime to halt all further spend</div>
       </div>
@@ -301,7 +301,7 @@ export function GrantMandate({ marketId, marketAddress, marketTitle }: Props) {
           border: `1px solid ${CF.bear}`, background: `color-mix(in oklab, ${CF.bear} 12%, transparent)`,
           color: CF.bear, fontFamily: CF.mono, fontSize: 11.5,
         }}>
-          your wallet is on a different chain — switch to Base Sepolia (chainId 84532) to continue
+          your wallet is on a different chain, switch to Base Sepolia (chainId 84532) to continue
         </div>
       ) : null}
 

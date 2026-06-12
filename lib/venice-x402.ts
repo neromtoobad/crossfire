@@ -1,11 +1,11 @@
 // Venice, wallet-native. Two orthogonal upgrades live here:
 //
 //   · TEE model (#2): forecaster reasoning runs on a Venice E2EE / Trusted-
-//     Execution model (e2ee-*, supportsTeeAttestation). TE — not even Venice
+//     Execution model (e2ee-*, supportsTeeAttestation). TE, not even Venice
 //     sees this prompt. Works on either payment path.
 //   · x402 payment (#4): inference is paid from a delegated wallet's USDC on
 //     Base via venice-x402-client. The mandate cap then covers BOTH evidence
-//     buys AND the AI inference cost — the thing Venice-livestream judges look
+//     buys AND the AI inference cost, the thing Venice-livestream judges look
 //     for. Falls back to the API-key client until the wallet is funded.
 //
 // Pay path is chosen at call time from the wallet's spendable balance, so the
@@ -14,7 +14,7 @@
 import { venice } from './venice.js'
 import { env } from './env.js'
 
-// A fast Trusted-Execution model — private, attestable, low-latency for the
+// A fast Trusted-Execution model, private, attestable, low-latency for the
 // live debate. Override per call when a heavier model is worth the wait.
 export const TEE_MODEL = 'e2ee-glm-4-7-flash-p'
 
@@ -44,7 +44,7 @@ async function x402Client(): Promise<any | null> {
   return _client
 }
 
-/** Wallet x402 status — surfaced in the UI so the demo can show it's live. */
+/** Wallet x402 status, surfaced in the UI so the demo can show it's live. */
 export async function veniceWalletStatus(): Promise<{
   configured: boolean
   walletAddress?: string

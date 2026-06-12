@@ -1,4 +1,4 @@
-// Live 2026 World Cup group tables — the real tournament standings, pulled from
+// Live 2026 World Cup group tables, the real tournament standings, pulled from
 // ESPN's structured standings API (no key). Every number is real: games played,
 // W-D-L, goals for/against, goal difference, points, group rank. If the feed is
 // briefly unreachable we fall back to the last verified snapshot, never a guess.
@@ -44,8 +44,8 @@ function stat(e: EspnEntry, name: string): number {
 
 function parseGroup(g: EspnGroup): GroupTable {
   const teams: TeamRow[] = (g.standings?.entries ?? []).map((e) => ({
-    abbr: e.team?.abbreviation ?? e.team?.shortDisplayName ?? '—',
-    name: e.team?.displayName ?? e.team?.shortDisplayName ?? '—',
+    abbr: e.team?.abbreviation ?? e.team?.shortDisplayName ?? '-',
+    name: e.team?.displayName ?? e.team?.shortDisplayName ?? '-',
     rank: stat(e, 'rank') || 99,
     played: stat(e, 'gamesPlayed'),
     wins: stat(e, 'wins'),
@@ -80,7 +80,7 @@ export async function getWorldCupStandings(nowMs: number): Promise<WorldCupStand
   }
 }
 
-// Last-verified snapshot (real ESPN data, captured 2026-06-12) — only used if the
+// Last-verified snapshot (real ESPN data, captured 2026-06-12), only used if the
 // live feed is momentarily unreachable, so the table is never blank or invented.
 const SNAPSHOT: WorldCupStandings = {
   live: false,

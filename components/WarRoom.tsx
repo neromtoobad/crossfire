@@ -1,6 +1,6 @@
 'use client'
 
-// THE WAR ROOM — a broadcast booth where the five agents debate a market.
+// THE WAR ROOM, a broadcast booth where the five agents debate a market.
 // The panel forms its arguments (Venice), then takes the floor ONE AT A TIME,
 // in order: PHOENIX, then ORION, then NEXUS, ECHO, VEGA. Each agent's line is
 // spoken aloud in its own voice, its seat lights up ON AIR with a live audio
@@ -39,7 +39,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
   const [speaking, setSpeaking] = useState<Slot | null>(null)
   const voiceOnRef = useRef(true)
   // Turns are generated mostly in parallel but REVEALED + spoken in canonical
-  // role order — slots are indexed by PUNDIT_ROLES position; the sequencer walks
+  // role order, slots are indexed by PUNDIT_ROLES position; the sequencer walks
   // them in order, waiting for the next to be ready.
   const slotsRef = useRef<(Slot | null)[]>([])
   const playIdxRef = useRef(0)
@@ -48,7 +48,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
   const audioElRef = useRef<HTMLAudioElement | null>(null)
   const audioResolveRef = useRef<(() => void) | null>(null)
   const audioCacheRef = useRef<Map<string, string>>(new Map())
-  // Web Audio graph — taps the voice so the arena can react to it in real time
+  // Web Audio graph, taps the voice so the arena can react to it in real time
   const ctxRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const turnTextRef = useRef<Record<string, string>>({})
@@ -60,7 +60,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
     if (t && (t === WINNER_ID || callById.has(t))) setSelectedId(t)
   }, [params]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // the agents' country picks — shown on the seats for the winner debate
+  // the agents' country picks, shown on the seats for the winner debate
   useEffect(() => {
     fetch('/api/winner-picks').then((r) => r.json()).then((d) => {
       if (d.picks?.length) setWinnerPicks(Object.fromEntries(d.picks.map((p: { role: string; country: string; flag: string }) => [p.role, { country: p.country, flag: p.flag }])))
@@ -156,7 +156,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
         const item = slotsRef.current[playIdxRef.current]
         if (!item) {
           // next speaker not ready yet
-          if (!streamDoneRef.current) return // wait — a later turn-end re-kicks us
+          if (!streamDoneRef.current) return // wait, a later turn-end re-kicks us
           if (!slotsRef.current.slice(playIdxRef.current).some(Boolean)) break
           playIdxRef.current++
           continue
@@ -206,7 +206,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
         break
       }
       case 'error':
-        setError(e.message || 'Venice was busy — try again.')
+        setError(e.message || 'Venice was busy, try again.')
         break
     }
   }
@@ -232,7 +232,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
         const lines = buf.split('\n'); buf = lines.pop() ?? ''
         for (const line of lines) { if (!line.trim()) continue; let ev; try { ev = JSON.parse(line) } catch { continue } apply(ev, myRun) }
       }
-    } catch { setError('Lost the connection — try again.') }
+    } catch { setError('Lost the connection, try again.') }
     streamDoneRef.current = true
     void runSequencer(myRun) // flush any remaining turns
     setRunning(false); setDone(true)
@@ -243,7 +243,7 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      {/* the arena — a live, audio-reactive debate visualisation */}
+      {/* the arena, a live, audio-reactive debate visualisation */}
       <DebateArena
         speaking={speaking}
         positions={positions}
@@ -275,19 +275,19 @@ export function WarRoom({ calls }: { calls: PublishedCall[] }) {
 
       {error ? <div className="mono" style={{ fontSize: 12.5, color: CF.bear, padding: '4px 2px' }}>× {error}</div> : null}
 
-      {/* the transcript — fills one speaker at a time, in sync with the voice */}
+      {/* the transcript, fills one speaker at a time, in sync with the voice */}
       {messages.length > 0 && (
         <DebateTranscript messages={messages} rounds={rounds} />
       )}
 
-      {/* back or fade — for a binary call topic, the existing kit-backed bet */}
+      {/* back or fade, for a binary call topic, the existing kit-backed bet */}
       {selectedCall ? (
         <div style={{ marginTop: 4 }}>
           <FadeFollow call={selectedCall} />
         </div>
       ) : done && !error ? (
         <div className="mono" style={{ fontSize: 12.5, color: CF.ink3, padding: '8px 2px' }}>
-          Backing the winner market is coming soon — pick a match market above to fade or back an agent now.
+          Backing the winner market is coming soon, pick a match market above to fade or back an agent now.
         </div>
       ) : null}
     </div>

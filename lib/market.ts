@@ -1,4 +1,4 @@
-// Phase 4.2 — typed access to the deployed BinaryMarket contract.
+// Phase 4.2, typed access to the deployed BinaryMarket contract.
 // ABI is intentionally minimal; we only use the methods CROSSFIRE needs.
 
 import { parseAbi } from 'viem'
@@ -19,7 +19,7 @@ export const marketAbi = parseAbi([
 
 export function getMarket(): `0x${string}` {
   if (!MARKET_ADDRESS) {
-    throw new Error('MARKET_ADDRESS not set in env — deploy via `npm run deploy:market` first.')
+    throw new Error('MARKET_ADDRESS not set in env, deploy via `npm run deploy:market` first.')
   }
   return MARKET_ADDRESS
 }

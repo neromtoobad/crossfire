@@ -1,4 +1,4 @@
-// Phase 5 — file-based state for 1Shot webhook payloads + duel outcomes.
+// Phase 5, file-based state for 1Shot webhook payloads + duel outcomes.
 // In production these would live in a real DB. For the hackathon, a JSON
 // file at .crossfire/state.json lets the dashboard, webhook handler, and
 // scripts share the same source of truth across process restarts.

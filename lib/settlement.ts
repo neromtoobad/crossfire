@@ -1,11 +1,11 @@
-// Authoritative market settlement — SERVER-ONLY (pulls the Polymarket/UMA
+// Authoritative market settlement, SERVER-ONLY (pulls the Polymarket/UMA
 // oracle over the network). Client components needing the sync backtest grade
 // import lib/resolutions.ts instead, which stays pure.
 //
 // Resolution order:
-//   1. Backtest — real, already-played matches (public results).
-//   2. UMA Optimistic Oracle via Polymarket — for live markets with a slug.
-//   3. PENDING — until a real result exists. Never a guess.
+//   1. Backtest, real, already-played matches (public results).
+//   2. UMA Optimistic Oracle via Polymarket, for live markets with a slug.
+//   3. PENDING, until a real result exists. Never a guess.
 
 import { HISTORICAL_RESOLUTIONS } from './historical-matches.js'
 import { getPolymarketResolution } from './polymarket.js'
@@ -29,5 +29,5 @@ export async function resolveMarket(marketId: string, polymarketSlug?: string | 
     }
   }
 
-  return { status: 'PENDING', via: 'pending', source: 'Open — settles on the real result' }
+  return { status: 'PENDING', via: 'pending', source: 'Open, settles on the real result' }
 }

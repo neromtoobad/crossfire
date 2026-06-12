@@ -1,7 +1,7 @@
 'use client'
 
 // Providers. When MetaMask Embedded Wallets is enabled (a Web3Auth client ID is
-// set), the app boots the Web3Auth provider stack — email/social login → an
+// set), the app boots the Web3Auth provider stack, email/social login → an
 // embedded smart account, plus MetaMask. Otherwise it uses the existing
 // RainbowKit/wagmi stack (Base Sepolia + injected). Either way, every downstream
 // wagmi hook works the same, so the mandate grant / bets / revoke are unchanged.

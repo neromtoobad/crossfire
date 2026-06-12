@@ -1,4 +1,4 @@
-// Venice voice — each oracle speaks its own line in its own voice (Venice
+// Venice voice, each oracle speaks its own line in its own voice (Venice
 // audio/speech, tts-kokoro). Cached to runtime state so a line is generated
 // once and replays instantly.
 
@@ -36,7 +36,7 @@ export async function generateVoice(voiceId: string, text: string): Promise<{ ke
   })
   if (!res.ok) throw new Error(`Venice TTS ${res.status}`)
   const audio = Buffer.from(await res.arrayBuffer())
-  // caching is best-effort — a read-only FS must never fail the request
+  // caching is best-effort, a read-only FS must never fail the request
   try {
     if (!existsSync(DIR)) mkdirSync(DIR, { recursive: true })
     writeFileSync(pathFor(key), audio)

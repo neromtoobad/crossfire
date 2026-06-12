@@ -1,6 +1,6 @@
 'use client'
 
-// Live debate transcript — renders the council's round-based argument as a
+// Live debate transcript, renders the council's round-based argument as a
 // chat thread, streaming token-by-token. Phase 9.1.
 
 import { useEffect, useRef } from 'react'

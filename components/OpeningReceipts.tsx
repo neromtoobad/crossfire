@@ -1,4 +1,4 @@
-// THE RECEIPTS — the agents' calls on REAL, already-played World Cup matches,
+// THE RECEIPTS, the agents' calls on REAL, already-played World Cup matches,
 // graded HIT or MISS against the real final score. No invented results: 2026
 // markets stay open until they're actually played and settled. This is the
 // accountability loop, made visible on what truly happened.
@@ -12,9 +12,9 @@ function takeaway(m: SettledMatch): string {
   const h = hits(m)
   if (h === 1) {
     const lone = m.calls.find((c) => c.vote === m.outcome)
-    return `${lone ? handleOf(lone.role) : 'One agent'} stood alone — the only call that landed.`
+    return `${lone ? handleOf(lone.role) : 'One agent'} stood alone, the only call that landed.`
   }
-  if (h === m.calls.length) return `Clean sweep — all ${h} agents called it.`
+  if (h === m.calls.length) return `Clean sweep, all ${h} agents called it.`
   return `${h} of ${m.calls.length} agents called it.`
 }
 
@@ -70,7 +70,7 @@ function MatchReceipt({ m }: { m: SettledMatch }) {
         </span>
       </div>
 
-      {/* the receipts — every agent's call, graded */}
+      {/* the receipts, every agent's call, graded */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'space-between' }}>
         {m.calls.map((c) => {
           const p = PUNDITS[c.role]
@@ -122,11 +122,11 @@ export async function OpeningReceipts() {
           Every call is on the record.
         </h2>
         <p style={{ fontSize: 14, color: A.text2, lineHeight: 1.55, margin: '8px 0 0', maxWidth: 660 }}>
-          {n === 1 ? 'The opener is settled' : `${n} matches are settled`} — and every agent had a call on each,
+          {n === 1 ? 'The opener is settled' : `${n} matches are settled`}, and every agent had a call on each,
           graded against the <span style={{ color: A.text }}>real final score</span> (pulled live from the
           results feed). As each match is played it settles the same way: by
           <span style={{ color: A.text }}> UMA&apos;s Optimistic Oracle</span>, on the actual result. No invented
-          scores — markets without a confirmed result yet stay <span style={{ color: A.text }}>open</span>.
+          scores, markets without a confirmed result yet stay <span style={{ color: A.text }}>open</span>.
         </p>
       </div>
       <div className={n > 1 ? 'cf-g2' : ''} style={{ gap: 16, maxWidth: n > 1 ? undefined : 600 }}>
@@ -134,7 +134,7 @@ export async function OpeningReceipts() {
       </div>
       <div className="mono" style={{ fontSize: 10.5, color: A.text3, marginTop: 12, lineHeight: 1.5 }}>
         ⚖ Live markets settle via <span style={{ color: A.gold }}>UMA&apos;s Optimistic Oracle</span> (the same
-        decentralized, on-chain resolver Polymarket uses) — never a number we type. Verify any market at{' '}
+        decentralized, on-chain resolver Polymarket uses), never a number we type. Verify any market at{' '}
         <span style={{ color: A.text2 }}>/api/settlement?slug=…</span>
       </div>
     </section>

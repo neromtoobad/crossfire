@@ -1,4 +1,4 @@
-// GET /api/positions?user=0x... — returns the connected user's positions
+// GET /api/positions?user=0x..., returns the connected user's positions
 // across all 4 themed markets, read live from the chain.
 
 import { NextResponse, type NextRequest } from 'next/server'

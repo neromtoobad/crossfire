@@ -1,14 +1,14 @@
 'use client'
 
-// RevertProof — Phase 8.12.
+// RevertProof, Phase 8.12.
 //
 // One click runs the ERC-7710 revert proof live. The screen splits into two
 // outcomes: IN-CAP success (1 USDC transfer) and OVER-CAP reverted (60 USDC
 // attempt blocked at the enforcer). The over-cap card surfaces the actual
 // revert reason returned by the DelegationManager / ERC20TransferAmountEnforcer.
 //
-// This is the hero moment for the x402 + ERC-7710 track: the chain — not the
-// code — refuses the over-cap mandate, and the user sees it happen.
+// This is the hero moment for the x402 + ERC-7710 track: the chain, not the
+// code, refuses the over-cap mandate, and the user sees it happen.
 
 import { useRef, useState, useEffect } from 'react'
 import { CF } from '../lib/theme'
@@ -52,11 +52,11 @@ export function RevertProof({ onDone }: { onDone?: () => void } = {}) {
       case 'incap-attempt':
         return { kind: 'info', text: `▸ [A] in-cap redeem · attempt ${e.amountUsdc} USDC transfer via ORCH delegation` }
       case 'incap-confirmed':
-        return { kind: 'good', text: `✓ in-cap redeem confirmed — cap accepted ${e.amountUsdc} USDC`, tx: e.txHash }
+        return { kind: 'good', text: `✓ in-cap redeem confirmed, cap accepted ${e.amountUsdc} USDC`, tx: e.txHash }
       case 'overcap-attempt':
-        return { kind: 'info', text: `▸ [B] OVER-CAP attempt · trying ${e.amountUsdc} USDC against ${e.capUsdc} USDC cap — should REVERT` }
+        return { kind: 'info', text: `▸ [B] OVER-CAP attempt · trying ${e.amountUsdc} USDC against ${e.capUsdc} USDC cap, should REVERT` }
       case 'overcap-reverted':
-        return { kind: 'good', text: `✓ chain refused over-cap mandate — enforcer reverted` }
+        return { kind: 'good', text: `✓ chain refused over-cap mandate, enforcer reverted` }
       case 'error':
         return { kind: 'bad', text: `× ${e.message}` }
       case 'heartbeat':
@@ -146,7 +146,7 @@ export function RevertProof({ onDone }: { onDone?: () => void } = {}) {
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
             marginTop: 8, marginBottom: 0, maxWidth: 580, lineHeight: 1.55,
           }}>
-            One click. First it spends $1 against a $50 limit — that goes through.
+            One click. First it spends $1 against a $50 limit, that goes through.
             Then it tries to spend $60 against that same limit, and the blockchain
             <em style={{ fontStyle: 'italic', color: CF.ink }}> rejects the transaction </em>
             on the spot. Our code never blocks it. The network does.
@@ -175,7 +175,7 @@ export function RevertProof({ onDone }: { onDone?: () => void } = {}) {
             border: `1px solid ${inCapTx ? CF.bull + '40' : CF.line}`,
           }}>
             <div className="mono" style={{ fontSize: 10, letterSpacing: 1.4, color: CF.ink3, marginBottom: 6 }}>
-              [A] IN-CAP — 1 USDC
+              [A] IN-CAP, 1 USDC
             </div>
             <div style={{
               fontFamily: CF.body, fontSize: 14, fontWeight: 600,
@@ -200,7 +200,7 @@ export function RevertProof({ onDone }: { onDone?: () => void } = {}) {
             border: `1px solid ${overCapReason ? CF.bear + '40' : CF.line}`,
           }}>
             <div className="mono" style={{ fontSize: 10, letterSpacing: 1.4, color: CF.ink3, marginBottom: 6 }}>
-              [B] OVER-CAP — 60 USDC vs 50 USDC CAP
+              [B] OVER-CAP, 60 USDC vs 50 USDC CAP
             </div>
             <div style={{
               fontFamily: CF.body, fontSize: 14, fontWeight: 600,

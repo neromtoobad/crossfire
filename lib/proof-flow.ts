@@ -1,4 +1,4 @@
-// Phase 8.12 — extract scripts/proof.ts into a reusable flow with structured
+// Phase 8.12, extract scripts/proof.ts into a reusable flow with structured
 // events. Same orchestration, no behavior change. The reusable lib lets a UI
 // route stream events live, while keeping the CLI script working untouched.
 //
@@ -8,7 +8,7 @@
 //   3. As ORCH EOA: redeem the mandate for 1 USDC → MUST succeed
 //   4. As ORCH EOA: attempt 60 USDC → MUST revert at the enforcer
 //
-// The over-cap revert IS the hero shot — no code stops it, the chain does.
+// The over-cap revert IS the hero shot, no code stops it, the chain does.
 
 import { erc7710WalletActions } from '@metamask/smart-accounts-kit/actions'
 import { encodeDelegations } from '@metamask/smart-accounts-kit/utils'
@@ -108,7 +108,7 @@ export async function runProofFlow(opts: RunProofOptions = {}): Promise<{
   }
   await emit({ type: 'incap-confirmed', amountUsdc: '1', txHash: inCapHash })
 
-  // ── (B) OVER-CAP redeem: 60 USDC — must REVERT ──────────────────────
+  // ── (B) OVER-CAP redeem: 60 USDC, must REVERT ──────────────────────
   const sixtyUsdc = parseUnits('60', 6)
   await emit({
     type: 'overcap-attempt',
@@ -124,8 +124,8 @@ export async function runProofFlow(opts: RunProofOptions = {}): Promise<{
     })
     const r = await sepoliaPublicClient.waitForTransactionReceipt({ hash })
     if (r.status === 'success') {
-      // This should never happen — the cap MUST be enforced.
-      const msg = `OVER-CAP redeem mined successfully — cap not enforced. tx: ${hash}`
+      // This should never happen, the cap MUST be enforced.
+      const msg = `OVER-CAP redeem mined successfully, cap not enforced. tx: ${hash}`
       await emit({ type: 'error', message: msg })
       throw new Error(msg)
     }

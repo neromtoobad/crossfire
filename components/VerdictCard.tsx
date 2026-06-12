@@ -1,6 +1,6 @@
 'use client'
 
-// The Venice verdict card — visible Venice IMAGE output, in the main flow.
+// The Venice verdict card, visible Venice IMAGE output, in the main flow.
 // Venice renders the broadcast artwork; we overlay the crisp verdict text.
 
 import { useEffect, useState } from 'react'
@@ -93,7 +93,7 @@ export function VerdictCard({
         ) : (
           <div style={{ textAlign: 'center', padding: 28 }}>
             <div style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink2, marginBottom: 14, maxWidth: 360 }}>
-              {state === 'error' ? 'Couldn’t reach Venice — try again.' : 'Render this call as a broadcast verdict card with Venice’s image model.'}
+              {state === 'error' ? 'Couldn’t reach Venice, try again.' : 'Render this call as a broadcast verdict card with Venice’s image model.'}
             </div>
             <button onClick={generate} style={{
               padding: '11px 20px', borderRadius: CF.radius.md, border: 'none', cursor: 'pointer',

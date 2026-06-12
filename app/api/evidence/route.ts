@@ -1,4 +1,4 @@
-// Phase 3 — Prompt 3.1. The x402-gated evidence seller.
+// Phase 3, Prompt 3.1. The x402-gated evidence seller.
 //
 // Without a valid PAYMENT-SIGNATURE → returns 402 with PAYMENT-REQUIRED header.
 // With one → settles the payment on-chain (real USDC moves) and returns one
@@ -16,7 +16,7 @@ import type { EvidenceItem } from '../../../lib/x402-types.js'
 // Static evidence catalogue keyed by market id. For Phase 3 we don't care
 // about realism; we care that the buyer actually paid for it. Phase 4+ can
 // swap this for live URLs scraped by Venice.
-// ── Phase 8.3 — role-keyed evidence ──────────────────────────────────────
+// ── Phase 8.3, role-keyed evidence ──────────────────────────────────────
 // Each council role gets evidence tailored to its domain (MacroScout reads
 // structural/regulatory, NewsHawk reads news flow, etc.). The /api/evidence
 // route picks from this map when ?role=MacroScout|NewsHawk|CrowdPulse|BookWatcher
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const url = new URL(req.url)
   const marketId = url.searchParams.get('marketId') ?? 'phase3-demo-market'
   const sideHint = (url.searchParams.get('side') as 'YES' | 'NO' | null) ?? undefined
-  const role = url.searchParams.get('role')  // Phase 8.3 — role-keyed evidence
+  const role = url.searchParams.get('role')  // Phase 8.3, role-keyed evidence
 
   const sig = req.headers.get('PAYMENT-SIGNATURE') ?? req.headers.get('payment-signature')
 

@@ -8,7 +8,7 @@
 //   SETTLED → full time: result in, receipts posted
 //
 // Betting is ONLY allowed in OPEN. A market never settles while a debate is
-// mid-generation — settlement reads the resolution, which only exists for real,
+// mid-generation, settlement reads the resolution, which only exists for real,
 // already-played matches (lib/resolutions.ts).
 
 import { getResolution } from './resolutions.js'
@@ -18,8 +18,8 @@ export type MatchPhase = 'OPEN' | 'LOCKED' | 'LIVE' | 'SETTLED'
 export const PHASE_ORDER: MatchPhase[] = ['OPEN', 'LOCKED', 'LIVE', 'SETTLED']
 
 export const PHASE_META: Record<MatchPhase, { label: string; blurb: string; tone: 'open' | 'lock' | 'live' | 'done'; betting: boolean }> = {
-  OPEN: { label: 'OPEN', blurb: 'Calls are in. Back or fade — betting closes at kickoff.', tone: 'open', betting: true },
-  LOCKED: { label: 'LOCKED', blurb: 'Kickoff — betting is closed. The calls are set.', tone: 'lock', betting: false },
+  OPEN: { label: 'OPEN', blurb: 'Calls are in. Back or fade, betting closes at kickoff.', tone: 'open', betting: true },
+  LOCKED: { label: 'LOCKED', blurb: 'Kickoff, betting is closed. The calls are set.', tone: 'lock', betting: false },
   LIVE: { label: 'LIVE', blurb: 'Match in progress. Halftime read incoming.', tone: 'live', betting: false },
   SETTLED: { label: 'SETTLED', blurb: 'Full time. Result in, agents graded, receipts posted.', tone: 'done', betting: false },
 }

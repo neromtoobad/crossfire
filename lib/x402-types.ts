@@ -1,6 +1,6 @@
 // Shared x402 types between seller, facilitator, and buyer.
 // Matches the x402 v2 spec with the ERC-7710 ("erc7710") asset transfer method
-// — i.e. payment authorization comes from a signed open delegation chain.
+//, i.e. payment authorization comes from a signed open delegation chain.
 
 import type { Hex } from 'viem'
 

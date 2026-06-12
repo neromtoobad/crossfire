@@ -20,5 +20,5 @@ export const userWalletMainnet = createWalletClient({
   transport: http(env.BASE_MAINNET_RPC_URL),
 })
 
-// USDC native on Base mainnet — same as what the 1Shot relayer accepts.
+// USDC native on Base mainnet, same as what the 1Shot relayer accepts.
 export const USDC_MAINNET = env.USDC_BASE_MAINNET

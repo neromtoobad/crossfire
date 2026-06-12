@@ -1,11 +1,11 @@
-// Phase 7.7 — in-memory pub-sub for 1Shot webhook arrivals.
+// Phase 7.7, in-memory pub-sub for 1Shot webhook arrivals.
 //
 // Lives in the Next.js node runtime: the webhook route publishes here as
 // soon as 1Shot POSTs a status; the relay stream route subscribes and
 // surfaces arrivals into the live log. Per-taskId fan-out, with a small
 // global stream for the "any webhook received" indicator on the landing.
 //
-// Persistence is still handled by relayer-state.ts — this bus is the
+// Persistence is still handled by relayer-state.ts, this bus is the
 // real-time channel only. If the server restarts, queued listeners go
 // away, but persisted events survive.
 

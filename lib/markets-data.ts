@@ -14,7 +14,7 @@ export type MarketMeta = {
   question: string
   address: `0x${string}`
   closeTime: string
-  /** Polymarket Gamma slug — when set, the UI shows the live Polymarket price. */
+  /** Polymarket Gamma slug, when set, the UI shows the live Polymarket price. */
   polymarketSlug?: string
 }
 
@@ -82,7 +82,7 @@ export async function readMarketLive(meta: MarketMeta): Promise<MarketLive> {
       totalLiquidityUsdc: formatUnits(usdcBal, 6),
     }
   } catch {
-    // RPC hiccup — return safe defaults so the grid still renders
+    // RPC hiccup, return safe defaults so the grid still renders
     return {
       ...meta,
       totalYes: '0',

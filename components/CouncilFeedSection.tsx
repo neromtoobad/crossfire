@@ -1,6 +1,6 @@
 'use client'
 
-// Tabbed council feed — keeps the home page tight. Default "All" shows
+// Tabbed council feed, keeps the home page tight. Default "All" shows
 // every bonded call by recency. Per-category tabs filter to one bucket.
 
 import { useMemo, useState } from 'react'
@@ -140,7 +140,7 @@ export function CouncilFeedSection({
           marginTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           fontFamily: CF.body, fontSize: 13, color: CF.ink3,
         }}>
-          + {hiddenInAll} more fixtures —
+          + {hiddenInAll} more fixtures -
           <button onClick={() => setTab('group')} style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
             fontFamily: CF.body, fontSize: 13, fontWeight: 600, color: CF.ink, textDecoration: 'underline',

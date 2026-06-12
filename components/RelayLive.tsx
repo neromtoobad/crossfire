@@ -1,6 +1,6 @@
 'use client'
 
-// RelayLive — editorial-light treatment.
+// RelayLive, editorial-light treatment.
 
 import { useEffect, useRef, useState } from 'react'
 import { CF, alpha } from '../lib/theme'
@@ -11,7 +11,7 @@ type WebhookConfig = { url: string; source: string } | null
 const BASESCAN_MAINNET = (h: string) => `https://basescan.org/tx/${h}`
 
 // The relay we already executed on Base mainnet (gas paid in USDC, status
-// Confirmed). Captured in PROOF.md — shown here so the panel reads "proven",
+// Confirmed). Captured in PROOF.md, shown here so the panel reads "proven",
 // not "disabled", even when a fresh live relay is safety-locked.
 const PROVEN_TX = '0x5a093da29349a1519e67aed5f0b6a518109ade6fed6a5f53ca35f8d6a1312651'
 
@@ -66,7 +66,7 @@ export function RelayLive({ onDone }: { onDone?: () => void } = {}) {
       case 'webhook-config':
         return e.url
           ? { kind: 'info', text: `· webhook listener configured · ${e.source === 'env' ? 'env' : 'tunnel'} → ${e.url}` }
-          : { kind: 'info', text: `· no webhook URL configured — falling back to polling only` }
+          : { kind: 'info', text: `· no webhook URL configured, falling back to polling only` }
       case 'webhook-received':
         return {
           kind: 'good',
@@ -186,7 +186,7 @@ export function RelayLive({ onDone }: { onDone?: () => void } = {}) {
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
             marginTop: 8, marginBottom: 12, maxWidth: 580, lineHeight: 1.55,
           }}>
-            A real transaction relayed on Base mainnet through 1Shot — the fee paid in
+            A real transaction relayed on Base mainnet through 1Shot, the fee paid in
             USDC, so no ETH is needed for gas. EIP-7702 upgrades the signer in-flight.
           </p>
           {/* connection + proof status */}
@@ -195,7 +195,7 @@ export function RelayLive({ onDone }: { onDone?: () => void } = {}) {
               <span style={dotBull} /> MAINNET RELAYER CONNECTED · USDC FEE
             </span>
             <a href={BASESCAN_MAINNET(PROVEN_TX)} target="_blank" rel="noreferrer" className="mono" style={{ ...chipGood, textDecoration: 'none' }}>
-              ✓ 1 RELAY PROVEN ON MAINNET — VIEW TX ↗
+              ✓ 1 RELAY PROVEN ON MAINNET, VIEW TX ↗
             </a>
             {webhookConfig ? (
               <span className="mono" style={chipGood}>

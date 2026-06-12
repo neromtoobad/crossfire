@@ -1,6 +1,6 @@
-// POST /api/debate — run the five agents' live debate over ANY market, by its
+// POST /api/debate, run the five agents' live debate over ANY market, by its
 // question. Streams NDJSON debate-* events (same shape RunCouncilLive/the War
-// Room parse). Venice-only; no on-chain market required — this is the "watch
+// Room parse). Venice-only; no on-chain market required, this is the "watch
 // them argue" surface for every market.
 
 import type { NextRequest } from 'next/server'
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         if (body.winner) {
           // multi-candidate debate: each agent defends the nation it picked
           const data = getCachedWinnerPicks()
-          if (!data?.picks?.length) throw new Error('No winner picks yet — run the agents first.')
+          if (!data?.picks?.length) throw new Error('No winner picks yet, run the agents first.')
           write({ type: 'started', marketTitle: 'Who lifts the 2026 World Cup?', impliedProbYes: 0.5 })
           await runWinnerDebate({ picks: data.picks, emit: (e) => write(e) })
           write({ type: 'done' })
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
         write({ type: 'verdict', roleVotes, skepticVote })
         write({ type: 'done' })
       } catch (e) {
-        write({ type: 'error', message: (e as Error).message || 'Venice was busy — try again.' })
+        write({ type: 'error', message: (e as Error).message || 'Venice was busy, try again.' })
         write({ type: 'done' })
       } finally {
         controller.close()

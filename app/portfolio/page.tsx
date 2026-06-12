@@ -1,4 +1,4 @@
-// /portfolio — The Vault. A user's positions + chain-enforced mandates (revoke).
+// /portfolio, The Vault. A user's positions + chain-enforced mandates (revoke).
 
 import Link from 'next/link'
 import { ConnectButton } from '../../components/ConnectButton'
@@ -37,7 +37,7 @@ export default function PortfolioPage() {
           </h1>
           <p style={{ fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.6, maxWidth: 620, margin: 0 }}>
             Your open positions and the spending mandates you’ve granted. A mandate
-            is a chain-capped limit — the agent can never spend past it, and you can
+            is a chain-capped limit, the agent can never spend past it, and you can
             <span style={{ color: CF.ink }}> revoke it instantly</span>.
           </p>
         </section>

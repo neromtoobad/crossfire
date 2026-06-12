@@ -1,6 +1,6 @@
 'use client'
 
-// Phase 9.4 — the user-facing MetaMask Smart Accounts Kit moment.
+// Phase 9.4, the user-facing MetaMask Smart Accounts Kit moment.
 //
 // This is the qualifying "Advanced Permissions (ERC-7715) in the main flow"
 // interaction: the user grants the council a capped, expiring USDC spending
@@ -8,7 +8,7 @@
 // erc7715ProviderActions wraps wallet_requestExecutionPermissions; MetaMask
 // returns a scoped permission context which we display as proof.
 //
-// The grant IS the demonstrated kit interaction — it does not depend on
+// The grant IS the demonstrated kit interaction, it does not depend on
 // server-side redemption (which is the counterfactual-smart-account rabbit
 // hole). Thesis unlock stays a plain transfer; this is the kit showcase.
 
@@ -51,7 +51,7 @@ function classify(e: unknown): { message: string; detail?: string } {
     }
   }
   if (code === -32603) {
-    return { message: 'Wallet returned an internal error — make sure you are on Base Sepolia and the wallet is unlocked.', detail: detail || msg.slice(0, 240) }
+    return { message: 'Wallet returned an internal error, make sure you are on Base Sepolia and the wallet is unlocked.', detail: detail || msg.slice(0, 240) }
   }
   return { message: msg.slice(0, 240), detail }
 }
@@ -75,7 +75,7 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
   const isConnected = status === 'connected'
   const isReconnecting = status === 'reconnecting' || status === 'connecting'
 
-  // Read the chain from the ACTUAL connected wallet's provider — NOT
+  // Read the chain from the ACTUAL connected wallet's provider, NOT
   // window.ethereum, which can be a different installed wallet (or absent for an
   // embedded wallet) and falsely report the wrong chain. Falls back to wagmi.
   const [providerChainId, setProviderChainId] = useState<number | null>(null)
@@ -205,7 +205,7 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
           ✓ MANDATE GRANTED · ERC-7715 ADVANCED PERMISSION
         </div>
         <div style={{ fontFamily: CF.body, fontSize: 14.5, color: CF.ink, lineHeight: 1.55, marginBottom: 14 }}>
-          MetaMask issued the council a scoped, revocable spending permission. The chain enforces every limit — the council can never exceed it.
+          MetaMask issued the council a scoped, revocable spending permission. The chain enforces every limit, the council can never exceed it.
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 16px', fontFamily: CF.mono, fontSize: 12 }}>
           <span style={{ color: CF.ink3 }}>cap</span>
@@ -246,7 +246,7 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
       </div>
       <p style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink2, lineHeight: 1.55, margin: '0 0 16px', maxWidth: 560 }}>
         {context?.blurb ?? (
-          <>Let the council spend up to <strong style={{ color: CF.ink, fontWeight: 600 }}>${CAP_USDC}</strong> for the next {EXPIRY_HOURS} hour — and only the council can use it. It’s capped, expires on its own, and you can cancel anytime from your wallet. The blockchain enforces the limit, not our code.</>
+          <>Let the council spend up to <strong style={{ color: CF.ink, fontWeight: 600 }}>${CAP_USDC}</strong> for the next {EXPIRY_HOURS} hour, and only the council can use it. It’s capped, expires on its own, and you can cancel anytime from your wallet. The blockchain enforces the limit, not our code.</>
         )}
       </p>
 
@@ -255,7 +255,7 @@ export function GrantCouncilMandate({ onDone, context }: { onDone?: (granted: Gr
       ) : wrongChain ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span className="mono" style={{ fontSize: 12, color: CF.bearInk, background: CF.bearTint, border: `1px solid ${alpha(CF.bear, 25)}`, borderRadius: CF.radius.md, padding: '8px 12px' }}>
-            wallet on chainId {chainId} — needs Base Sepolia (84532)
+            wallet on chainId {chainId}, needs Base Sepolia (84532)
           </span>
           <button onClick={handleSwitch} disabled={switching} style={{ padding: '10px 16px', borderRadius: CF.radius.md, border: 'none', background: CF.ink, color: CF.bg, fontFamily: CF.body, fontSize: 13, fontWeight: 600, cursor: switching ? 'wait' : 'pointer' }}>
             {switching ? 'Switching…' : 'Switch to Base Sepolia'}

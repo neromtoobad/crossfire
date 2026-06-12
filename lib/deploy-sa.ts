@@ -26,13 +26,13 @@ export async function ensureDeployed(
 
   const factoryArgs = await sa.getFactoryArgs()
   if (!factoryArgs?.factory || !factoryArgs?.factoryData) {
-    throw new Error(`${label} SA gave no factoryArgs — cannot deploy`)
+    throw new Error(`${label} SA gave no factoryArgs, cannot deploy`)
   }
 
   const eoaEth = await publicClient.getBalance({ address: ownerEoa.address })
   if (eoaEth === 0n) {
     throw new Error(
-      `${label} EOA (${ownerEoa.address}) has 0 ETH — fund it on Base Sepolia first`,
+      `${label} EOA (${ownerEoa.address}) has 0 ETH, fund it on Base Sepolia first`,
     )
   }
   console.log(`  … deploying ${label} SA via factory ${factoryArgs.factory} (EOA gas: ${formatEther(eoaEth)} ETH)`)
@@ -48,10 +48,10 @@ export async function ensureDeployed(
     throw new Error(`${label} deploy tx reverted: ${hash}`)
   }
 
-  // RPC can serve stale code reads right after a receipt — retry briefly.
+  // RPC can serve stale code reads right after a receipt, retry briefly.
   for (let i = 0; i < 6; i++) {
     if (await isDeployed(publicClient, sa.address)) {
-      console.log(`  ✓ ${label} SA deployed at ${sa.address} — tx ${hash}`)
+      console.log(`  ✓ ${label} SA deployed at ${sa.address}, tx ${hash}`)
       return { deployed: true, deployTx: hash }
     }
     await new Promise((r) => setTimeout(r, 1500))
@@ -94,7 +94,7 @@ export async function ensureFunded(
   if (eoaUsdc < topUpUsdc) {
     throw new Error(
       `${label} SA needs USDC (has ${formatUnits(bal, 6)}, want ≥${formatUnits(minUsdc, 6)}) ` +
-        `but owner EOA only holds ${formatUnits(eoaUsdc, 6)} — fund the EOA first`,
+        `but owner EOA only holds ${formatUnits(eoaUsdc, 6)}, fund the EOA first`,
     )
   }
 
@@ -114,6 +114,6 @@ export async function ensureFunded(
     functionName: 'balanceOf',
     args: [saAddress],
   })
-  console.log(`  ✓ ${label} SA now holds ${formatUnits(bal, 6)} USDC — tx ${hash}`)
+  console.log(`  ✓ ${label} SA now holds ${formatUnits(bal, 6)} USDC, tx ${hash}`)
   return { funded: true, fundTx: hash, balance: bal }
 }

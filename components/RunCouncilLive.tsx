@@ -1,6 +1,6 @@
 'use client'
 
-// RunCouncilLive — editorial-light treatment.
+// RunCouncilLive, editorial-light treatment.
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -95,21 +95,21 @@ export function RunCouncilLive({ markets, onDone }: { markets: MarketChoice[]; o
       case 'role-vote':
         return {
           ts, kind: 'info', agent: e.vote.role,
-          text: `· ${e.vote.role} votes ${e.vote.vote} @ ${(e.vote.confidence * 100).toFixed(0)}% — ${e.vote.oneLiner}`,
+          text: `· ${e.vote.role} votes ${e.vote.vote} @ ${(e.vote.confidence * 100).toFixed(0)}%, ${e.vote.oneLiner}`,
         }
       case 'majority':
         return { ts, kind: 'info', text: `▸ majority side ${e.side} · ${e.agreeing}/${e.total} role agents agreed` }
       case 'skeptic-verdict':
         return {
           ts, kind: 'info', agent: 'Skeptic',
-          text: `· Skeptic refutation @ ${(e.vote.confidence * 100).toFixed(0)}% — ${e.vote.oneLiner}`,
+          text: `· Skeptic refutation @ ${(e.vote.confidence * 100).toFixed(0)}%, ${e.vote.oneLiner}`,
         }
       case 'gate-decision':
         return {
           ts, kind: e.passed ? 'good' : 'bad',
           text: e.passed
-            ? `✓ quality gate PASSED — proceeding to publish`
-            : `✗ quality gate FAILED — ${e.reasons.join(' · ')}`,
+            ? `✓ quality gate PASSED, proceeding to publish`
+            : `✗ quality gate FAILED, ${e.reasons.join(' · ')}`,
         }
       case 'thesis-generated':
         return { ts, kind: 'good', text: `✓ Venice produced the written thesis` }
@@ -122,7 +122,7 @@ export function RunCouncilLive({ markets, onDone }: { markets: MarketChoice[]; o
       case 'published':
         return { ts, kind: 'good', text: `✓ PUBLISHED: ${e.call.marketTitle} · side ${e.call.side} @ ${(e.call.selectedSideProb * 100).toFixed(0)}%` }
       case 'refused':
-        return { ts, kind: 'bad', text: `× council REFUSED to publish — ${e.reason}` }
+        return { ts, kind: 'bad', text: `× council REFUSED to publish, ${e.reason}` }
       case 'error':
         return { ts, kind: 'bad', text: `× error: ${e.message}` }
       case 'heartbeat':
@@ -221,7 +221,7 @@ export function RunCouncilLive({ markets, onDone }: { markets: MarketChoice[]; o
             fontFamily: CF.body, fontSize: 14, color: CF.ink2,
             marginTop: 8, marginBottom: 0, maxWidth: 560, lineHeight: 1.55,
           }}>
-            Pick a market and press Run. Five AI agents <em style={{ fontStyle: 'italic' }}>debate it live</em> —
+            Pick a market and press Run. Five AI agents <em style={{ fontStyle: 'italic' }}>debate it live</em> -
             openings, rebuttals, then a skeptic cross-examines. They pay for
             evidence as they go, and only place a real bet if the call clears
             their quality bar.
@@ -298,11 +298,11 @@ export function RunCouncilLive({ markets, onDone }: { markets: MarketChoice[]; o
           {running ? (
             <div style={{ color: CF.amber, marginTop: 4 }}>· streaming…</div>
           ) : doneState === 'published' ? (
-            <div style={{ color: CF.bull, marginTop: 6 }}>✓ done — feed updated below</div>
+            <div style={{ color: CF.bull, marginTop: 6 }}>✓ done, feed updated below</div>
           ) : doneState === 'refused' ? (
-            <div style={{ color: CF.amber, marginTop: 6 }}>· council declined to publish — this is the system working correctly</div>
+            <div style={{ color: CF.amber, marginTop: 6 }}>· council declined to publish, this is the system working correctly</div>
           ) : doneState === 'error' ? (
-            <div style={{ color: CF.bear, marginTop: 6 }}>× stopped on error — see line above</div>
+            <div style={{ color: CF.bear, marginTop: 6 }}>× stopped on error, see line above</div>
           ) : null}
         </div>
       ) : debateMsgs.length === 0 ? (

@@ -2,7 +2,7 @@
 //
 // The settlement oracle, exposed for verification. Reads a Polymarket market's
 // UMA Optimistic Oracle resolution and maps it to YES / NO / PENDING. This is
-// the authoritative source CROSSFIRE settles live markets against — decentralized,
+// the authoritative source CROSSFIRE settles live markets against, decentralized,
 // disputable, on-chain. No invented outcomes.
 
 import type { NextRequest } from 'next/server'
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     status: r.status,                       // YES | NO | PENDING
     via: r.status === 'PENDING' ? 'pending' : 'uma',
     umaStatus: r.umaStatus,                 // e.g. "resolved"
-    resolvedBy: r.resolvedBy,               // on-chain UMA resolver contract — the proof
+    resolvedBy: r.resolvedBy,               // on-chain UMA resolver contract, the proof
     question: r.question,
     oracle: 'UMA Optimistic Oracle via Polymarket',
   })

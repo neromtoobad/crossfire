@@ -1,4 +1,4 @@
-// Live 2026 World Cup group tables — the real tournament standings (ESPN). On
+// Live 2026 World Cup group tables, the real tournament standings (ESPN). On
 // the home page we show the groups that have actually kicked off ("fixtures
 // played so far"); the full 48-team table lives on /fixtures.
 
@@ -38,7 +38,7 @@ export async function WorldCupStandings({ full = false }: { full?: boolean }) {
 
       {display.length === 0 ? (
         <div style={{ padding: '20px', background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, color: CF.ink3, fontFamily: CF.body, fontSize: 14 }}>
-          The tournament hasn’t kicked off yet — tables fill in as fixtures are played.
+          The tournament hasn’t kicked off yet, tables fill in as fixtures are played.
         </div>
       ) : (
         <div className="cf-g3 cf-stagger" style={{ gap: 14 }}>

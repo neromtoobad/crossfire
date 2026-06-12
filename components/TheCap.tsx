@@ -47,7 +47,7 @@ export function TheCap({ capUsdc = 5, agentHandle = 'an agent' }: { capUsdc?: nu
         }
       }
     } catch {
-      // fall back to the canonical proofs — the moment still lands
+      // fall back to the canonical proofs, the moment still lands
       setInCap({ s: 'done', tx: INCAP_TX }); setOverCap({ s: 'done', tx: OVERCAP_TX, reason: ENFORCER_ERROR })
     }
     setInCap((p) => (p.s === 'done' ? p : { s: 'done', tx: INCAP_TX }))
@@ -60,11 +60,11 @@ export function TheCap({ capUsdc = 5, agentHandle = 'an agent' }: { capUsdc?: nu
       <div style={{ padding: '20px 22px 16px', borderBottom: `1px solid ${CF.line}` }}>
         <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2, color: CF.bear, marginBottom: 8 }}>THE GUARANTEE</div>
         <h3 style={{ fontFamily: CF.display, fontWeight: 500, fontSize: 24, letterSpacing: -0.6, color: CF.ink, margin: '0 0 8px' }}>
-          The cap is the chain&apos;s — not our code.
+          The cap is the chain&apos;s, not our code.
         </h3>
         <p style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink2, lineHeight: 1.55, margin: 0, maxWidth: 560 }}>
           When you back {agentHandle}, you sign a mandate capped at <strong style={{ color: CF.ink }}>{capUsdc} USDC</strong>.
-          What stops the agent — or a bug, or us — from spending more? Nothing in our code. <strong style={{ color: CF.ink }}>The chain refuses it.</strong>
+          What stops the agent, or a bug, or us, from spending more? Nothing in our code. <strong style={{ color: CF.ink }}>The chain refuses it.</strong>
         </p>
       </div>
 
@@ -87,7 +87,7 @@ export function TheCap({ capUsdc = 5, agentHandle = 'an agent' }: { capUsdc?: nu
 
       <div style={{ padding: '16px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div className="mono" style={{ fontSize: 11.5, color: CF.ink2 }}>
-          {live ? 'No code stopped the over-cap bet — MetaMask’s on-chain enforcer did.' : 'These are real, already-mined transactions. Open them.'}
+          {live ? 'No code stopped the over-cap bet, MetaMask’s on-chain enforcer did.' : 'These are real, already-mined transactions. Open them.'}
         </div>
         <button onClick={runLive} disabled={running} className="cf-press" style={{
           padding: '10px 18px', borderRadius: CF.radius.md, border: 'none', cursor: running ? 'wait' : 'pointer',

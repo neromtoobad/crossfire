@@ -1,4 +1,4 @@
-// Phase 5 — Prompt 5.1.
+// Phase 5, Prompt 5.1.
 // Thin JSON-RPC client for 1Shot's public relayer.
 //
 // API shape (verified from https://1shotapi.com/.well-known/skills/public-relayer/references/schemas.md):

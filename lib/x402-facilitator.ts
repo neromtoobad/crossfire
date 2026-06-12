@@ -1,11 +1,11 @@
-// Phase 3 — seller-side x402 helpers.
+// Phase 3, seller-side x402 helpers.
 //
 // The facilitator's job:
 //   1. Build a PAYMENT-REQUIRED descriptor for unpaid requests.
 //   2. Validate a PAYMENT-SIGNATURE submitted by the buyer (basic shape check).
 //   3. Settle: call DelegationManager.redeemDelegations using the buyer's
 //      signed chain, executing USDC.transfer(payTo, amount). This is what
-//      makes the spend "metered on-chain" — real USDC actually moves.
+//      makes the spend "metered on-chain", real USDC actually moves.
 //
 // In production the facilitator is a third-party (e.g. Coinbase CDP). For the
 // hackathon, the seller IS the facilitator and uses ORCH EOA as the redeemer.
@@ -111,7 +111,7 @@ export async function settlePayment(
   })
 
   // Wrap in the kit's ExecutionStruct and encode using its single-call format.
-  // (My earlier hand-rolled abi.encode produced the wrong layout — the
+  // (My earlier hand-rolled abi.encode produced the wrong layout, the
   // ValueLteEnforcer that the Erc20TransferAmount scope auto-adds saw
   // garbage in the value slot and rejected the call.)
   const execution = createExecution({
@@ -128,7 +128,7 @@ export async function settlePayment(
 
   // Simulate first to capture the precise revert reason (which enforcer
   // rejected, ERC-1271 failure, etc.). viem's writeContract throws with a
-  // helpful 'Details: execution reverted' string but no enforcer name —
+  // helpful 'Details: execution reverted' string but no enforcer name -
   // simulation gives us the named revert.
   try {
     await sepoliaPublicClient.simulateContract({
@@ -179,7 +179,7 @@ export async function settlePayment(
  * Verify a DIRECT USDC transfer as an x402 "exact"-scheme settlement.
  *
  * This is the robust unlock path: the buyer's wallet sends a plain
- * USDC.transfer(payTo, amount) — MetaMask signs it as a normal ERC-20 tx
+ * USDC.transfer(payTo, amount), MetaMask signs it as a normal ERC-20 tx
  * with no smart-account / delegation friction. The seller verifies the
  * on-chain transfer landed and matches the requirement.
  *
@@ -247,7 +247,7 @@ export async function verifyDirectTransfer(params: {
   }
 
   // A correctly-sized transfer to payTo exists but we couldn't bind it to the
-  // buyer — surface the precise reason.
+  // buyer, surface the precise reason.
   const best = toPayTo.reduce((m, t) => {
     const v = (t.args as { value?: bigint }).value ?? 0n
     return v > m ? v : m

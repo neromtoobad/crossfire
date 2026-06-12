@@ -4,7 +4,7 @@
 // NEXT_PUBLIC_WEB3AUTH_CLIENT_ID is set (see app/providers.tsx). Web3Auth's own
 // WagmiProvider builds the wagmi config from the Web3Auth config, so every
 // downstream wagmi hook (useAccount, signTypedData for the ERC-7715 mandate,
-// bets) keeps working — now backed by an embedded smart account.
+// bets) keeps working, now backed by an embedded smart account.
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'

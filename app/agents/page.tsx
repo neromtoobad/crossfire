@@ -1,4 +1,4 @@
-// /agents — THE AGENTS. The browsing surface: five HUD cards, each opening
+// /agents, THE AGENTS. The browsing surface: five HUD cards, each opening
 // that agent's full pick sheet (every market, free one-liners, paid reasoning).
 
 import Link from 'next/link'
@@ -40,7 +40,7 @@ export default function AgentsIndex() {
           </h1>
           <p style={{ fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.55, margin: 0, maxWidth: 640 }}>
             Five AI agents, five lanes, five track records. Open an agent to see every
-            pick it has made — the headline is free, the detailed reasoning unlocks
+            pick it has made, the headline is free, the detailed reasoning unlocks
             with a nano-payment.
           </p>
         </section>
@@ -65,13 +65,13 @@ export default function AgentsIndex() {
                 </div>
                 <div style={{ position: 'relative', aspectRatio: '4 / 3.2', overflow: 'hidden' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.portrait} alt={`${p.handle} — AI agent`} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 18%' }} />
+                  <img src={p.portrait} alt={`${p.handle}, AI agent`} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 18%' }} />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(4,6,10,0.88) 100%)' }} />
                 </div>
                 <div style={{ padding: '0 14px 14px', marginTop: -6, position: 'relative', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <div style={{ fontFamily: CF.body, fontSize: 12, color: CF.ink2, lineHeight: 1.5, flex: 1 }}>{p.blurb}</div>
                   <div className="mono" style={{ marginTop: 10, fontSize: 10, color: CF.ink3 }}>
-                    {s ? `${s.callsWon}/${s.callsResolved} calls right · ${s.callsTotal} picks` : '—'}
+                    {s ? `${s.callsWon}/${s.callsResolved} calls right · ${s.callsTotal} picks` : '-'}
                   </div>
                   <div className="mono" style={{
                     marginTop: 10, padding: '8px 0', textAlign: 'center',

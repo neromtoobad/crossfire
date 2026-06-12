@@ -164,7 +164,7 @@ export async function loadDashboard(): Promise<DashboardData> {
       rootCap: '50.00',
       bullCap: '20.00',
       bearCap: '20.00',
-      note: 'Cap per signing — fresh salt on each run resets on-chain counters.',
+      note: 'Cap per signing, fresh salt on each run resets on-chain counters.',
     },
     market,
     latestDuel,

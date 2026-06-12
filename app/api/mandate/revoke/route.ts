@@ -1,4 +1,4 @@
-// POST /api/mandate/revoke — marks a user's mandate as soft-revoked in
+// POST /api/mandate/revoke, marks a user's mandate as soft-revoked in
 // our store after they've called DelegationManager.disableDelegation
 // on-chain. The on-chain refusal is the cryptographic truth; this is
 // just the server's bookkeeping so /api/duel/run won't try a redemption

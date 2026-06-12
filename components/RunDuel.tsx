@@ -1,6 +1,6 @@
 'use client'
 
-// Phase 7.5 — live duel UI. Opens an NDJSON stream from /api/duel/run and
+// Phase 7.5, live duel UI. Opens an NDJSON stream from /api/duel/run and
 // renders Bull/Bear panels filling in real time.
 
 import { useEffect, useRef, useState } from 'react'
@@ -352,7 +352,7 @@ function SidePanel({ label, color, state }: { label: string; color: string; stat
           {label}
         </span>
         <span style={{ fontFamily: CF.mono, fontSize: 10.5, color: CF.dim }}>
-          cap {state.cap || '—'} USDC
+          cap {state.cap || '-'} USDC
         </span>
       </div>
       <div style={{ fontFamily: CF.mono, fontSize: 32, fontWeight: 600, color: CF.text, letterSpacing: -0.5 }}>

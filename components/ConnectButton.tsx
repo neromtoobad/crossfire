@@ -1,6 +1,6 @@
 'use client'
 
-// Connect-wallet button — MetaMask (or any injected) via wagmi.
+// Connect-wallet button, MetaMask (or any injected) via wagmi.
 // Editorial-light treatment (Phase 8.11 audit).
 
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
@@ -88,7 +88,7 @@ function WagmiConnectButton({ variant = 'primary' }: { variant?: 'primary' | 'gh
               fontSize: 11, fontWeight: 600,
             }}
           >
-            wrong chain — switch to Base Sepolia
+            wrong chain, switch to Base Sepolia
           </span>
         ) : null}
         <button

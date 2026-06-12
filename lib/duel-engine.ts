@@ -1,4 +1,4 @@
-// Phase 7.5 — server-side duel engine driven by a user-signed mandate.
+// Phase 7.5, server-side duel engine driven by a user-signed mandate.
 //
 // Where lib/resolve.ts uses env-key USER (a smart account we control), this
 // module accepts a user's wallet-signed root delegation and runs the same
@@ -85,7 +85,7 @@ export type RunDuelParams = {
   marketTitle: string
   capUsdc: number              // human-readable user cap
   onEvent: (e: DuelEvent) => void | Promise<void>
-  bullEvidenceCalls?: number   // default 2 — more buys means more conviction
+  bullEvidenceCalls?: number   // default 2, more buys means more conviction
   bearEvidenceCalls?: number   // default 1
 }
 
@@ -223,7 +223,7 @@ export async function runUserDuel(params: RunDuelParams): Promise<DuelOutcome> {
   // ── 3. Abstain or place bet ───────────────────────────────────────────
   const netWei = parseUnits(Math.abs(netUsdcFloat).toFixed(6), 6)
   if (netWei < DUST_USDC) {
-    await onEvent({ type: 'abstain', netUsdc: netUsdcFloat, reason: 'stakes too close — market genuinely uncertain' })
+    await onEvent({ type: 'abstain', netUsdc: netUsdcFloat, reason: 'stakes too close, market genuinely uncertain' })
     await onEvent({ type: 'done', outcome })
     return outcome
   }
@@ -266,7 +266,7 @@ export async function runUserDuel(params: RunDuelParams): Promise<DuelOutcome> {
     txHash: transferHash,
   })
 
-  // (b) buyOnBehalf credits the user's wallet — wait for fresh balance
+  // (b) buyOnBehalf credits the user's wallet, wait for fresh balance
   const balAfter = await readBalanceAfter(marketAddress, balBefore)
   const claimAmount = balAfter - balBefore
   if (claimAmount === 0n) {

@@ -1,4 +1,4 @@
-// Phase 8.10 — shared 1Shot mainnet relay flow with structured events.
+// Phase 8.10, shared 1Shot mainnet relay flow with structured events.
 //
 // Same orchestration as scripts/relay-bet.ts, but emits events through an
 // onEvent callback so it can drive a UI stream (or a CLI log).
@@ -42,9 +42,9 @@ import { setLatestRelayDispatch } from './relayer-state.js'
 // Hard cap on what the relayer can spend per relay (fee + work). The relayer
 // charges the actual fee; anything within cap is bounded by the chain.
 const MAX_USDC_SPEND = parseUnits('3', 6)
-// Generous fee upper bound — relayer keeps only what it needs.
+// Generous fee upper bound, relayer keeps only what it needs.
 const FEE_TRANSFER_USDC = parseUnits('2', 6)
-// The "work" transfer — minimal real action so the relay does something on-chain.
+// The "work" transfer, minimal real action so the relay does something on-chain.
 const WORK_TRANSFER_ATOMS = 1000n // 0.001 USDC back to USER
 
 export type RelayEvent =

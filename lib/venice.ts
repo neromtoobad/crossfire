@@ -1,4 +1,4 @@
-// Phase 3 — Prompt 3.3. Venice is the ONLY decision engine. No fallbacks.
+// Phase 3, Prompt 3.3. Venice is the ONLY decision engine. No fallbacks.
 // No other LLM provider may appear anywhere in the repo (`grep -r`-enforced).
 //
 // Two surfaces:
@@ -16,19 +16,19 @@ import type { EvidenceItem } from './x402-types.js'
 
 // Construct without throwing at import (a top-level throw breaks `next build`
 // before the key is set on the deploy). If VENICE_API_KEY is genuinely missing,
-// the placeholder makes the real Venice call fail loudly at runtime (401) —
+// the placeholder makes the real Venice call fail loudly at runtime (401) -
 // still NO fallback engine, just the failure deferred from build to request.
 export const venice = new OpenAI({
   apiKey: envVars.VENICE_API_KEY ?? 'VENICE_API_KEY-not-set',
   baseURL: 'https://api.venice.ai/api/v1',
 })
 
-// Model choices — both Venice-native, picked deliberately (no Claude/GPT
+// Model choices, both Venice-native, picked deliberately (no Claude/GPT
 // routing models that would muddy the "Venice as sole engine" track claim).
 const CONVICTION_MODEL = 'qwen3-235b-a22b-instruct-2507' // instruct, schema, web-search
 const IMAGE_MODEL = 'flux-2-pro'
 
-/** A single side's verdict — what the agent commits to. */
+/** A single side's verdict, what the agent commits to. */
 export type Conviction = {
   side: 'YES' | 'NO'
   estProb: number      // agent's estimate of P(YES)
@@ -63,13 +63,13 @@ export async function conviction({
     `You are a calibrated prediction-market analyst arguing ONLY the ${arguing} side.`,
     `You may not concede or hedge. Your role is to find the strongest steelman for ${arguing}.`,
     ``,
-    `Output a single JSON object — no markdown, no fences, no commentary. Schema:`,
+    `Output a single JSON object, no markdown, no fences, no commentary. Schema:`,
     `{`,
     `  "side": "${arguing}",`,
     `  "estProb": <0..1>,           // YOUR estimate of P(YES), as a YES-perspective probability`,
     `  "impliedProb": ${impliedProb}, // echo input`,
     `  "edge": <number>,            // signed: +X means ${arguing} is favored by X over market`,
-    `  "stakeUsdc": <0..${remainingCapUsdc}>, // dollars you stake — must be 0 if |edge|<0.05; otherwise ≈ |edge|×${remainingCapUsdc}×2, clamped`,
+    `  "stakeUsdc": <0..${remainingCapUsdc}>, // dollars you stake, must be 0 if |edge|<0.05; otherwise ≈ |edge|×${remainingCapUsdc}×2, clamped`,
     `  "rationale": "<one or two sentences>"`,
     `}`,
   ].join('\n')
@@ -100,7 +100,7 @@ export async function conviction({
     ],
     response_format: { type: 'json_object' },
     temperature: 0.4,
-    // Venice extension — OpenAI SDK passes unknown fields through.
+    // Venice extension, OpenAI SDK passes unknown fields through.
     // @ts-expect-error venice-specific param not in OpenAI typings
     venice_parameters: { enable_web_scraping: true },
   })
@@ -125,7 +125,7 @@ export async function conviction({
     rationale: String(parsed.rationale ?? '').slice(0, 400),
   }
 
-  // Server-side guardrail on the stake — the prompt asks for clamping but we
+  // Server-side guardrail on the stake, the prompt asks for clamping but we
   // verify here too so a malformed model output can't slip a too-large stake.
   if (Math.abs(result.edge) < 0.05) result.stakeUsdc = 0
   if (result.side !== arguing) {

@@ -1,4 +1,4 @@
-// Server-side mandate persistence — separate from relayer-state.ts so
+// Server-side mandate persistence, separate from relayer-state.ts so
 // concerns stay decoupled. Each user-mandate pair (user address + market id)
 // is keyed and stored as the signed delegation JSON + meta.
 

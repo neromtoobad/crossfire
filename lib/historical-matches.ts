@@ -1,5 +1,5 @@
 // The agents' TRACK RECORD is a backtest on REAL, already-played matches with
-// REAL outcomes — not invented results for 2026 games that haven't happened.
+// REAL outcomes, not invented results for 2026 games that haven't happened.
 // Each agent applies its deterministic style (favourites lean YES, the
 // contrarian VEGA fades them) to a real fixture; the call is then graded
 // against what actually occurred. So a HIT/MISS reflects a real result.
@@ -20,14 +20,14 @@ type Match = {
 
 // ── real matches, real results ────────────────────────────────────────────
 const MATCHES: Match[] = [
-  // 2022 World Cup — chalk that held
+  // 2022 World Cup, chalk that held
   { fav: 'Argentina', dog: 'Croatia', comp: '2022 World Cup semi-final', favProb: 0.62, favWon: true },   // 3-0
   { fav: 'France', dog: 'Morocco', comp: '2022 World Cup semi-final', favProb: 0.66, favWon: true },       // 2-0
   { fav: 'Argentina', dog: 'Australia', comp: '2022 World Cup round of 16', favProb: 0.78, favWon: true }, // 2-1
   { fav: 'Brazil', dog: 'South Korea', comp: '2022 World Cup round of 16', favProb: 0.80, favWon: true },  // 4-1
   { fav: 'Netherlands', dog: 'USA', comp: '2022 World Cup round of 16', favProb: 0.68, favWon: true },     // 3-1
   { fav: 'France', dog: 'England', comp: '2022 World Cup quarter-final', favProb: 0.54, favWon: true },    // 2-1
-  // 2022 World Cup — the upsets
+  // 2022 World Cup, the upsets
   { fav: 'Portugal', dog: 'Morocco', comp: '2022 World Cup quarter-final', favProb: 0.70, favWon: false }, // Morocco 1-0
   { fav: 'Spain', dog: 'Morocco', comp: '2022 World Cup round of 16', favProb: 0.72, favWon: false },      // Morocco on pens
   { fav: 'Brazil', dog: 'Croatia', comp: '2022 World Cup quarter-final', favProb: 0.68, favWon: false },   // Croatia on pens
@@ -35,13 +35,13 @@ const MATCHES: Match[] = [
   { fav: 'Germany', dog: 'Japan', comp: '2022 World Cup group stage', favProb: 0.70, favWon: false },      // Japan 2-1
   { fav: 'Argentina', dog: 'Saudi Arabia', comp: '2022 World Cup group stage', favProb: 0.84, favWon: false }, // KSA 2-1
 
-  // Euro 2024 — chalk
+  // Euro 2024, chalk
   { fav: 'Spain', dog: 'England', comp: 'Euro 2024 final', favProb: 0.56, favWon: true },                  // 2-1
   { fav: 'Spain', dog: 'France', comp: 'Euro 2024 semi-final', favProb: 0.52, favWon: true },              // 2-1
   { fav: 'England', dog: 'Netherlands', comp: 'Euro 2024 semi-final', favProb: 0.52, favWon: true },       // 2-1
   { fav: 'Spain', dog: 'Germany', comp: 'Euro 2024 quarter-final', favProb: 0.51, favWon: true },          // 2-1 ET
   { fav: 'Spain', dog: 'Croatia', comp: 'Euro 2024 group stage', favProb: 0.64, favWon: true },           // 3-0
-  // Euro 2024 — the upsets
+  // Euro 2024, the upsets
   { fav: 'Italy', dog: 'Switzerland', comp: 'Euro 2024 round of 16', favProb: 0.58, favWon: false },       // Switzerland 2-0
   { fav: 'Portugal', dog: 'Georgia', comp: 'Euro 2024 group stage', favProb: 0.80, favWon: false },        // Georgia 2-0
   { fav: 'France', dog: 'Portugal', comp: 'Euro 2024 quarter-final', favProb: 0.52, favWon: true },        // France on pens
@@ -57,7 +57,7 @@ const MATCHES: Match[] = [
   { fav: 'England', dog: 'Italy', comp: 'Euro 2020 final', favProb: 0.52, favWon: false },                 // Italy on pens
   { fav: 'Brazil', dog: 'Argentina', comp: '2021 Copa América final', favProb: 0.54, favWon: false },      // Argentina 1-0
 
-  // More chalk that held — so the favourite-win rate is realistic (~70%) and the
+  // More chalk that held, so the favourite-win rate is realistic (~70%) and the
   // favourite-backers aren't punished into "miscalibrated" by a cherry-picked
   // run of shocks. All real results.
   { fav: 'Spain', dog: 'Georgia', comp: 'Euro 2024 round of 16', favProb: 0.78, favWon: true },           // 4-1
@@ -93,13 +93,13 @@ function rng(seed: number) { let s = seed >>> 0; return () => { s = (s * 1664525
 function lineFor(role: AgentVote['role'], fav: string, dog: string, back: 'fav' | 'dog'): string {
   const F = back === 'fav' ? fav : dog, D = back === 'fav' ? dog : fav
   const L: Record<AgentVote['role'], string> = {
-    MacroScout: `${F} control the shape here — they dictate tempo and ${D} have to chase the game on ${F}'s terms.`,
+    MacroScout: `${F} control the shape here, they dictate tempo and ${D} have to chase the game on ${F}'s terms.`,
     NewsHawk: `${F} go in with the fitter, fuller squad; ${D}'s team-news is the worry, not theirs.`,
-    CrowdPulse: `${F} have the belief and the momentum in this one — ${D} fold when the noise turns.`,
+    CrowdPulse: `${F} have the belief and the momentum in this one, ${D} fold when the noise turns.`,
     BookWatcher: `The numbers favour ${F}: better xG profile and chance quality than ${D} across the run-in.`,
     Skeptic: back === 'dog'
-      ? `Everyone's on ${fav}. That's exactly when they slip — I'll take ${dog} to spring it.`
-      : `No edge for the dog here — ${fav} are the right side and the panel's right to back them.`,
+      ? `Everyone's on ${fav}. That's exactly when they slip, I'll take ${dog} to spring it.`
+      : `No edge for the dog here, ${fav} are the right side and the panel's right to back them.`,
   }
   return L[role]
 }
@@ -112,7 +112,7 @@ function makeHistCall(m: Match, idx: number): PublishedCall {
     const isOutfield = role !== 'Skeptic'
     const dissent = isOutfield && i >= 4 - dissenters
     if (role === 'Skeptic') {
-      // VEGA fades the favourite ~45% of the time — and is graded on it
+      // VEGA fades the favourite ~45% of the time, and is graded on it
       if (r() < 0.45) {
         return { role, vote: 'NO', confidence: Math.round((0.55 + r() * 0.15) * 100) / 100, oneLiner: lineFor(role, m.fav, m.dog, 'dog') }
       }
@@ -144,13 +144,13 @@ function makeHistCall(m: Match, idx: number): PublishedCall {
     locked: {
       thesis: `${m.comp}. The panel backed ${m.fav} over ${m.dog} at ${Math.round(m.favProb * 100)}% against a ${Math.round(marketImpliedYes * 100)}% line, citing the control and quality gap. Outcome: ${resultLine}. This is a graded, real-result call in the agents' backtest record.`,
       evidenceUrls: [
-        { label: `${m.fav} vs ${m.dog} — result + xG`, url: 'https://fbref.com', signal: 'YES' as const },
+        { label: `${m.fav} vs ${m.dog}, result + xG`, url: 'https://fbref.com', signal: 'YES' as const },
         { label: `${m.comp} report`, url: 'https://www.bbc.com/sport/football', signal: 'YES' as const },
       ],
-      sizingRationale: `Bond ${bond} USDC — scaled to the pre-match edge over the line.`,
+      sizingRationale: `Bond ${bond} USDC, scaled to the pre-match edge over the line.`,
       counterarguments: m.favWon
         ? `${m.dog}'s upset path existed but didn't land; the chalk held.`
-        : `${m.dog} took exactly the upset path the contrarian flagged — the favourite-backers were burned.`,
+        : `${m.dog} took exactly the upset path the contrarian flagged, the favourite-backers were burned.`,
     },
   }
 }

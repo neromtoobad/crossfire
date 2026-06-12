@@ -1,6 +1,6 @@
 'use client'
 
-// AgentMarkets — the live, bettable markets THIS agent has called. Each row is
+// AgentMarkets, the live, bettable markets THIS agent has called. Each row is
 // collapsed to the market + the agent's own pick; expanding reveals a Fade or
 // Follow scoped to that agent (follow its side, or fade it). Only one open at a
 // time. Resolved calls live in the track record below, not here.
@@ -11,7 +11,7 @@ import { PUNDITS } from '../lib/pundits'
 import { FadeFollow } from './FadeFollow'
 import { CF, alpha } from '../lib/theme'
 
-// The paid thesis (locked) is deliberately NOT part of this type — it never
+// The paid thesis (locked) is deliberately NOT part of this type, it never
 // ships to the client here.
 export type LiveCall = Omit<PublishedCall, 'locked'>
 
@@ -22,7 +22,7 @@ export function AgentMarkets({ calls, role, color }: { calls: LiveCall[]; role: 
   if (!calls.length) {
     return (
       <div className="mono" style={{ fontSize: 12.5, color: CF.ink3, padding: '14px 0' }}>
-        No open markets right now — {handle}’s calls are all locked or settled. See the track record below.
+        No open markets right now, {handle}’s calls are all locked or settled. See the track record below.
       </div>
     )
   }

@@ -1,8 +1,8 @@
-// Optional durable KV (Upstash Redis over REST) — server-only.
+// Optional durable KV (Upstash Redis over REST), server-only.
 //
 // WHY REST: Vercel serverless has no persistent filesystem and no TCP-friendly
 // runtime for a classic Redis client, but the Upstash REST API is a plain
-// fetch() — works anywhere, no SDK, bundle-safe.
+// fetch(), works anywhere, no SDK, bundle-safe.
 //
 // WHY OPTIONAL: if no KV is configured, every call is a no-op and the app falls
 // back to the client localStorage store. So the Vault works with ZERO setup,
@@ -10,7 +10,7 @@
 // (one click in the dashboard → it injects KV_REST_API_URL/TOKEN → redeploy).
 //
 // Vercel's Upstash Marketplace integration injects either the KV_* names
-// (legacy Vercel KV) or the UPSTASH_* names — we accept both.
+// (legacy Vercel KV) or the UPSTASH_* names, we accept both.
 
 const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || ''
 const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || ''
@@ -38,5 +38,5 @@ export async function kvGetJSON<T>(key: string, fallback: T): Promise<T> {
 
 export async function kvSetJSON(key: string, value: unknown): Promise<void> {
   if (!kvEnabled) return
-  try { await cmd(['SET', key, JSON.stringify(value)]) } catch { /* best effort — localStorage still holds it */ }
+  try { await cmd(['SET', key, JSON.stringify(value)]) } catch { /* best effort, localStorage still holds it */ }
 }

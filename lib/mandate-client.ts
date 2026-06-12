@@ -1,4 +1,4 @@
-// Client-side mandate store (localStorage, keyed by wallet) — same rationale as
+// Client-side mandate store (localStorage, keyed by wallet), same rationale as
 // bets-client.ts: Vercel /tmp is per-instance + ephemeral, so the granted
 // ERC-7715 mandate must live in the user's browser to survive the round-trip to
 // the Vault. Revoke flips a local flag (the real chain-side revoke happens in
@@ -6,7 +6,7 @@
 
 export type StoredMandate = {
   user: string                    // wallet address, lowercased
-  marketId: string                // the call's market — the key shown in the Vault
+  marketId: string                // the call's market, the key shown in the Vault
   marketTitle?: string
   capUsdc: number
   expiresAt: number               // unix MILLISECONDS

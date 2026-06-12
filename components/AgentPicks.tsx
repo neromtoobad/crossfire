@@ -2,7 +2,7 @@
 
 // An agent's full pick sheet. The one-liner is free; the detailed reasoning
 // behind a pick unlocks with an x402 nano-payment (USDC). The thesis content
-// never ships to the client — the server returns it only after payment.
+// never ships to the client, the server returns it only after payment.
 
 import { useState } from 'react'
 import Link from 'next/link'

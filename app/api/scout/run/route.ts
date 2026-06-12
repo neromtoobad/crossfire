@@ -1,7 +1,7 @@
 // POST /api/scout/run
 //
 // Body: { question: string, yesPrice: number, slug?: string }
-// Response: NDJSON — scout-started, the debate-* stream, then scout-verdict,
+// Response: NDJSON, scout-started, the debate-* stream, then scout-verdict,
 // plus a final { type: 'done' }.
 //
 // Runs the live council debate on an arbitrary Polymarket watch market and

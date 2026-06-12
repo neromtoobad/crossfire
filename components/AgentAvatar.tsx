@@ -1,4 +1,4 @@
-// AgentAvatar — the agent's Venice-generated robot portrait in a tinted,
+// AgentAvatar, the agent's Venice-generated robot portrait in a tinted,
 // colour-ringed frame. Falls back to the letter monogram if no portrait.
 // Pure presentational (no hooks) so it renders in server or client components.
 

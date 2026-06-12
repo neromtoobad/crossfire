@@ -1,4 +1,4 @@
-// Phase 2 — Prompts 2.1 + 2.2.
+// Phase 2, Prompts 2.1 + 2.2.
 //
 // Build the two opposed sub-budgets that make CROSSFIRE adversarial:
 //   USER SA ──(root: 50 USDC, signed)──► ORCH EOA
@@ -19,7 +19,7 @@
 //
 // Phase 2 simplification (continuation of Phase 1):
 //   Sub-agents are real EOAs, not SAs. Real keypairs that actually redeem
-//   on-chain — what the spec really cared about. If Phase 4/5 demands SAs
+//   on-chain, what the spec really cared about. If Phase 4/5 demands SAs
 //   (for the bet placement or 1Shot relay), we either bundle or 7702-upgrade.
 
 import { createDelegation, ScopeType, signDelegation } from '@metamask/smart-accounts-kit'
@@ -65,7 +65,7 @@ export async function redelegate({
       maxAmount: capUsdc,
     },
     parentDelegation,
-    salt: generateSalt(), // see mandate.ts — keep each run's children fresh too
+    salt: generateSalt(), // see mandate.ts, keep each run's children fresh too
     environment,
   })
 

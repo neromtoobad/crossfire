@@ -1,4 +1,4 @@
-// Venice verdict card — the visible Venice IMAGE output for a call.
+// Venice verdict card, the visible Venice IMAGE output for a call.
 // Venice generates the broadcast artwork (gold trophy / stadium); the UI
 // overlays the crisp YES/NO verdict text on top (model text rendering is
 // unreliable, so we keep the data legible ourselves). Cached to runtime state
@@ -30,7 +30,7 @@ export async function generateVerdictCard(callId: string, side: 'YES' | 'NO'): P
   if (cached) return cached
 
   const key = env.VENICE_API_KEY
-  if (!key) throw new Error('VENICE_API_KEY missing — Venice is the only engine.')
+  if (!key) throw new Error('VENICE_API_KEY missing, Venice is the only engine.')
 
   const mood = side === 'YES'
     ? 'triumphant golden glow, rising light, victory energy'

@@ -2,7 +2,7 @@
 // POST /api/bets            → record a fade/follow bet (called after the grant)
 //
 // Backed by an OPTIONAL KV (see lib/kv.ts). When no KV is configured this is a
-// graceful no-op and the Vault reads the client localStorage store instead — so
+// graceful no-op and the Vault reads the client localStorage store instead, so
 // the feature works with zero setup, and provisioning a KV upgrades it to
 // cross-device sync without a code change.
 

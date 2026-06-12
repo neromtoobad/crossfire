@@ -1,6 +1,6 @@
 'use client'
 
-// Phase 7.6 — per-user dashboard section. Reads the connected wallet's
+// Phase 7.6, per-user dashboard section. Reads the connected wallet's
 // active mandates + positions across all markets, and provides an
 // on-chain Revoke button that calls DelegationManager.disableDelegation.
 
@@ -48,7 +48,7 @@ type Position = {
 }
 
 export function YourWallet() {
-  // wagmi hydration guard — same reasoning as in GrantMandate.
+  // wagmi hydration guard, same reasoning as in GrantMandate.
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
@@ -58,7 +58,7 @@ export function YourWallet() {
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
 
-  const [usdcBal, setUsdcBal] = useState<string>('—')
+  const [usdcBal, setUsdcBal] = useState<string>('-')
   const [positions, setPositions] = useState<Position[]>([])
   const [mandates, setMandates] = useState<Mandate[]>([])
   const [loading, setLoading] = useState(false)
@@ -86,7 +86,7 @@ export function YourWallet() {
   useEffect(() => {
     if (isConnected && address) refresh()
     else {
-      setPositions([]); setMandates([]); setUsdcBal('—')
+      setPositions([]); setMandates([]); setUsdcBal('-')
     }
   }, [isConnected, address])
 

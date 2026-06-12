@@ -1,4 +1,4 @@
-// /calls/[id] — per-call detail page (editorial-light, Phase 8.11).
+// /calls/[id], per-call detail page (editorial-light, Phase 8.11).
 
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -46,7 +46,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
   const lead = [...call.votes].filter((v) => v.vote === call.side).sort((a, b) => b.confidence - a.confidence)[0]
   const leadHandle = punditOf(lead?.role ?? '')?.handle ?? 'THE PANEL'
 
-  // match state machine — betting is only open in OPEN; SETTLED shows the result
+  // match state machine, betting is only open in OPEN; SETTLED shows the result
   const phase = matchPhase(call, Date.now())
   const bettingOpen = canBet(phase)
 
@@ -98,7 +98,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             {call.marketTitle}
           </h1>
 
-          {/* ── numbers card — wraps on small screens, dividers on desktop ── */}
+          {/* ── numbers card, wraps on small screens, dividers on desktop ── */}
           <div className="cf-divided" style={{
             display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'center',
             padding: '24px 28px',
@@ -247,7 +247,7 @@ BACKED WITH
         </section>
 
         {/* ── fade or follow: only while the market is OPEN (locks at kickoff) ──
-               locked reasoning stripped — client components never see it unpaid */}
+               locked reasoning stripped, client components never see it unpaid */}
         {bettingOpen ? (
           // the enforcer-revert proof now lives INSIDE Fade or Follow ($50 = over-cap)
           <section style={{ padding: '12px 0' }}>
@@ -259,18 +259,18 @@ BACKED WITH
               <PhaseBadge phase={phase} />
               <span style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink2 }}>
                 {phase === 'SETTLED'
-                  ? `Betting is closed — this match has settled. The agents were graded on the result.`
-                  : `Betting is closed — the market locked at kickoff. The calls are set.`}
+                  ? `Betting is closed, this match has settled. The agents were graded on the result.`
+                  : `Betting is closed, the market locked at kickoff. The calls are set.`}
               </span>
             </div>
           </section>
         )}
 
-        {/* ── the full reasoning — x402 nano-payment unlock (same gate as the
+        {/* ── the full reasoning, x402 nano-payment unlock (same gate as the
                agent pages; the one-liners above are the free layer) ── */}
         {call.locked?.thesis ? (
           <section style={{ padding: '12px 0 4px' }}>
-            {/* slim object only — the thesis itself never ships until paid */}
+            {/* slim object only, the thesis itself never ships until paid */}
             <UnlockThesis call={{ id: call.id, unlockUsdc: call.unlockUsdc, marketTitle: call.marketTitle } as typeof call} />
           </section>
         ) : null}

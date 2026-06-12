@@ -1,4 +1,4 @@
-// /agents/[handle] — an AI agent's profile: record, ROI, calibration by stage,
+// /agents/[handle], an AI agent's profile: record, ROI, calibration by stage,
 // and its actual Venice-written reasoning on recent calls. The "study before
 // you back" page. Arena dark/gold via CF tokens.
 
@@ -31,7 +31,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
   const rank = [...stats].sort((a, b) => b.winRate - a.winRate).findIndex((s) => s.role === role) + 1
   const winPct = me.callsResolved ? Math.round(me.winRate * 100) : null
 
-  // this agent's record in THE 2026 World Cup — the fixtures actually played
+  // this agent's record in THE 2026 World Cup, the fixtures actually played
   const myWC = agentWorldCup(await getPlayedMatches(Date.now()), role)
   const myWCrate = myWC.played ? myWC.won / myWC.played : 0
   const wcWinColor = myWCrate >= 0.66 ? CF.bull : myWCrate >= 0.34 ? CF.amber : CF.bear
@@ -56,14 +56,14 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
   const openRec = record.filter((r) => canBet(matchPhase(r.c, now)))
   const gradedRec = record.filter((r) => !canBet(matchPhase(r.c, now)))
 
-  // live markets for the agent-scoped Fade/Follow — strip the paid thesis
+  // live markets for the agent-scoped Fade/Follow, strip the paid thesis
   // (locked) before it crosses to the client; it never ships here.
   const liveCalls = openRec.slice(0, 12).map(({ c }) => {
     const { locked: _locked, ...rest } = c
     return rest
   })
 
-  // serializable pick rows for the track record — the thesis content itself
+  // serializable pick rows for the track record, the thesis content itself
   // NEVER ships here; it's returned by the unlock API after payment.
   const pickRows = gradedRec.map(({ c, v, outcome }) => ({
     callId: c.id,
@@ -104,7 +104,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
               boxShadow: `0 0 24px ${alpha(p.color, 40)}`,
             }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.portrait} alt={`${p.handle} — AI agent`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
+              <img src={p.portrait} alt={`${p.handle}, AI agent`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 16%' }} />
             </span>
             <div>
               <div className="mono" style={{ fontSize: 10.5, letterSpacing: 2, color: CF.ink3, marginBottom: 6 }}>AI AGENT · RANK #{rank} OF 5</div>
@@ -117,7 +117,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
           <div style={{ textAlign: 'right' }}>
             <div className="mono" style={{ fontSize: 10.5, letterSpacing: 1.4, color: CF.ink4, marginBottom: 4 }}>WIN RATE</div>
             <div className="mono tnum" style={{ fontSize: 44, fontWeight: 700, letterSpacing: -1.5, color: winPct === null ? CF.ink3 : winPct >= 60 ? CF.positive : winPct >= 40 ? CF.amber : CF.bear }}>
-              {winPct === null ? '—' : `${winPct}%`}
+              {winPct === null ? '-' : `${winPct}%`}
             </div>
           </div>
         </section>
@@ -132,7 +132,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
           {[
             { label: 'CALLS MADE', value: `${me.callsTotal}` },
             { label: 'RESOLVED', value: `${me.callsResolved}` },
-            { label: 'WIN RATE', value: me.callsResolved ? `${Math.round(me.winRate * 100)}%` : '—', color: me.winRate >= 0.6 ? CF.bull : me.winRate >= 0.4 ? CF.amber : CF.bear },
+            { label: 'WIN RATE', value: me.callsResolved ? `${Math.round(me.winRate * 100)}%` : '-', color: me.winRate >= 0.6 ? CF.bull : me.winRate >= 0.4 ? CF.amber : CF.bear },
             { label: 'BUDGET ×', value: `${me.budgetMultiplier.toFixed(2)}×`, color: me.budgetMultiplier > 1 ? CF.bull : me.budgetMultiplier < 1 ? CF.bear : CF.ink2 },
           ].map((t) => (
             <div key={t.label} style={{ padding: '16px 18px', background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, boxShadow: CF.shadow.card }}>
@@ -158,20 +158,20 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
           })}
         </section>
 
-        {/* THIS WORLD CUP — the agent's scoreboard on the 2026 fixtures played */}
+        {/* THIS WORLD CUP, the agent's scoreboard on the 2026 fixtures played */}
         <section style={{ marginBottom: 34 }}>
           <div className="mono" style={{ fontSize: 11, letterSpacing: 2.2, color: CF.gold, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span className="cf-live-dot" aria-hidden /> THIS WORLD CUP · 2026
           </div>
           {myWC.played === 0 ? (
             <p style={{ fontFamily: CF.body, fontSize: 13.5, color: CF.ink3, lineHeight: 1.55, margin: '4px 0 0', maxWidth: 620 }}>
-              {p.handle} hasn’t had a fixture settle yet — the scoreboard fills in as the
+              {p.handle} hasn’t had a fixture settle yet, the scoreboard fills in as the
               2026 matches are played and graded on the real result.
             </p>
           ) : (
             <>
               <p style={{ fontFamily: CF.body, fontSize: 13.5, color: CF.ink3, lineHeight: 1.55, margin: '4px 0 14px', maxWidth: 620 }}>
-                {p.handle}’s record on the fixtures already played at the 2026 World Cup —
+                {p.handle}’s record on the fixtures already played at the 2026 World Cup -
                 graded live against the real result. <strong style={{ color: wcWinColor }}>{myWC.won}/{myWC.played} right</strong>.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -195,7 +195,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
           )}
         </section>
 
-        {/* live markets — back or fade THIS agent */}
+        {/* live markets, back or fade THIS agent */}
         <section style={{ marginBottom: 34 }}>
           <div className="mono" style={{ fontSize: 11, letterSpacing: 2.2, color: p.color, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ display: 'inline-block', width: 18, height: 1, background: p.color }} />
@@ -203,7 +203,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
           </div>
           <p style={{ fontFamily: CF.body, fontSize: 13.5, color: CF.ink3, lineHeight: 1.55, margin: '0 0 16px', maxWidth: 620 }}>
             {p.handle} has a call on each of these open markets. <strong style={{ color: CF.ink2 }}>Follow</strong> to bet its
-            side, <strong style={{ color: CF.ink2 }}>fade</strong> to bet against it — placed via the chain-capped ERC-7715 mandate.
+            side, <strong style={{ color: CF.ink2 }}>fade</strong> to bet against it, placed via the chain-capped ERC-7715 mandate.
           </p>
           <AgentMarkets calls={liveCalls} role={role} color={p.color} />
           {openRec.length > liveCalls.length ? (
@@ -213,7 +213,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
           ) : null}
         </section>
 
-        {/* track record — the Venice reasoning */}
+        {/* track record, the Venice reasoning */}
         <section>
           <div className="mono" style={{ fontSize: 11, letterSpacing: 2.2, color: CF.ink3, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ display: 'inline-block', width: 18, height: 1, background: CF.ink }} />

@@ -1,4 +1,4 @@
-// CROSSFIRE logomark — two tapered laser beams crossing in an X: a crimson
+// CROSSFIRE logomark, two tapered laser beams crossing in an X: a crimson
 // Bear beam and an azure Bull beam colliding at a white-hot flare. Literally
 // "crossfire," and a 1:1 map onto the Bull/Bear thesis.
 //
@@ -7,8 +7,8 @@
 // counter so multiple marks on one page never collide.
 //
 // Two tuned variants:
-//   · mode="dark"  — full bloom on dark surfaces (the reference look)
-//   · mode="light" — solid tapered beams + gold-ringed core that read on the
+//   · mode="dark" , full bloom on dark surfaces (the reference look)
+//   · mode="light", solid tapered beams + gold-ringed core that read on the
 //                    editorial off-white paper (glow can't bloom on light)
 
 import { CF } from '../lib/theme'
@@ -16,7 +16,7 @@ import { CF } from '../lib/theme'
 export type LogoMode = 'light' | 'dark'
 
 // Theme-aware header mark. Renders BOTH variants and lets CSS show the right
-// one per data-theme (rules live in app/layout.tsx) — no client JS, no
+// one per data-theme (rules live in app/layout.tsx), no client JS, no
 // hydration flash. Use this in headers; use <Logo mode=…> when you need a
 // fixed variant (e.g. on a known-dark canvas).
 export function BrandLogo({ size = 28 }: { size?: number }) {
@@ -43,7 +43,7 @@ export function Logo({
 }) {
   // Deterministic id (must match between SSR and client to avoid hydration
   // mismatch). Two marks of the same mode+size share identical gradient defs,
-  // so a duplicate id resolves to an identical gradient — visually harmless.
+  // so a duplicate id resolves to an identical gradient, visually harmless.
   const uid = `cf-${mode}-${Math.round(size)}`
   const isDark = mode === 'dark'
 
@@ -77,7 +77,7 @@ export function Logo({
       aria-hidden={title ? undefined : true}
     >
       <defs>
-        {/* bear beam gradient — transparent tips, hot white core */}
+        {/* bear beam gradient, transparent tips, hot white core */}
         <linearGradient id={`${uid}-bear`} gradientUnits="userSpaceOnUse" x1="13.62" y1="13.62" x2="50.38" y2="50.38">
           <stop offset="0%" stopColor={RED} stopOpacity="0" />
           <stop offset="16%" stopColor={RED} />

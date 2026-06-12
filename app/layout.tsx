@@ -4,7 +4,7 @@ import { getConfig } from '../lib/wagmi-config.js'
 import { Providers } from './providers'
 
 export const metadata = {
-  title: 'CROSSFIRE — five AI pundits call the World Cup',
+  title: 'CROSSFIRE, five AI pundits call the World Cup',
   description: 'Five AI football pundits call the 2026 World Cup and stake real, chain-capped USDC on every match. Follow the ones you trust, fade the ones you don\'t. The winning side splits the pot.',
 }
 
@@ -25,7 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           rel="stylesheet"
         />
         <style>{`
-          /* ── CROSSFIRE "Trophy Gold" — one theme, no toggle ──────────────
+          /* ── CROSSFIRE "Trophy Gold", one theme, no toggle ──────────────
              Stadium-night warm black lit by World Cup gold. Pitch-green YES,
              red NO, gold for the brand + every call-to-action. Defined on :root
              and ANY data-theme value so a stale saved preference can never
@@ -59,7 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             font-feature-settings: 'ss01', 'cv11';
           }
           /* the gold: a spotlit trophy glow pooled at the top, a faint warm
-             wash from the right — fixed so it sits behind the whole scroll. */
+             wash from the right, fixed so it sits behind the whole scroll. */
           body {
             background:
               radial-gradient(120% 72% at 50% -10%, rgba(239,199,90,0.13), transparent 56%),
@@ -80,7 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           a:hover { text-decoration: underline; text-decoration-color: var(--cf-underline); text-underline-offset: 3px; }
           button { font-family: inherit; }
           ::selection { background: var(--cf-selection-bg); color: var(--cf-selection-fg); }
-          /* Subtle paper noise — adds editorial warmth without taxing perf. */
+          /* Subtle paper noise, adds editorial warmth without taxing perf. */
           body::before {
             content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
             background-image: radial-gradient(var(--cf-noise) 1px, transparent 1px);
@@ -88,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             opacity: var(--cf-noise-opacity);
           }
           main { position: relative; z-index: 1; }
-          /* feed cards lift on hover — a little life for the betting feed */
+          /* feed cards lift on hover, a little life for the betting feed */
           .cf-card { transition: transform 180ms cubic-bezier(0.22,1,0.36,1), box-shadow 180ms ease, border-color 180ms ease; will-change: transform; }
           .cf-card:hover { transform: translateY(-2px); box-shadow: var(--cf-shadow-hover); border-color: var(--cf-line-2); }
           .cf-card:active { transform: translateY(0) scale(0.99); }
@@ -104,7 +104,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           .cf-think span { animation: cf-blink 1.1s infinite; }
           .cf-think span:nth-child(2) { animation-delay: 0.18s; }
           .cf-think span:nth-child(3) { animation-delay: 0.36s; }
-          /* staggered entrance — apply .cf-stagger to a grid/list; children rise in sequence */
+          /* staggered entrance, apply .cf-stagger to a grid/list; children rise in sequence */
           .cf-stagger > * { animation: cf-rise 0.4s cubic-bezier(0.22,1,0.36,1) both; }
           .cf-stagger > *:nth-child(1) { animation-delay: 0.03s; }
           .cf-stagger > *:nth-child(2) { animation-delay: 0.08s; }
@@ -117,10 +117,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           .cf-press { transition: transform 120ms cubic-bezier(0.22,1,0.36,1), opacity 120ms ease, box-shadow 160ms ease; }
           .cf-press:hover { filter: brightness(1.06); }
           .cf-press:active { transform: scale(0.97); }
-          /* visible keyboard focus — never remove, always on-brand */
+          /* visible keyboard focus, never remove, always on-brand */
           :focus-visible { outline: 2px solid var(--cf-gold); outline-offset: 2px; border-radius: 4px; }
           select, button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-          /* ── responsive grid system — fixed multi-col grids collapse cleanly ── */
+          /* ── responsive grid system, fixed multi-col grids collapse cleanly ── */
           .cf-g5, .cf-g4, .cf-g3, .cf-g2 { display: grid; gap: 14px; }
           .cf-g5 { grid-template-columns: repeat(5, 1fr); }
           .cf-g4 { grid-template-columns: repeat(4, 1fr); }
@@ -142,8 +142,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           /* wide tables scroll inside their card instead of stretching the page */
           .cf-scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
           .cf-scroll-x > * { min-width: 640px; }
-          /* divided strip — vertical separators between cells, desktop only
-             (children with their own inline padding keep it — inline wins) */
+          /* divided strip, vertical separators between cells, desktop only
+             (children with their own inline padding keep it, inline wins) */
           @media (min-width: 921px) { .cf-divided > * + * { border-left: 1px solid var(--cf-line); padding-left: 28px; } }
           /* nav wraps gracefully on small screens */
           .cf-nav { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; row-gap: 8px; }
@@ -156,7 +156,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             main header > div { flex-wrap: wrap; row-gap: 8px; }
             main header a, main header button { font-size: 12.5px !important; }
           }
-          /* logo variant swap — BrandLogo renders both, CSS shows one */
+          /* logo variant swap, BrandLogo renders both, CSS shows one */
           .cf-logo-dark { display: none !important; }
           :root[data-theme="dark"] .cf-logo-light { display: none !important; }
           :root[data-theme="dark"] .cf-logo-dark { display: inline-flex !important; }

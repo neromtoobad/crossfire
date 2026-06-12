@@ -1,4 +1,4 @@
-// POST /api/duel/run — streams duel progress as newline-delimited JSON
+// POST /api/duel/run, streams duel progress as newline-delimited JSON
 // (NDJSON). The client reads with fetch + ReadableStream so we don't need
 // EventSource (which requires GET).
 //

@@ -1,4 +1,4 @@
-// THE CHAMPION DRAFT — the whole product, simplified to one bet: you don't bet
+// THE CHAMPION DRAFT, the whole product, simplified to one bet: you don't bet
 // on a match, you bet on a MIND. Back one of the five agents to finish the World
 // Cup as the sharpest forecaster. The live leaderboard IS the price: an agent's
 // record (real, ESPN/UMA-settled) becomes its win probability and its odds.
@@ -6,14 +6,14 @@
 // Favorite = the current leader = the lowest odds. Longshots pay more. When the
 // tournament settles, the champion's backers split the pot.
 //
-// Client-safe (no node imports) — used by the home Draft Board, BackAgent, and
+// Client-safe (no node imports), used by the home Draft Board, BackAgent, and
 // the Vault to show a backed agent's live standing.
 
 import type { AgentStats } from './leaderboard.js'
 import { ALL_ROLES } from './leaderboard.js'
 import { PUNDITS } from './pundits.js'
 import type { AgentRole } from './calls-data.js'
-import type { SettledMatch } from './wc-results.js' // type only — no fetch dragged in
+import type { SettledMatch } from './wc-results.js' // type only, no fetch dragged in
 
 export type ChampionStanding = {
   role: AgentRole
@@ -27,7 +27,7 @@ export type ChampionStanding = {
   resolved: number
   winRate: number       // 0..1
   brierScore: number
-  winProb: number       // 0..1 — modeled chance to be crowned champion
+  winProb: number       // 0..1, modeled chance to be crowned champion
   oddsX: number         // decimal payout multiple (1/winProb), floored
   leading: boolean      // rank === 1
 }
@@ -84,7 +84,7 @@ export function standingOf(standings: ChampionStanding[], handle: string): Champ
 
 // ── THIS WORLD CUP (2026) only ──────────────────────────────────────────────
 // Career standings (above) grade every call ever, including the backtest. These
-// grade ONLY the 2026 fixtures actually played, against the real ESPN result —
+// grade ONLY the 2026 fixtures actually played, against the real ESPN result -
 // the agents' record in the tournament happening right now. Pure: the caller
 // passes in getPlayedMatches() (server-only fetch).
 
@@ -122,7 +122,7 @@ export function worldCupRecords(matches: SettledMatch[]): WCRecord[] {
     .map((r, i) => ({ ...r, rank: i + 1 }))
 }
 
-// One agent's 2026 scoreboard — the fixtures it called, with HIT/MISS, for the
+// One agent's 2026 scoreboard, the fixtures it called, with HIT/MISS, for the
 // agent page.
 export type WCMatchResult = {
   id: string; home: string; away: string; score: string; stage: string; favorite: string

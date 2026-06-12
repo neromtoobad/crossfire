@@ -1,4 +1,4 @@
-// Phase 8.15 — read the cached Polymarket snapshot for the feed watch-list.
+// Phase 8.15, read the cached Polymarket snapshot for the feed watch-list.
 
 import { readFileSync, existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'

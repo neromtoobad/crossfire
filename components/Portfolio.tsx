@@ -1,6 +1,6 @@
 'use client'
 
-// The Vault — a connected user's positions + active mandates (with revoke).
+// The Vault, a connected user's positions + active mandates (with revoke).
 // Closes the human side of the loop and surfaces the kit's mandate management
 // + the revoke kill-switch (a definition-of-done item).
 
@@ -45,7 +45,7 @@ export function Portfolio({ standings = [] }: { standings?: ChampionStanding[] }
           }
           setBets([...byCall.values()].sort((a, b) => b.ts - a.ts))
         }
-      } catch { /* offline / no KV — local store already shown */ }
+      } catch { /* offline / no KV, local store already shown */ }
     } finally {
       setLoading(false)
     }
@@ -72,7 +72,7 @@ export function Portfolio({ standings = [] }: { standings?: ChampionStanding[] }
       <Empty>
         <div style={{ fontFamily: CF.display, fontSize: 24, color: CF.ink, marginBottom: 10 }}>Connect your wallet</div>
         <p style={{ color: CF.ink2, fontSize: 15, lineHeight: 1.55, maxWidth: 380, margin: '0 auto 20px' }}>
-          See what you’ve backed, your open stakes, and the spending mandates you’ve granted — with a one-tap revoke.
+          See what you’ve backed, your open stakes, and the spending mandates you’ve granted, with a one-tap revoke.
         </p>
         <ConnectButton variant="primary" />
       </Empty>
@@ -90,7 +90,7 @@ export function Portfolio({ standings = [] }: { standings?: ChampionStanding[] }
         {[
           ['BACKED CALLS', `${bets.length}`],
           ['STAKED', `${totalStaked.toFixed(0)} USDC`],
-          ['RECORD', settled ? `${wins}/${settled} won` : '—'],
+          ['RECORD', settled ? `${wins}/${settled} won` : '-'],
         ].map(([l, v]) => (
           <div key={l} style={{ padding: '16px 18px', background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, boxShadow: CF.shadow.card }}>
             <div className="mono" style={{ fontSize: 9.5, color: CF.ink4, letterSpacing: 1.4, marginBottom: 8 }}>{l}</div>
@@ -165,7 +165,7 @@ export function Portfolio({ standings = [] }: { standings?: ChampionStanding[] }
       <section>
         <SectionLabel>YOUR MANDATES <span style={{ color: CF.ink4 }}>· chain-enforced spending limits</span></SectionLabel>
         {mandates.length === 0 ? (
-          <Muted>No active mandates. You grant one when you back a call — it caps what an agent can ever spend.</Muted>
+          <Muted>No active mandates. You grant one when you back a call, it caps what an agent can ever spend.</Muted>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {mandates.map((m) => {

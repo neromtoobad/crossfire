@@ -1,12 +1,12 @@
 // POST /api/council/run
 //
 // Body: { marketId: string, stubEvidence?: boolean }
-// Response: NDJSON stream — one CouncilEvent per line, plus a final
+// Response: NDJSON stream, one CouncilEvent per line, plus a final
 // { type: 'done' } sentinel. This is the live spine of the demo: the
 // kit-mediated A2A redelegation, Venice reasoning, x402 evidence buys,
 // quality gate, and on-chain bond posting all stream into the UI.
 //
-// The orchestrator is a black box from the API's perspective — we just
+// The orchestrator is a black box from the API's perspective, we just
 // hand it an onEvent callback that writes to the stream.
 
 import type { NextRequest } from 'next/server'
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   }
 
   const stubEvidence = body.stubEvidence === true
-  // Debate mode is the default for the UI — it's the show. Callers can opt
+  // Debate mode is the default for the UI, it's the show. Callers can opt
   // out (the auto-cron) by passing debate:false.
   const debate = body.debate !== false
 

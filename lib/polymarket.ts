@@ -1,11 +1,11 @@
-// Phase 8.14 — live Polymarket prices for the markets where we have a slug.
+// Phase 8.14, live Polymarket prices for the markets where we have a slug.
 //
 // Hits the public Gamma API (gamma-api.polymarket.com) with a real UA and
 // caches per-slug for 60s to stay polite. Returns a graceful null when the
 // slug is unknown / the market is closed / the API misbehaves, so callers
 // can fall back to the chain-implied price without crashing.
 
-// bundle-safe sleep (no node: imports — this module reaches client bundles
+// bundle-safe sleep (no node: imports, this module reaches client bundles
 // via resolutions/calls-data import chains, and Turbopack can't externalize
 // node:timers/promises there)
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
@@ -85,16 +85,16 @@ export async function getPolymarketPrice(slug: string): Promise<PolymarketPrice 
 }
 
 // ── Settlement via UMA's Optimistic Oracle (the real resolution source) ─────
-// Polymarket markets settle through UMA's Optimistic Oracle — a decentralized,
+// Polymarket markets settle through UMA's Optimistic Oracle, a decentralized,
 // disputable, on-chain resolution. When a market is resolved, Gamma reports
 // `umaResolutionStatus: "resolved"`, the winning side's `outcomePrice` is "1",
-// and `resolvedBy` is the on-chain UMA adapter. We read that — never invent it.
+// and `resolvedBy` is the on-chain UMA adapter. We read that, never invent it.
 
 export type PolymarketResolution = {
   slug: string
   status: 'YES' | 'NO' | 'PENDING'
   umaStatus: string | null    // e.g. "resolved"
-  resolvedBy: string | null   // on-chain UMA resolver contract — the proof
+  resolvedBy: string | null   // on-chain UMA resolver contract, the proof
   question?: string
   fetchedAt: number
 }
@@ -111,7 +111,7 @@ export async function getPolymarketResolution(slug: string): Promise<PolymarketR
   while (attempt < 2) {
     try {
       // closed=true so the lookup also returns SETTLED markets (the default
-      // slug filter hides closed ones — and resolved markets are closed).
+      // slug filter hides closed ones, and resolved markets are closed).
       const r = await fetch(
         `https://gamma-api.polymarket.com/markets?slug=${encodeURIComponent(slug)}&closed=true`,
         { headers: { 'User-Agent': UA, 'Accept': 'application/json' }, signal: AbortSignal.timeout(6000) },

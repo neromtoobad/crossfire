@@ -1,4 +1,4 @@
-// Wagmi config — Base Sepolia + injected (MetaMask) connector.
+// Wagmi config, Base Sepolia + injected (MetaMask) connector.
 // Uses cookieStorage so the server can hydrate the connected state on
 // initial render; without this, every SSR'd page shows "Connect wallet"
 // for the ~1-second gap while wagmi reconciles localStorage on the client.
@@ -11,7 +11,7 @@ export function getConfig() {
   return createConfig({
     chains: [baseSepolia, base],
     connectors: [
-      // MetaMask first — the demo target. injected() catches Rabby, Brave, etc.
+      // MetaMask first, the demo target. injected() catches Rabby, Brave, etc.
       metaMask(),
       injected(),
     ],

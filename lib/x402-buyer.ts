@@ -1,4 +1,4 @@
-// Phase 3 — Prompt 3.2. The metered, on-chain costly-signal buyer.
+// Phase 3, Prompt 3.2. The metered, on-chain costly-signal buyer.
 //
 // Flow per call:
 //   1. POST evidence URL → seller returns 402 with PAYMENT-REQUIRED header.
@@ -8,7 +8,7 @@
 //        scope: Erc20TransferAmount on accepted.asset, maxAmount = accepted.amount
 //        caveats: [redeemer: accepted.extra.facilitators]
 //        parentDelegation: buyer's sub-budget (so payment draws from USER SA
-//                          through the existing chain — never from the buyer's
+//                          through the existing chain, never from the buyer's
 //                          own EOA holdings).
 //   4. Sign with the buyer's private key.
 //   5. encodeDelegations([open, ...parentChain]) → permissionContext (leaf-to-root).
@@ -63,7 +63,7 @@ export async function buyEvidence({
   parentChain: SignedDelegation[] // leaf-first parent chain, e.g. [bullBudget, root]
   fetchFn: (req: Request) => Promise<Response>
 }): Promise<BuyEvidenceResult> {
-  // ── (1) Initial request — expect 402 ──────────────────────────────────────
+  // ── (1) Initial request, expect 402 ──────────────────────────────────────
   const first = await fetchFn(new Request(url, { method: 'POST' }))
   if (first.status !== 402) {
     throw new Error(`x402: expected 402 on first call, got ${first.status}`)
@@ -92,7 +92,7 @@ export async function buyEvidence({
     .addCaveat('redeemer', { redeemers: accepted.extra.facilitators })
     .build()
 
-  // Fresh salt on EVERY x402 buy — otherwise two evidence buys in the same
+  // Fresh salt on EVERY x402 buy, otherwise two evidence buys in the same
   // session reuse the same open-delegation hash and the on-chain enforcer
   // sees the 0.5 USDC cap already exhausted from the first one.
   const open = createOpenDelegation({

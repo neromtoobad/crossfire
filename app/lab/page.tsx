@@ -1,4 +1,4 @@
-// /lab — THE WAR ROOM. The conference room where the five agents debate a
+// /lab, THE WAR ROOM. The conference room where the five agents debate a
 // market live (Venice), and you back or fade them. On-chain proof sits compact
 // below. (Route kept as /lab; the room is "The War Room".)
 
@@ -29,7 +29,7 @@ const RECEIPTS = [
 ]
 
 export default async function WarRoomPage() {
-  // REAL World Cup fixtures (live from ESPN) to debate — upcoming + recent.
+  // REAL World Cup fixtures (live from ESPN) to debate, upcoming + recent.
   // Falls back to the sample slate only if the feed is unreachable.
   const live = await getWorldCupMarkets(Date.now())
   const calls = live.length ? live : loadCalls().slice(0, 36)
@@ -63,8 +63,8 @@ export default async function WarRoomPage() {
           </h1>
           <p style={{ fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.55, margin: 0, maxWidth: 680 }}>
             Sit the five agents down at the table and put a market to them. They take
-            the floor one at a time — each entering evidence and challenging the
-            speakers before them, every word from Venice — until each commits to a
+            the floor one at a time, each entering evidence and challenging the
+            speakers before them, every word from Venice, until each commits to a
             side. Then you back the one you trust, or fade them.
           </p>
         </section>
@@ -73,7 +73,7 @@ export default async function WarRoomPage() {
           <WarRoom calls={calls} />
         </Suspense>
 
-        {/* on-chain proof — compact */}
+        {/* on-chain proof, compact */}
         <section id="proof" style={{ padding: '48px 0 8px', borderTop: `1px solid ${CF.line}`, marginTop: 44 }}>
           <div className="mono" style={{ fontSize: 11, letterSpacing: 2.4, color: CF.ink3, marginBottom: 10 }}>ON-CHAIN PROOF</div>
           <h2 style={{ fontFamily: CF.display, fontWeight: 500, fontSize: 26, letterSpacing: -0.6, color: CF.ink, margin: '0 0 18px' }}>Every primitive, on a real chain.</h2>
@@ -82,7 +82,7 @@ export default async function WarRoomPage() {
               <div key={r.tx} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'center', padding: '12px 20px', borderBottom: i < RECEIPTS.length - 1 ? `1px solid ${CF.line}` : 'none' }}>
                 <div>
                   <span style={{ fontFamily: CF.body, fontSize: 13.5, fontWeight: 600, color: CF.ink }}>{r.what}</span>
-                  <span style={{ fontFamily: CF.body, fontSize: 13, color: CF.ink3 }}> — {r.detail}</span>
+                  <span style={{ fontFamily: CF.body, fontSize: 13, color: CF.ink3 }}>, {r.detail}</span>
                 </div>
                 <div style={{ textAlign: 'right' }}><Tx hash={r.tx} label={r.label} network={r.net} /><span className="mono" style={{ fontSize: 9.5, color: CF.ink4, marginLeft: 8 }}>{r.net === 'mainnet' ? 'mainnet' : 'sepolia'}</span></div>
               </div>

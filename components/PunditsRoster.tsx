@@ -1,6 +1,6 @@
-// THE LEAGUE — the five forecasters as a roster of character cards. Server
+// THE LEAGUE, the five forecasters as a roster of character cards. Server
 // component: takes the calls, computes each pundit's record, renders the panel.
-// This is the heart of the new identity — the personalities, front and centre.
+// This is the heart of the new identity, the personalities, front and centre.
 
 import Link from 'next/link'
 import { PUNDITS, PUNDIT_ROLES } from '../lib/pundits'

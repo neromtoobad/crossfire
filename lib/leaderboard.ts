@@ -55,7 +55,7 @@ export function budgetMultiplier(brierScore: number, callsResolved: number): num
   if (brierScore < 0.12) return 1.5   // sharp
   if (brierScore < 0.21) return 1.2   // calibrated
   if (brierScore < 0.27) return 1.0   // fair
-  return 0.7                          // miscalibrated — staked smaller
+  return 0.7                          // miscalibrated, staked smaller
 }
 
 function predictedYesProb(v: AgentVote): number {
@@ -68,7 +68,7 @@ function predictedYesProb(v: AgentVote): number {
 // For the Skeptic, the meaning of confidence is "refutation confidence",
 // not direction. A high refutation confidence on an approved call means
 // the Skeptic actually opposed it (and was overruled). We score the
-// Skeptic by reading their vote literally — they still emit a YES/NO/ABSTAIN.
+// Skeptic by reading their vote literally, they still emit a YES/NO/ABSTAIN.
 
 function votedOutcome(v: AgentVote, side: 'YES' | 'NO'): boolean {
   return v.vote === side

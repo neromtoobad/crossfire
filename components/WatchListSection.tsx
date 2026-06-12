@@ -1,8 +1,8 @@
 'use client'
 
-// Tabbed watch list — keeps the home page from drowning in 100+ cards.
-//   default tab: "Trending" — top N across all buckets by volume
-//   per-bucket tabs: "Sports", "Politics", ... — top N in that bucket
+// Tabbed watch list, keeps the home page from drowning in 100+ cards.
+//   default tab: "Trending", top N across all buckets by volume
+//   per-bucket tabs: "Sports", "Politics", ..., top N in that bucket
 //
 // The full WatchSnapshot is passed in server-side; this component just
 // filters and renders locally on tab change. No network calls.

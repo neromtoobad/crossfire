@@ -1,4 +1,4 @@
-// POST /api/mandate — receives a signed delegation from the client, stores it
+// POST /api/mandate, receives a signed delegation from the client, stores it
 // keyed to the user's wallet address + market id. The server-side orchestrator
 // will redelegate against this when /api/duel/run fires.
 

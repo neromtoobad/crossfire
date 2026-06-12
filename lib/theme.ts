@@ -1,4 +1,4 @@
-// CROSSFIRE design tokens — Phase 8.11, dark-mode-enabled Phase 9.5.
+// CROSSFIRE design tokens, Phase 8.11, dark-mode-enabled Phase 9.5.
 //
 // Editorial system, now theme-switchable. Every color token resolves to a CSS
 // variable whose value is defined in app/layout.tsx for :root (light) and
@@ -8,7 +8,7 @@
 // Non-color tokens (fonts, radius, spacing) are theme-independent and stay raw.
 //
 // Typography pairing: Fraunces (variable display serif) + Inter (UI body)
-// + JetBrains Mono (tx hashes, status codes, data only — NOT body).
+// + JetBrains Mono (tx hashes, status codes, data only, NOT body).
 
 export const CF = {
   // ── surfaces ──────────────────────────────────────────────────────────

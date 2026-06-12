@@ -1,4 +1,4 @@
-// Phase 8.2 — Venice-driven role agents. Each runs ONE Venice chat call
+// Phase 8.2, Venice-driven role agents. Each runs ONE Venice chat call
 // with its role-specific system prompt + the user prompt below. Returns
 // a typed AgentVote that lib/calls-data.ts already expects.
 
@@ -42,7 +42,7 @@ export async function runRoleAgent({
     `Market-implied P(YES): ${(impliedProbYes * 100).toFixed(0)}%`,
     ``,
     `Evidence available to your role:`,
-    evidenceContext || '(no role-specific evidence — reason from common-knowledge structural understanding only)',
+    evidenceContext || '(no role-specific evidence, reason from common-knowledge structural understanding only)',
     ``,
     `Now vote, with calibrated confidence. JSON only.`,
   ].join('\n')
@@ -72,7 +72,7 @@ export async function runRoleAgent({
   }
 }
 
-// ── Skeptic — gets the other four votes, tries to refute the majority ──
+// ── Skeptic, gets the other four votes, tries to refute the majority ──
 export async function runSkeptic({
   marketTitle,
   impliedProbYes,
@@ -121,7 +121,7 @@ export async function runSkeptic({
   }
 }
 
-// ── full thesis — final synthesis (run only when the gate passes) ──────
+// ── full thesis, final synthesis (run only when the gate passes) ──────
 export async function generateThesis({
   marketTitle,
   side,
@@ -151,7 +151,7 @@ Output ONE JSON object, no markdown:
     `Council estimate for P(${side}): ${(selectedSideProb * 100).toFixed(0)}%`,
     ``,
     `Role votes:`,
-    ...votes.map((v) => `  ${v.role}: ${v.vote} (conf ${(v.confidence * 100).toFixed(0)}%) — ${v.oneLiner}`),
+    ...votes.map((v) => `  ${v.role}: ${v.vote} (conf ${(v.confidence * 100).toFixed(0)}%), ${v.oneLiner}`),
     `  Skeptic refutation conf ${(skeptic.confidence * 100).toFixed(0)}%: ${skeptic.oneLiner}`,
   ].join('\n')
 

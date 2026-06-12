@@ -1,4 +1,4 @@
-// The agents' World Cup winner picks — each of the five agents backs ONE
+// The agents' World Cup winner picks, each of the five agents backs ONE
 // nation to lift the trophy and argues why, in character, via Venice. They may
 // overlap. A short debate (rebuttals) is generated alongside. Cached to runtime
 // state so the home shows real Venice output instantly.
@@ -11,7 +11,7 @@ import { resolve } from 'node:path'
 import { STATE_BASE } from './state-dir.js'
 
 // A fast Venice model for this generative task (the heavy qwen3-235b decision
-// model is frequently overloaded). Still Venice — the only provider.
+// model is frequently overloaded). Still Venice, the only provider.
 const MODEL = 'zai-org-glm-4.7-flash'
 const DIR = STATE_BASE
 const FILE = resolve(DIR, 'winner-picks.json')
@@ -43,7 +43,7 @@ function stripFences(s: string): string {
 export async function generateWinnerPicks(): Promise<WinnerData> {
   const roster = PUNDIT_ROLES.map((r) => {
     const p: Pundit = PUNDITS[r]
-    return `- ${p.handle} — ${p.archetype}: ${p.blurb}`
+    return `- ${p.handle}, ${p.archetype}: ${p.blurb}`
   }).join('\n')
 
   const system = 'You are a sports desk of five distinct AI football analysts debating the 2026 FIFA World Cup. Reply with ONLY valid JSON, no prose, no markdown fences.'
@@ -51,15 +51,15 @@ export async function generateWinnerPicks(): Promise<WinnerData> {
 ${roster}
 
 Rules:
-- Each analyst picks exactly one nation. Picks MAY overlap (two analysts can back the same nation) — only pick the same nation if the analyst genuinely would.
-- Each gives a 1-2 sentence PITCH addressed directly to the bettor (second person — "you"), SELLING their pick with swagger and a concrete footballing reason, in their own voice and lane. They are competing to convince you to follow THEM.
+- Each analyst picks exactly one nation. Picks MAY overlap (two analysts can back the same nation), only pick the same nation if the analyst genuinely would.
+- Each gives a 1-2 sentence PITCH addressed directly to the bettor (second person, "you"), SELLING their pick with swagger and a concrete footballing reason, in their own voice and lane. They are competing to convince you to follow THEM.
 - Then they DEBATE: 4 short rebuttal lines where analysts challenge each other's picks by name (e.g. VEGA jabs at ECHO's pick). One sentence each.
 
 Return JSON exactly:
 {"picks":[{"handle":"PHOENIX","country":"Brazil","reason":"..."}, ... all five ...],
  "debate":[{"handle":"VEGA","line":"..."}, ... 4 lines ...]}`
 
-  // Venice can return 429 (model overloaded) under load — retry the same Venice
+  // Venice can return 429 (model overloaded) under load, retry the same Venice
   // model with backoff. No non-Venice fallback (Venice is the only engine).
   let raw = ''
   let lastErr: unknown
@@ -71,11 +71,11 @@ Return JSON exactly:
         temperature: 0.8,
         max_tokens: 1400,
         response_format: { type: 'json_object' },
-        // Venice extension: GLM/qwen are reasoning models — disable thinking so
+        // Venice extension: GLM/qwen are reasoning models, disable thinking so
         // the JSON lands in content (passed through by the OpenAI SDK).
         venice_parameters: { disable_thinking: true },
       } as Parameters<typeof venice.chat.completions.create>[0])
-      // reasoning models may still route output to reasoning_content — read both
+      // reasoning models may still route output to reasoning_content, read both
       const msg = res.choices?.[0]?.message as { content?: string | null; reasoning_content?: string | null } | undefined
       raw = (msg?.content || msg?.reasoning_content || '').trim()
       if (raw) break
@@ -95,7 +95,7 @@ Return JSON exactly:
     const p = PUNDITS[role]
     const got = byHandle.get(p.handle.toUpperCase())
     const country = got?.country?.trim() || 'Brazil'
-    return { role, handle: p.handle, country, flag: flagOf(country), reason: got?.reason?.trim() || '—' }
+    return { role, handle: p.handle, country, flag: flagOf(country), reason: got?.reason?.trim() || '-' }
   })
   const debate = (parsed.debate ?? []).filter((d) => d?.handle && d?.line).slice(0, 6)
 

@@ -1,7 +1,7 @@
-// Phase 7.7 — webhook URL discovery.
+// Phase 7.7, webhook URL discovery.
 //
 // Source priority:
-//   1. CROSSFIRE_WEBHOOK_URL env var (highest — manually configured)
+//   1. CROSSFIRE_WEBHOOK_URL env var (highest, manually configured)
 //   2. .crossfire/webhook-url file (written by `npm run tunnel`)
 //   3. null (polling-only, no webhook)
 //

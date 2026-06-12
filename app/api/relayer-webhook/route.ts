@@ -1,4 +1,4 @@
-// Phase 5 — Prompt 5.2. Webhook endpoint for 1Shot status pushes.
+// Phase 5, Prompt 5.2. Webhook endpoint for 1Shot status pushes.
 //
 // 1Shot POSTs status updates here with an Ed25519 signature header verified
 // against their JWKS. For Phase 5 we accept-without-verify and document the
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: false, error: 'invalid JSON' }, { status: 400 })
   }
 
-  // Best-effort extraction — different 1Shot event shapes possible.
+  // Best-effort extraction, different 1Shot event shapes possible.
   const taskId: string | undefined =
     body?.TaskId ?? body?.taskId ?? body?.task?.id ?? body?.id
   const status: string | undefined =
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const receivedAt = Date.now()
   appendRelayerEvent({ receivedAt, taskId, status, txHash, rawPayload: body })
-  // Live fan-out — any open NDJSON relay stream subscribed to this taskId
+  // Live fan-out, any open NDJSON relay stream subscribed to this taskId
   // (or the global "any webhook" indicator) gets it instantly.
   publish({ receivedAt, taskId, status, txHash, raw: body })
 

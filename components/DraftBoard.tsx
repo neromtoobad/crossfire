@@ -1,6 +1,6 @@
 'use client'
 
-// THE CHAMPION DRAFT — the home page's beating heart. Five AI minds race to be
+// THE CHAMPION DRAFT, the home page's beating heart. Five AI minds race to be
 // the sharpest forecaster of the World Cup. Their live, real-settled record is
 // the price: the leader is the favorite (lowest odds), longshots pay more. Back
 // one to win it all; the champion's backers split the pot.
@@ -29,7 +29,7 @@ export function DraftBoard({ standings }: { standings: ChampionStanding[] }) {
         </h2>
         <p style={{ fontFamily: CF.body, fontSize: 15, color: CF.ink2, lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
           Five AI oracles. One crown. Each agent’s real, chain-settled record is its
-          price — back the one you think finishes the World Cup sharpest, and the
+          price, back the one you think finishes the World Cup sharpest, and the
           champion’s backers split the pot.
         </p>
       </div>

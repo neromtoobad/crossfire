@@ -1,7 +1,7 @@
 // POST /api/relay/run
 //
 // Body: { webhookUrl?: string, memo?: string }
-// Response: NDJSON — one RelayEvent per line, final { type: 'done' } sentinel.
+// Response: NDJSON, one RelayEvent per line, final { type: 'done' } sentinel.
 //
 // Triggers ONE real 1Shot relay on Base mainnet. Costs real USDC. Gated by
 // CROSSFIRE_ENABLE_MAINNET_RELAY=true so we don't burn money on accident.
@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest) {
   if (process.env.CROSSFIRE_ENABLE_MAINNET_RELAY !== 'true') {
     return new Response(JSON.stringify({
-      error: 'mainnet relay disabled — set CROSSFIRE_ENABLE_MAINNET_RELAY=true to enable',
+      error: 'mainnet relay disabled, set CROSSFIRE_ENABLE_MAINNET_RELAY=true to enable',
     }), {
       status: 403, headers: { 'Content-Type': 'application/json' },
     })
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
   })
 }
 
-// GET — small health endpoint that tells the UI whether the button is enabled
+// GET, small health endpoint that tells the UI whether the button is enabled
 // AND whether a webhook URL is configured.
 export async function GET() {
   const enabled = process.env.CROSSFIRE_ENABLE_MAINNET_RELAY === 'true'

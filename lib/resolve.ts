@@ -1,4 +1,4 @@
-// Phase 4 — Prompt 4.2. The mechanism.
+// Phase 4, Prompt 4.2. The mechanism.
 //
 // Adversarial conviction → metered on-chain → net position.
 //
@@ -13,10 +13,10 @@
 //   else        → bet sized |net| through the WINNING side's chain
 //
 // The bet itself is two on-chain steps:
-//   (a) USDC.transfer(market, |net|)   — through winning sub's redelegation
+//   (a) USDC.transfer(market, |net|)  , through winning sub's redelegation
 //                                        chain, allowed by Erc20TransferAmount.
 //   (b) market.buyOnBehalf(USER SA, isYes, |net|)
-//                                      — permissionless credit call from any
+//                                     , permissionless credit call from any
 //                                        EOA; here ORCH does the courtesy.
 
 import { POST as evidenceHandler } from '../app/api/evidence/route.js'
@@ -54,7 +54,7 @@ import { buildRootMandate } from './mandate.js'
 import { buyEvidence } from './x402-buyer.js'
 
 const EVIDENCE_PRICE_USDC = 500_000n // 0.5 USDC, must match seller's PAYMENT-REQUIRED
-const DUST_USDC = 1_000_000n          // 1 USDC — if net is below this the system honestly abstains
+const DUST_USDC = 1_000_000n          // 1 USDC, if net is below this the system honestly abstains
 const STAKE_BELOW_THRESHOLD = 0       // model returns 0 if |edge|<0.05
 
 type SideResult = {
@@ -219,7 +219,7 @@ export async function runDuel(opts: RunOptions = {}): Promise<DuelOutcome> {
   }
 
   if (netUsdcWei < DUST_USDC) {
-    // ABSTAIN — no on-chain bet, just read market state for the summary
+    // ABSTAIN, no on-chain bet, just read market state for the summary
     const totals = await readTotals()
     const userPos = await readPosition(userSA.address)
     const impl = await readImpliedProbYes()
@@ -262,7 +262,7 @@ export async function runDuel(opts: RunOptions = {}): Promise<DuelOutcome> {
     throw new Error(`Bet transfer reverted on-chain: ${transferHash}`)
   }
 
-  // Read what actually landed in the market — use this as the credit amount
+  // Read what actually landed in the market, use this as the credit amount
   // so any "ghost" pre-existing balance can't mis-credit the bet. Public RPCs
   // can return stale state right after a receipt, so retry until we see the
   // delta (or 8 × 1.5s timeout).
@@ -282,7 +282,7 @@ export async function runDuel(opts: RunOptions = {}): Promise<DuelOutcome> {
     throw new Error(`Transfer mined but market balance unchanged after 8 retries: ${transferHash}`)
   }
 
-  // (b) ORCH calls market.buyOnBehalf(USER_SA, isYes, claimAmount) — uses
+  // (b) ORCH calls market.buyOnBehalf(USER_SA, isYes, claimAmount), uses
   //     the OBSERVED delta, not the requested net, so we credit exactly what
   //     landed even if RPC routing or earlier ghost deposits muddied things.
   const buyHash = await orchestratorWalletSepolia.writeContract({
@@ -296,7 +296,7 @@ export async function runDuel(opts: RunOptions = {}): Promise<DuelOutcome> {
     throw new Error(`buyOnBehalf reverted on-chain: ${buyHash}`)
   }
 
-  // Public RPC nodes can serve stale state right after a receipt — retry
+  // Public RPC nodes can serve stale state right after a receipt, retry
   // until the credited shares appear in the position read.
   let userPos = await readPosition(userSA.address)
   for (let i = 0; i < 6; i++) {

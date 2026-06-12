@@ -5,7 +5,7 @@
 // over-cap bet. Two real, already-mined receipts are always on screen (one
 // settled, one reverted); "Try it live" re-streams a fresh on-chain revert.
 //
-// Self-contained — manages its own prove-live state — so FadeFollow (back/fade a
+// Self-contained, manages its own prove-live state, so FadeFollow (back/fade a
 // call) and BackAgent (back a champion) both just render <OverCapRevert/>.
 
 import { useState } from 'react'
@@ -57,7 +57,7 @@ export function OverCapRevert({ amount, cap = CAP_USDC }: { amount: number; cap?
         </div>
         <div style={{ fontFamily: CF.body, fontSize: 14, color: CF.ink, lineHeight: 1.55 }}>
           <strong style={{ color: CF.bear, fontWeight: 700 }}>${amount} is {multiple}× your ${cap} cap.</strong>{' '}
-          Your mandate is capped at <strong style={{ color: CF.ink }}>${cap} USDC</strong> — nothing in our code stops a bigger bet. The chain does.
+          Your mandate is capped at <strong style={{ color: CF.ink }}>${cap} USDC</strong>, nothing in our code stops a bigger bet. The chain does.
         </div>
         <div className="mono" style={{ fontSize: 10, color: CF.bear, background: alpha(CF.bear, 8), border: `1px solid ${alpha(CF.bear, 22)}`, borderRadius: 5, padding: '6px 9px', margin: '10px 0', wordBreak: 'break-all' }}>
           {proving ? 'submitting over-cap redemption…' : `⛔ REVERTED · ${ENFORCER_ERROR}`}
@@ -73,7 +73,7 @@ export function OverCapRevert({ amount, cap = CAP_USDC }: { amount: number; cap?
       </div>
       <div style={{ padding: '12px 16px', borderTop: `1px solid ${alpha(CF.bear, 20)}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
         <span className="mono" style={{ fontSize: 11, color: CF.ink2 }}>
-          {proved ? 'No code stopped it — MetaMask’s enforcer did.' : 'Real, already-mined. Or prove it again, live.'}
+          {proved ? 'No code stopped it, MetaMask’s enforcer did.' : 'Real, already-mined. Or prove it again, live.'}
         </span>
         <button onClick={proveRevert} disabled={proving} className="cf-press" style={{
           padding: '9px 16px', borderRadius: CF.radius.md, border: 'none', cursor: proving ? 'wait' : 'pointer',

@@ -1,4 +1,4 @@
-// Backed-calls store — records which calls a user has faded/followed, so The
+// Backed-calls store, records which calls a user has faded/followed, so The
 // Vault can show them. Runtime state (gitignored). One bet per user+call
 // (re-backing updates it).
 

@@ -1,4 +1,4 @@
-// /fixtures — the live 2026 World Cup group stage. Real ESPN standings, all 12
+// /fixtures, the live 2026 World Cup group stage. Real ESPN standings, all 12
 // groups. The agents' records (and their odds in the Champion Draft) are graded
 // against these exact results.
 
@@ -34,8 +34,8 @@ export default function FixturesPage() {
             World Cup 2026 · live table
           </h1>
           <p style={{ fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.6, maxWidth: 640, margin: 0 }}>
-            The real tournament, pulled live from ESPN. Every agent’s record — and
-            every odds in the <Link href="/" style={{ color: CF.gold }}>Champion Draft</Link> — is graded
+            The real tournament, pulled live from ESPN. Every agent’s record, and
+            every odds in the <Link href="/" style={{ color: CF.gold }}>Champion Draft</Link>, is graded
             against these exact results. Top two of each group advance.
           </p>
         </section>

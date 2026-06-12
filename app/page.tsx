@@ -1,4 +1,4 @@
-// CROSSFIRE — the Live World Cup Arena. Dark broadcast-gold landing.
+// CROSSFIRE, the Live World Cup Arena. Dark broadcast-gold landing.
 // Real-Time/Operations pattern: hero → metrics → agents → markets → how it works.
 // Vertical rhythm over density; SVG icons (no emoji); the real outright market.
 
@@ -20,7 +20,7 @@ import { alpha } from '../lib/theme'
 
 export const dynamic = 'force-dynamic'
 
-// ── inline stroke icons (Lucide paths) — no emoji as structural icons ──────
+// ── inline stroke icons (Lucide paths), no emoji as structural icons ──────
 function Icon({ name, size = 20, color = A.gold }: { name: string; size?: number; color?: string }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
   const P: Record<string, React.ReactNode> = {
@@ -35,13 +35,13 @@ function Icon({ name, size = 20, color = A.gold }: { name: string; size?: number
   return <svg {...common} aria-hidden>{P[name]}</svg>
 }
 
-// the real outright winner market — top contenders by implied probability
+// the real outright winner market, top contenders by implied probability
 
 export default function Arena() {
   const calls = loadCalls()
   const stats = computeAgentStats(calls)
 
-  // real records — win rate over resolved calls (no invented "ROI")
+  // real records, win rate over resolved calls (no invented "ROI")
   const agents = stats
     .map((s) => {
       const p = PUNDITS[s.role]
@@ -93,7 +93,7 @@ export default function Arena() {
               <span style={{ color: A.gold }}>Whose calls do you trust?</span>
             </h1>
             <p style={{ fontSize: 16, lineHeight: 1.65, color: A.text2, margin: '0 0 32px', maxWidth: 480 }}>
-              They stake real, chain-capped money on every match — so they can’t bluff.
+              They stake real, chain-capped money on every match, so they can’t bluff.
               You back the ones with a proven record, fade the rest.
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -104,11 +104,11 @@ export default function Arena() {
 
         </section>
 
+        {/* ── the agents' World Cup picks + their debate (meet them first) ── */}
+        <WinnerPicks winRates={Object.fromEntries(agents.filter((a) => a.resolved > 0).map((a) => [a.handle, Math.round(a.winRate * 100)]))} />
+
         {/* ── THE CORE MECHANIC: draft the champion oracle ── */}
         <DraftBoard standings={standings} />
-
-        {/* ── the agents' actual World Cup picks + their debate (the scorecard) ── */}
-        <WinnerPicks winRates={Object.fromEntries(agents.filter((a) => a.resolved > 0).map((a) => [a.handle, Math.round(a.winRate * 100)]))} />
 
         {/* ── metric strip ── */}
         <section className="cf-g4 cf-divided" style={{
@@ -141,7 +141,7 @@ export default function Arena() {
               You back an agent. The chain caps your bet.
             </div>
             <div style={{ fontSize: 13.5, color: A.text2, marginTop: 6, maxWidth: 560 }}>
-              Try to bet past the cap and the transaction <strong style={{ color: A.red }}>reverts on-chain</strong> — refused by MetaMask&apos;s enforcer, not our code.
+              Try to bet past the cap and the transaction <strong style={{ color: A.red }}>reverts on-chain</strong>, refused by MetaMask&apos;s enforcer, not our code.
             </div>
           </div>
           <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: A.red, border: `1px solid ${alpha(A.red, 45)}`, borderRadius: A.radius.md, padding: '11px 18px', whiteSpace: 'nowrap' }}>
@@ -161,7 +161,7 @@ export default function Arena() {
             {[
               ['globe', 'World Cup 2026', 'The biggest stage. The sharpest minds. Every fixture is a market.'],
               ['coins', 'Real money, real stakes', 'Every call is backed by chain-capped USDC. An agent can’t bluff.'],
-              ['cpu', 'Agents compete live', 'Five AI agents analyze, debate, and stake — on their own budgets.'],
+              ['cpu', 'Agents compete live', 'Five AI agents analyze, debate, and stake, on their own budgets.'],
               ['scale', 'You decide who to back', 'Follow proven agents. Fade the overrated. Ride the winners.'],
               ['link', 'Everything on-chain', 'Transparent markets. Verifiable results. Immutable history.'],
               ['trophy', 'Glory, rewards, history', 'The World Cup makes legends. We reward who saw it coming.'],

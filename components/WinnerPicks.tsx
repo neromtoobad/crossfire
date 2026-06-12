@@ -1,6 +1,6 @@
 'use client'
 
-// THE AGENTS' WORLD CUP PICKS — HUD-style agent cards. Each agent (Venice-
+// THE AGENTS' WORLD CUP PICKS, HUD-style agent cards. Each agent (Venice-
 // generated robot portrait) backs one nation and pitches YOU to follow it.
 // VIEW ARGUMENT → the War Room, where they defend the pick live.
 
@@ -15,7 +15,7 @@ type Pick = { role: string; handle: string; country: string; flag: string; reaso
 const PUNDIT_LIST = Object.values(PUNDITS)
 const punditByHandle = (h: string) => PUNDIT_LIST.find((p) => p.handle === h)
 
-// HUD corner brackets — four glowing corners in the agent's colour
+// HUD corner brackets, four glowing corners in the agent's colour
 function Corners({ color }: { color: string }) {
   const s: React.CSSProperties = { position: 'absolute', width: 14, height: 14, pointerEvents: 'none' }
   const b = `2px solid ${color}`
@@ -57,7 +57,7 @@ export function WinnerPicks({ winRates = {} }: { winRates?: Record<string, numbe
           Five agents. Five pitches. Who do you follow?
         </h2>
         <p style={{ fontSize: 14.5, color: A.text2, lineHeight: 1.55, margin: '8px 0 0', maxWidth: 620 }}>
-          Each agent backs a nation to lift the trophy — and makes its case to you directly.
+          Each agent backs a nation to lift the trophy, and makes its case to you directly.
           Open an argument to watch them defend it in the <Link href="/lab?topic=winner" style={{ color: A.gold }}>War Room</Link>.
         </p>
       </div>
@@ -75,7 +75,7 @@ export function WinnerPicks({ winRates = {} }: { winRates?: Record<string, numbe
           ) : (
             <>
               <div style={{ fontSize: 14, color: A.text2, marginBottom: 14 }}>
-                {state === 'error' ? 'Venice was busy — try again.' : 'Run the agents to see who they back to win the World Cup.'}
+                {state === 'error' ? 'Venice was busy, try again.' : 'Run the agents to see who they back to win the World Cup.'}
               </div>
               <button onClick={generate} className="cf-press" style={{
                 padding: '11px 20px', borderRadius: A.radius.md, border: 'none', cursor: 'pointer',
@@ -98,7 +98,7 @@ export function WinnerPicks({ winRates = {} }: { winRates?: Record<string, numbe
                 boxShadow: `0 0 22px ${c}1a, inset 0 0 30px rgba(0,0,0,0.5)`,
               }}>
                 <Corners color={c} />
-                {/* header — handle · persona · win rate */}
+                {/* header, handle · persona · win rate */}
                 <div style={{ padding: '12px 14px 10px', borderBottom: `1px solid ${c}26` }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{ fontFamily: A.mono, fontWeight: 700, fontSize: 14, letterSpacing: 1.5, color: A.cream }}>{p.handle}</span>
@@ -114,7 +114,7 @@ export function WinnerPicks({ winRates = {} }: { winRates?: Record<string, numbe
                 {/* Venice robot portrait */}
                 <div style={{ position: 'relative', aspectRatio: '4 / 3.4', overflow: 'hidden' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={agent?.portrait} alt={`${p.handle} — AI agent`} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 18%' }} />
+                  <img src={agent?.portrait} alt={`${p.handle}, AI agent`} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 18%' }} />
                   <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 40%, rgba(4,6,10,0.92) 96%)` }} />
                 </div>
                 {/* the pick + the pitch */}

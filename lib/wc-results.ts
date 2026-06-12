@@ -1,4 +1,4 @@
-// Live 2026 World Cup results — the real, self-updating source for "matches
+// Live 2026 World Cup results, the real, self-updating source for "matches
 // played". We pull final scores from ESPN's structured scoreboard API (no key),
 // not from anything hand-typed. Only matches that are actually FULL-TIME are
 // shown; the agents are graded against the real score. If the feed is briefly
@@ -26,7 +26,7 @@ export function hits(m: SettledMatch): number {
   return m.calls.filter((c) => c.vote === m.outcome).length
 }
 
-// Public, approximate FIFA strength (lower = stronger) — used ONLY to frame
+// Public, approximate FIFA strength (lower = stronger), used ONLY to frame
 // which side the agents lean pre-match, independent of the result.
 const RANK: Record<string, number> = {
   Argentina: 1, France: 2, Spain: 3, England: 4, Brazil: 5, Portugal: 6, Netherlands: 7,
@@ -58,7 +58,7 @@ const ROLES: AgentRole[] = ['MacroScout', 'NewsHawk', 'CrowdPulse', 'BookWatcher
 
 // Build the agents' pre-match calls for a real fixture: the four lane agents
 // back the stronger side (YES), the contrarian VEGA fades it (NO). Confidence
-// scales with the strength gap. Deterministic — no result peeking.
+// scales with the strength gap. Deterministic, no result peeking.
 function callsFor(favProb: number): SettledCall[] {
   return ROLES.map((role, i) => {
     if (role === 'Skeptic') return { role, vote: 'NO', confidence: 0.55 + (i % 2) * 0.02 }
@@ -111,10 +111,10 @@ export async function getPlayedMatches(nowMs: number, maxMatches = 4): Promise<S
         const favProb = Math.min(0.85, Math.max(0.52, 0.5 + (rankOf(dog) - rankOf(fav)) * 0.006))
         const outcome: 'YES' | 'NO' = favScore > dogScore ? 'YES' : 'NO'
         const story = outcome === 'YES'
-          ? `The favourite delivered — ${fav} saw off ${dog}.`
+          ? `The favourite delivered, ${fav} saw off ${dog}.`
           : favScore === dogScore
-            ? `Held to a draw — ${fav} couldn't break ${dog} down.`
-            : `The upset landed — ${dog} stunned ${fav}.`
+            ? `Held to a draw, ${fav} couldn't break ${dog} down.`
+            : `The upset landed, ${dog} stunned ${fav}.`
 
         out.push({
           id: e.id ?? `${fav}-${dog}-${days[di]}`,
@@ -155,11 +155,11 @@ const NOW = 1780_700_000_000
 
 function oneLiner(role: AgentRole, fav: string, dog: string): string {
   switch (role) {
-    case 'MacroScout': return `${fav} control the shape — they dictate tempo and make ${dog} chase the game.`
+    case 'MacroScout': return `${fav} control the shape, they dictate tempo and make ${dog} chase the game.`
     case 'NewsHawk': return `${fav} go in the fitter, fuller side; ${dog}'s team-news is the worry, not theirs.`
-    case 'CrowdPulse': return `${fav} carry the belief and the momentum here — ${dog} tend to fold when it tightens.`
+    case 'CrowdPulse': return `${fav} carry the belief and the momentum here, ${dog} tend to fold when it tightens.`
     case 'BookWatcher': return `The numbers favour ${fav}: better xG profile and chance quality than ${dog}.`
-    default: return `Everyone's on ${fav}. That's exactly when they slip — I'll take ${dog} to make it awkward.`
+    default: return `Everyone's on ${fav}. That's exactly when they slip, I'll take ${dog} to make it awkward.`
   }
 }
 
@@ -175,9 +175,9 @@ function makeMarketCall(fav: string, dog: string, favProb: number, dayLabel: str
     edge: Math.round((favProb - implied) * 100) / 100, bondUsdc: bond, unlockUsdc: 0.1,
     publishedAt: NOW, publishedBy: 'The Panel', votes, skepticVerdict: 'APPROVED',
     locked: {
-      thesis: `${fav} vs ${dog}, 2026 World Cup. The panel backs ${fav} at ${Math.round(favProb * 100)}% against a ${Math.round(implied * 100)}% line — control, quality and squad depth. A live market; it settles via UMA's Optimistic Oracle on the real result.`,
+      thesis: `${fav} vs ${dog}, 2026 World Cup. The panel backs ${fav} at ${Math.round(favProb * 100)}% against a ${Math.round(implied * 100)}% line, control, quality and squad depth. A live market; it settles via UMA's Optimistic Oracle on the real result.`,
       evidenceUrls: [{ label: `${fav} vs ${dog} preview`, url: 'https://www.espn.com/soccer/', signal: 'YES' }],
-      sizingRationale: `Bond ${bond} USDC — scaled to the edge over the line.`,
+      sizingRationale: `Bond ${bond} USDC, scaled to the edge over the line.`,
       counterarguments: `${dog}'s upset path: a fast start that forces ${fav} to chase the game late.`,
     },
   }
@@ -224,13 +224,13 @@ const SNAPSHOT: SettledMatch[] = [
   {
     id: 'mex-rsa-2026', home: 'Mexico', homeFlag: '🇲🇽', away: 'South Africa', awayFlag: '🇿🇦',
     score: '2–0', stage: '2026 World Cup · Jun 11', market: 'Mexico to beat South Africa',
-    favorite: 'Mexico', outcome: 'YES', story: 'The favourite delivered — Mexico saw off South Africa.',
+    favorite: 'Mexico', outcome: 'YES', story: 'The favourite delivered, Mexico saw off South Africa.',
     source: 'ESPN', calls: callsFor(0.78),
   },
   {
     id: 'kor-cze-2026', home: 'South Korea', homeFlag: '🇰🇷', away: 'Czechia', awayFlag: '🇨🇿',
     score: '2–1', stage: '2026 World Cup · Jun 11', market: 'South Korea to beat Czechia',
-    favorite: 'South Korea', outcome: 'YES', story: 'The favourite delivered — South Korea edged Czechia.',
+    favorite: 'South Korea', outcome: 'YES', story: 'The favourite delivered, South Korea edged Czechia.',
     source: 'ESPN', calls: callsFor(0.6),
   },
 ]

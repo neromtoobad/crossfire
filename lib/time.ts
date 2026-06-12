@@ -1,4 +1,4 @@
-// Pure time helpers — no server-only deps, safe to import from client
+// Pure time helpers, no server-only deps, safe to import from client
 // components (keeps lib/calls-data, with its node:fs imports, out of the
 // client bundle).
 

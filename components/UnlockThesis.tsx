@@ -1,6 +1,6 @@
 'use client'
 
-// Phase 8.5 — user-side x402 unlock flow.
+// Phase 8.5, user-side x402 unlock flow.
 //
 // On click:
 //   1. fetch GET /api/unlock/[callId]?user=… → check if already unlocked
@@ -41,7 +41,7 @@ type State =
 // Map a thrown error to a user-readable cause. Wagmi/viem surface
 // rejection with code 4001 / class names; -32603 is the JSON-RPC
 // "internal error" code MetaMask returns when the wallet can't process
-// the request — most often a chain mismatch or a locked wallet.
+// the request, most often a chain mismatch or a locked wallet.
 // Friendly chain label for the wrong-chain banner.
 function chainLabel(id: number): string {
   const known: Record<number, string> = {
@@ -77,7 +77,7 @@ function classifyError(e: unknown): { cause: ErrorCause; message: string; detail
     return {
       cause: 'wallet-internal',
       message:
-        'Your wallet returned an internal error. Most common causes: (1) wallet is on the wrong chain — switch to Base Sepolia (84532); (2) wallet is locked — unlock it and retry; (3) MetaMask needs a refresh — try closing and reopening the extension.',
+        'Your wallet returned an internal error. Most common causes: (1) wallet is on the wrong chain, switch to Base Sepolia (84532); (2) wallet is locked, unlock it and retry; (3) MetaMask needs a refresh, try closing and reopening the extension.',
       detail: detail || msg.slice(0, 240),
     }
   }
@@ -95,12 +95,12 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
   useEffect(() => { setMounted(true) }, [])
 
   const { address, status: accountStatus, connector } = useAccount()
-  const wagmiChainId = useChainId() // wagmi's view — can be stale vs the actual provider
+  const wagmiChainId = useChainId() // wagmi's view, can be stale vs the actual provider
   const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain()
   const { data: walletClient } = useWalletClient()
 
   // ── Live provider chain (ground truth) ────────────────────────────────
-  // Read from the ACTUAL connected wallet's provider — not window.ethereum,
+  // Read from the ACTUAL connected wallet's provider, not window.ethereum,
   // which can be a different installed wallet (or absent for an embedded wallet)
   // and falsely report the wrong chain. Falls back to wagmi.
   const [providerChainId, setProviderChainId] = useState<number | null>(null)
@@ -120,7 +120,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
     })()
     return () => { cancelled = true; try { prov?.removeListener?.('chainChanged', onChanged) } catch {} }
   }, [connector, accountStatus])
-  // Chain gate REMOVED — unreliable detection kept false-flagging Base Sepolia.
+  // Chain gate REMOVED, unreliable detection kept false-flagging Base Sepolia.
   // The payment tx specifies chain: baseSepolia, so the wallet handles any switch.
   const chainId = providerChainId ?? wagmiChainId // kept for the (now unused) diagnostics
   const isConnected = accountStatus === 'connected'
@@ -221,14 +221,14 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       }
 
       // (2) x402 "exact" scheme: a plain USDC.transfer(payTo, amount). MetaMask
-      //     signs this as a normal ERC-20 tx — no smart-account / delegation
+      //     signs this as a normal ERC-20 tx, no smart-account / delegation
       //     friction. The ERC-7710 story is already proven by the council.
       setState({ kind: 'signing' })
       const txHash = await walletClient.writeContract({
         account: address,
         // Target Base Sepolia explicitly. walletClient.chain can resolve to the
         // wrong network (e.g. Ethereum Sepolia 11155111) when the wallet client
-        // is cookie-hydrated or an embedded provider seeds a different default —
+        // is cookie-hydrated or an embedded provider seeds a different default -
         // viem then rejects the tx as a chain mismatch even though the wallet is
         // on 84532. The pre-flight above already confirmed the provider is here.
         chain: baseSepolia,
@@ -303,7 +303,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
       <LockedShell call={call} body={
         <div>
           <p style={{ fontFamily: CF.display, color: CF.ink2, fontSize: 14, lineHeight: 1.6, margin: '0 0 18px' }}>
-            Connect your wallet to read the full reasoning, the evidence, why they bet this much, and the case against — for{' '}
+            Connect your wallet to read the full reasoning, the evidence, why they bet this much, and the case against, for{' '}
             <span style={{ color: CF.ink }}>{call.unlockUsdc.toFixed(2)} USDC</span>.
           </p>
           <ConnectButton variant="primary" />
@@ -377,7 +377,7 @@ export function UnlockThesis({ call }: { call: PublishedCall }) {
             }} />
             <div>
               <div style={{ fontWeight: 700, color: CF.amber }}>CHECK YOUR WALLET</div>
-              <div style={{ color: CF.ink2, marginTop: 2 }}>MetaMask should be asking you to approve a {call.unlockUsdc.toFixed(2)} USDC transfer. If you don't see a popup, click your MetaMask extension icon — it may be hidden.</div>
+              <div style={{ color: CF.ink2, marginTop: 2 }}>MetaMask should be asking you to approve a {call.unlockUsdc.toFixed(2)} USDC transfer. If you don't see a popup, click your MetaMask extension icon, it may be hidden.</div>
             </div>
           </div>
         ) : null}

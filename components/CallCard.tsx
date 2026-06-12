@@ -1,6 +1,6 @@
 'use client'
 
-// CallCard — a matchup card for the feed. Leads with the forecaster who made
+// CallCard, a matchup card for the feed. Leads with the forecaster who made
 // the call (the character), shows the pot (the forecasters' own disagreement),
 // the desk lineup, and a Fade-or-Follow CTA. The personality is the hook; the
 // staked pot is the tension.

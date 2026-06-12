@@ -1,6 +1,6 @@
 'use client'
 
-// BACK AN AGENT — the whole product in one bet. You don't bet on a match; you
+// BACK AN AGENT, the whole product in one bet. You don't bet on a match; you
 // back one of the five minds to finish the World Cup as the sharpest forecaster.
 // The bet is placed via the ERC-7715 capped mandate (the kit moment): the chain
 // caps it at $5, and a $50 stake (10× the cap) reverts at the enforcer.
@@ -98,7 +98,7 @@ export function BackAgent({ standing, onClose }: { standing: ChampionStanding; o
               } : undefined
               const callId = `champion:${standing.role}`
               recordBetLocal({
-                user: address, callId, marketId: 'champion', marketTitle: 'Champion Oracle — World Cup 2026',
+                user: address, callId, marketId: 'champion', marketTitle: 'Champion Oracle, World Cup 2026',
                 agentHandle: standing.handle, choice: 'follow', side: 'YES', amountUsdc: amount, ts: Date.now(),
                 proof, kind: 'champion', agentRole: standing.role, oddsX: standing.oddsX,
               })
@@ -111,7 +111,7 @@ export function BackAgent({ standing, onClose }: { standing: ChampionStanding; o
               fetch('/api/bets', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  user: address, callId, marketId: 'champion', marketTitle: 'Champion Oracle — World Cup 2026',
+                  user: address, callId, marketId: 'champion', marketTitle: 'Champion Oracle, World Cup 2026',
                   agentHandle: standing.handle, choice: 'follow', side: 'YES', amountUsdc: amount, proof,
                   kind: 'champion', agentRole: standing.role, oddsX: standing.oddsX,
                 }),
@@ -123,7 +123,7 @@ export function BackAgent({ standing, onClose }: { standing: ChampionStanding; o
               cta: `Back ${standing.handle} · up to $5`,
               blurb: (
                 <>Authorize up to <strong style={{ color: CF.ink, fontWeight: 600 }}>$5</strong> in MetaMask to stake on {standing.handle}.
-                It’s a capped, expiring permission (ERC-7715) — the chain won’t let your stake exceed the limit, and you can
+                It’s a capped, expiring permission (ERC-7715), the chain won’t let your stake exceed the limit, and you can
                 revoke anytime. Try to back past the cap and the transaction reverts on-chain.</>
               ),
             }} />

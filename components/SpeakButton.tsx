@@ -1,6 +1,6 @@
 'use client'
 
-// SpeakButton — plays an oracle's line aloud in its own Venice voice.
+// SpeakButton, plays an oracle's line aloud in its own Venice voice.
 // First click fetches + caches the audio; replays are instant. Safe to nest
 // inside a <Link> card: it stops the click from navigating.
 

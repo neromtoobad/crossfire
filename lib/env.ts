@@ -1,4 +1,4 @@
-// Centralized env access. Throws loudly if anything required is missing —
+// Centralized env access. Throws loudly if anything required is missing -
 // better to fail at script startup than mid-redemption.
 
 import { config } from 'dotenv'
@@ -9,7 +9,7 @@ import { resolve } from 'node:path'
 config({ path: [resolve(process.cwd(), '.env.local'), resolve(process.cwd(), '.env')] })
 
 // During `next build` (collect-page-data imports every route module), env vars
-// may be absent — defer the hard failure to real runtime so the build completes.
+// may be absent, defer the hard failure to real runtime so the build completes.
 const BUILD = process.env.NEXT_PHASE === 'phase-production-build'
 
 function required(name: string): string {
@@ -27,8 +27,8 @@ function optional(name: string): string | undefined {
 }
 
 // Build-phase placeholders are VALID hex shapes (a real 32-byte key / 20-byte
-// address) so viem's privateKeyToAccount()/address validation — which some
-// modules run at import — doesn't throw during `next build`. Never used for
+// address) so viem's privateKeyToAccount()/address validation, which some
+// modules run at import, doesn't throw during `next build`. Never used for
 // real signing; at runtime the actual env value is present.
 const BUILD_PK = ('0x' + '0'.repeat(63) + '1') as `0x${string}`
 const BUILD_ADDR = ('0x' + '0'.repeat(40)) as `0x${string}`
@@ -51,7 +51,7 @@ function addr(name: string, value: string): `0x${string}` {
 }
 
 // LAZY getters: a missing required var throws only when that value is actually
-// ACCESSED (at runtime, in the route/script that needs it) — NOT at import time.
+// ACCESSED (at runtime, in the route/script that needs it), NOT at import time.
 // This keeps `next build` from crashing on a deploy that hasn't set every env
 // var yet; pages that never touch chain/keys still build + render.
 export const env = {
@@ -76,6 +76,6 @@ export const env = {
   get USDC_BASE_SEPOLIA() { return addr('USDC_BASE_SEPOLIA', required('USDC_BASE_SEPOLIA')) },
   get USDC_BASE_MAINNET() { return addr('USDC_BASE_MAINNET', required('USDC_BASE_MAINNET')) },
 
-  // Market — filled after Phase 4
+  // Market, filled after Phase 4
   get MARKET_ADDRESS() { return optional('MARKET_ADDRESS') },
 }

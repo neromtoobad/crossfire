@@ -1,4 +1,4 @@
-// Visual surface for the match state machine — a status pill + a stepper.
+// Visual surface for the match state machine, a status pill + a stepper.
 
 import { PHASE_META, PHASE_ORDER, type MatchPhase } from '../lib/match-phase'
 import { CF, alpha } from '../lib/theme'

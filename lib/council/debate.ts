@@ -1,8 +1,8 @@
-// Phase 9.1 — the live debate engine.
+// Phase 9.1, the live debate engine.
 //
 // Instead of 5 parallel votes that never see each other, the council now
 // DEBATES in sequential rounds. Each agent reads the running transcript and
-// reacts to what came before — genuine agent-to-agent coordination.
+// reacts to what came before, genuine agent-to-agent coordination.
 //
 //   ONE round, SEQUENTIAL: the four role agents take the floor one at a time
 //   (each sees and engages everything said before them, with cited evidence),
@@ -19,7 +19,7 @@ import { PUNDITS, PUNDIT_ROLES, handleOf } from '../pundits.js'
 
 // The live debate streams turn-by-turn, so it needs a fast Venice model that
 // stays available under load (the heavy qwen3-235b decision model is frequently
-// overloaded → 429). glm-4.7-flash is quick and reliable. Still Venice — the
+// overloaded → 429). glm-4.7-flash is quick and reliable. Still Venice, the
 // only provider. (Deeper conviction/scoring elsewhere can use the big model.)
 const COUNCIL_MODEL = 'zai-org-glm-4.7-flash'
 
@@ -103,7 +103,7 @@ async function streamTurn(
   let full = ''
   let emitted = 0
   for await (const chunk of stream as AsyncIterable<{ choices?: { delta?: { content?: string | null; reasoning_content?: string | null } }[] }>) {
-    // reasoning models may stream the answer in reasoning_content — read both
+    // reasoning models may stream the answer in reasoning_content, read both
     const d = chunk.choices?.[0]?.delta
     const delta = d?.content || d?.reasoning_content || ''
     if (!delta) continue
@@ -136,7 +136,7 @@ function renderTranscript(transcript: DebateMessage[]): string {
 // ── role-agent debate persona (wraps the existing role prompt) ───────────
 function debateSystemPrompt(role: RoleName, marketTitle: string, impliedProbYes: number, evidenceContext: string): string {
   const base = ROLE_PROMPTS[role]({ marketTitle, impliedProbYes, evidenceContext })
-  // Strip the JSON output rules from the base prompt — we want prose now.
+  // Strip the JSON output rules from the base prompt, we want prose now.
   const persona = base.split('Output ONE JSON object')[0].trim()
   const me = PUNDITS[role]
   const others = (Object.values(PUNDITS) as typeof me[])
@@ -148,9 +148,9 @@ function debateSystemPrompt(role: RoleName, marketTitle: string, impliedProbYes:
 
 YOUR CHARACTER: you are ${me.handle}, "${me.archetype}". ${me.voice}
 
-You are on a live World Cup punditry panel: ${others}. You are debating this match. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, in 2-3 punchy sentences (this is spoken aloud — keep it tight). PRESENT PROOF: cite ONE or TWO concrete, specific facts from your lane — an actual stat, form line, head-to-head record, injury, tactical matchup, xG figure or conversion rate. When another pundit has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and engage their evidence. Stay strictly in your lane. No hedging filler, no vibes — every claim backed by a concrete fact.
+You are on a live World Cup punditry panel: ${others}. You are debating this match. Speak in the FIRST PERSON and fully IN CHARACTER as ${me.handle}, in 2-3 punchy sentences (this is spoken aloud, keep it tight). PRESENT PROOF: cite ONE or TWO concrete, specific facts from your lane, an actual stat, form line, head-to-head record, injury, tactical matchup, xG figure or conversion rate. When another pundit has already spoken, reference them BY THEIR HANDLE (e.g. "${others.split(' ')[0]}") and engage their evidence. Stay strictly in your lane. No hedging filler, no vibes, every claim backed by a concrete fact.
 
-CALIBRATION — the betting line prices YES at ${impliedPct}% (so NO at ${(100 - Number(impliedPct))}%). That line reflects sharp money — treat it as your PRIOR. If you call YES, anchor your confidence near ${impliedPct}%; if NO, near ${(100 - Number(impliedPct))}%. To push more than ~15 points beyond that anchor you need a specific, defensible reason — don't move far on vibes. The whole point is to find where the line is genuinely WRONG, not to restate it.
+CALIBRATION, the betting line prices YES at ${impliedPct}% (so NO at ${(100 - Number(impliedPct))}%). That line reflects sharp money, treat it as your PRIOR. If you call YES, anchor your confidence near ${impliedPct}%; if NO, near ${(100 - Number(impliedPct))}%. To push more than ~15 points beyond that anchor you need a specific, defensible reason, don't move far on vibes. The whole point is to find where the line is genuinely WRONG, not to restate it.
 
 After your spoken argument, on a NEW LINE output EXACTLY this marker (it will be hidden from readers):
 POSITION: YES|NO|NEUTRAL | CONFIDENCE: <0..1>
@@ -174,7 +174,7 @@ export async function runDebate({
 
   // Run one role agent's turn against an explicit context (no shared state),
   // so a whole round's agents can stream CONCURRENTLY. Agents react ACROSS
-  // rounds (R2 rebuts all of R1) — that's the A2A — while each round's four
+  // rounds (R2 rebuts all of R1), that's the A2A, while each round's four
   // calls run as one parallel wave. 9 sequential calls → 3 waves, ~3× faster.
   async function roleTurn(
     role: RoleName, round: number, context: DebateMessage[], roundInstruction: string,
@@ -186,9 +186,9 @@ export async function runDebate({
       `Market-implied P(YES): ${impliedPct}%`,
       ``,
       `Evidence for your role:`,
-      evidenceFor(role) || '(none — reason from your domain expertise)',
+      evidenceFor(role) || '(none, reason from your domain expertise)',
       ``,
-      context.length === 0 ? `(You speak first — no transcript yet.)` : `The debate so far — engage it:`,
+      context.length === 0 ? `(You speak first, no transcript yet.)` : `The debate so far, engage it:`,
       context.length === 0 ? '' : renderTranscript(context),
       ``,
       roundInstruction,
@@ -201,11 +201,11 @@ export async function runDebate({
     return msg
   }
 
-  // ── The floor — the role agents make their case, ONE AT A TIME. ──
+  // ── The floor, the role agents make their case, ONE AT A TIME. ──
   // The opener is generated first so the booth can start broadcasting it right
   // away; the rest form their cases CONCURRENTLY in the background (each argues
   // its own lane), but the booth still reveals + voices them strictly in order.
-  await emit({ type: 'debate-round', round: 1, title: 'The floor — one at a time' })
+  await emit({ type: 'debate-round', round: 1, title: 'The floor, one at a time' })
   const instruction = `Make your sharp, evidence-based case and state your position. You may name a rival pundit by handle (e.g. NEXUS, ECHO) and their lane, but lead with YOUR own concrete proof.`
   const opener = await roleTurn(ROLES[0]!, 1, [], instruction)
   const rest = await Promise.all(ROLES.slice(1).map((role) => roleTurn(role, 1, [], instruction)))
@@ -227,14 +227,14 @@ export async function runDebate({
   const no = roleVotes.filter((v) => v.vote === 'NO').length
   const majoritySide: 'YES' | 'NO' = yes >= no ? 'YES' : 'NO'
 
-  // ── VEGA closes the same round — the cross-examination ─────────────────
+  // ── VEGA closes the same round, the cross-examination ─────────────────
   await emit({ type: 'debate-turn-start', round: 1, role: 'Skeptic' })
-  const skepticSystem = `You are the Skeptic on a prediction-market council — the adversary in the room. The four role agents have just debated and lean ${majoritySide}.
+  const skepticSystem = `You are the Skeptic on a prediction-market council, the adversary in the room. The four role agents have just debated and lean ${majoritySide}.
 
-Your job: cross-examine. Make the STRONGEST possible case that the majority is WRONG. Name specific agents and attack their weakest assumption. You have no evidence of your own — you find the cracks in theirs. You VETO the call if your refutation reaches confidence ≥ 0.5.
+Your job: cross-examine. Make the STRONGEST possible case that the majority is WRONG. Name specific agents and attack their weakest assumption. You have no evidence of your own, you find the cracks in theirs. You VETO the call if your refutation reaches confidence ≥ 0.5.
 
 Speak in the first person, 2-4 sharp sentences. Then on a NEW LINE output EXACTLY (hidden from readers):
-POSITION: ${majoritySide} | CONFIDENCE: <0..1 — your confidence the majority is WRONG>
+POSITION: ${majoritySide} | CONFIDENCE: <0..1, your confidence the majority is WRONG>
 
 Confidence: 0.0-0.3 = the council is right, you concede; 0.3-0.5 = real concerns but not a veto; 0.5+ = strong refutation, you VETO.`
   const skepticUser = [
@@ -278,7 +278,7 @@ export async function runWinnerDebate({
     .map((role) => picks.find((p) => p.role === role))
     .filter((p): p is WinnerPickInput => !!p)
 
-  await emit({ type: 'debate-round', round: 1, title: 'Who lifts the trophy — make your case' })
+  await emit({ type: 'debate-round', round: 1, title: 'Who lifts the trophy, make your case' })
 
   // Each agent defends its own nation, referencing rivals by their known pick.
   // The opener is generated first so the booth starts broadcasting immediately;
@@ -294,13 +294,13 @@ export async function runWinnerDebate({
 
 You are on a live panel debating WHO WILL WIN the 2026 FIFA World Cup. YOU have backed ${pk.country.toUpperCase()} to lift the trophy. Your entire job is to DEFEND ${pk.country} and argue it beats every rival pick.
 
-Speak in the FIRST PERSON, fully in character, in 2-3 punchy sentences (this is spoken aloud — keep it tight). Make the concrete case for ${pk.country} with ONE or TWO specific facts: squad depth, current form, a key player, tournament pedigree or draw. Rivals on the panel: ${rivals}. Name ONE rival BY HANDLE and argue why ${pk.country} beats the nation THEY backed. Never concede your pick. No POSITION marker, no hedging — pure advocacy for ${pk.country}.`
+Speak in the FIRST PERSON, fully in character, in 2-3 punchy sentences (this is spoken aloud, keep it tight). Make the concrete case for ${pk.country} with ONE or TWO specific facts: squad depth, current form, a key player, tournament pedigree or draw. Rivals on the panel: ${rivals}. Name ONE rival BY HANDLE and argue why ${pk.country} beats the nation THEY backed. Never concede your pick. No POSITION marker, no hedging, pure advocacy for ${pk.country}.`
 
     const user = [
       `YOUR PICK: ${pk.country} to win the 2026 World Cup.`,
       `Your seed argument: ${pk.reason}`,
       ``,
-      `Make your case for ${pk.country} now — and say why it beats a rival's pick.`,
+      `Make your case for ${pk.country} now, and say why it beats a rival's pick.`,
     ].join('\n')
 
     await streamTurn(system, user, (t) => emit({ type: 'debate-token', round: 1, role: pk.role, token: t }), 0.7)

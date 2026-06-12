@@ -1,11 +1,11 @@
 'use client'
 
-// THE ARENA — a live, audio-reactive debate visualisation on <canvas>.
+// THE ARENA, a live, audio-reactive debate visualisation on <canvas>.
 // The five agents orbit a reactive core; whoever holds the floor erupts with an
 // aura + a circular frequency spectrum driven by the ACTUAL voice (Web Audio
 // AnalyserNode), fires energy beams at any rival it names, and throws particles
 // on the loud beats. Falls back to a synthetic pulse if no analyser is live, so
-// it always moves. Pure browser — no video gen.
+// it always moves. Pure browser, no video gen.
 
 import { useEffect, useRef } from 'react'
 import { PUNDITS, PUNDIT_ROLES } from '../lib/pundits'
@@ -116,7 +116,7 @@ export function DebateArena({
         for (let i = 0; i < bins; i++) spectrum[i] = 0.3 + 0.5 * Math.abs(Math.sin(time * 6 + i * 0.5)) * (1 - i / bins)
       }
       const spPundit = sp ? PUNDITS[sp.role] : null
-      // literal hex — canvas fillStyle can't resolve var() tokens
+      // literal hex, canvas fillStyle can't resolve var() tokens
       const accent = spPundit?.color ?? '#E8C254'
 
       // motion-blur clear (trails)
@@ -157,7 +157,7 @@ export function DebateArena({
         }
       }
 
-      // central core — pulses with the voice
+      // central core, pulses with the voice
       const coreR = baseNode * (0.62 + amp * 0.9)
       const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR * 2.4)
       cg.addColorStop(0, hexA(accent, 0.5 + amp * 0.3))
@@ -214,7 +214,7 @@ export function DebateArena({
 
       ctx.globalCompositeOperation = 'source-over'
 
-      // agent tiles — big rectangular portraits (not circles)
+      // agent tiles, big rectangular portraits (not circles)
       const tileW = M * 0.155
       const tileH = tileW * 1.24
       const rad = tileW * 0.14
@@ -272,7 +272,7 @@ export function DebateArena({
 
         // label + pick/vote chip
         ctx.globalAlpha = dim ? 0.55 : 1
-        ctx.fillStyle = isLive ? p.color : '#EFE7D2' // literal — canvas can't resolve var()
+        ctx.fillStyle = isLive ? p.color : '#EFE7D2' // literal, canvas can't resolve var()
         ctx.font = `700 ${Math.round(tileW * 0.2)}px ui-monospace, monospace`
         ctx.textAlign = 'center'; ctx.textBaseline = 'top'
         ctx.fillText(p.handle, x, ty + th + 7)
@@ -298,7 +298,7 @@ export function DebateArena({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* the canvas stage — pure visualisation, nothing overlaps the agents */}
+      {/* the canvas stage, pure visualisation, nothing overlaps the agents */}
       <div ref={stageRef} style={{
         position: 'relative', width: '100%', aspectRatio: '16 / 10', maxHeight: 460, minHeight: 320,
         borderRadius: CF.radius.lg, overflow: 'hidden', background: '#080a0f',
@@ -307,7 +307,7 @@ export function DebateArena({
         <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0 }} />
         {!speaking ? (
           <div style={{ position: 'absolute', left: 0, right: 0, top: 14, textAlign: 'center', pointerEvents: 'none' }}>
-            {/* literal colors — this banner sits on the always-dark stage */}
+            {/* literal colors, this banner sits on the always-dark stage */}
             <span className="mono" style={{ fontSize: 10.5, letterSpacing: 1.6, color: deliberating ? '#CFC9BB' : '#8E8979' }}>
               {deliberating ? <><span className="cf-live-dot" style={{ width: 6, height: 6, display: 'inline-block', marginRight: 6 }} aria-hidden /> THE PANEL IS DELIBERATING…</> : '▸ OPEN THE FLOOR TO BEGIN'}
             </span>
@@ -315,7 +315,7 @@ export function DebateArena({
         ) : null}
       </div>
 
-      {/* readable caption — BELOW the stage, never over the agents */}
+      {/* readable caption, BELOW the stage, never over the agents */}
       {speaking && sp ? (
         <div className="cf-rise" style={{
           background: `linear-gradient(90deg, ${hexA(sp.color, 0.16)}, ${CF.surface})`,

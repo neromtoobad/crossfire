@@ -1,4 +1,4 @@
-// Arena theme — the dark "broadcast gold" palette from the design.
+// Arena theme, the dark "broadcast gold" palette from the design.
 // Self-contained (independent of the light/dark CF tokens) so the arena
 // surfaces always render in the broadcast look.
 
@@ -33,7 +33,7 @@ export const A = {
   radius: { sm: 6, md: 10, lg: 14, xl: 18 },
 } as const
 
-// money formatter — $6.42M, $920K, $1.2M
+// money formatter, $6.42M, $920K, $1.2M
 export function money(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`
   if (n >= 1_000) return `$${Math.round(n / 1_000)}K`

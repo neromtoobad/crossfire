@@ -1,12 +1,12 @@
 // Public addresses + chain config safe to import in client components.
-// These are NOT secret — they're our deployed service account addresses
+// These are NOT secret, they're our deployed service account addresses
 // and well-known token contracts.
 
 export const PUBLIC = {
   chainId: 84532, // Base Sepolia
   USDC: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const,
 
-  // The orchestrator service EOA — users sign delegations TO this address.
+  // The orchestrator service EOA, users sign delegations TO this address.
   // The server (with ORCHESTRATOR_PRIVATE_KEY in env) acts on their behalf.
   ORCHESTRATOR: '0x58a17A308431e7C56A92Df78cEeBeB6a99D5301f' as `0x${string}`,
 } as const

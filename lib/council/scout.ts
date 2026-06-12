@@ -1,8 +1,8 @@
-// Phase 9.2 — "scout" the watch list.
+// Phase 9.2, "scout" the watch list.
 //
 // Run the full live debate on an arbitrary Polymarket market (not one of our
 // on-chain BinaryMarkets) and produce a verdict + the council's edge vs the
-// live Polymarket price. No on-chain bond — bonding 1,889 markets would be
+// live Polymarket price. No on-chain bond, bonding 1,889 markets would be
 // absurd; this is the council scanning the universe for mispricings.
 
 import type { AgentVote } from '../calls-data.js'
@@ -45,7 +45,7 @@ export async function runScout({
 }): Promise<void> {
   await emit({ type: 'scout-started', question, impliedProbYes, slug })
 
-  // Watch markets have no x402 evidence keyed to them — the agents reason
+  // Watch markets have no x402 evidence keyed to them, the agents reason
   // from their domain expertise + the live Polymarket price they're given.
   const evidenceFor = () => ''
 
@@ -73,7 +73,7 @@ export async function runScout({
       side: impliedProbYes >= 0.5 ? 'YES' : 'NO',
       confidence: 0.5, polymarketYes: impliedProbYes, edgePts: 0,
       agreeing: 0, skepticVetoed: false, passed: false,
-      reasons: ['every agent abstained — no signal'],
+      reasons: ['every agent abstained, no signal'],
       oneLiner: 'The desk found no edge here.',
     })
     return
@@ -96,7 +96,7 @@ export async function runScout({
   const passed = reasons.length === 0
 
   const oneLiner = passed
-    ? `The council backs ${side} at ${(confidence * 100).toFixed(0)}% — ${edgePts > 0 ? '+' : ''}${edgePts}pts vs Polymarket.`
+    ? `The council backs ${side} at ${(confidence * 100).toFixed(0)}%, ${edgePts > 0 ? '+' : ''}${edgePts}pts vs Polymarket.`
     : `The council leans ${side} but won't commit: ${reasons.join(' · ')}.`
 
   await emit({

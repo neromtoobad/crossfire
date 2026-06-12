@@ -1,4 +1,4 @@
-// World Cup 2026 group stage — the full fixture list, as match calls.
+// World Cup 2026 group stage, the full fixture list, as match calls.
 //
 // 12 groups × 4 teams = 72 round-robin fixtures. Rather than hand-author every
 // one, we generate them deterministically: a seeded PRNG picks the favourite by
@@ -50,34 +50,34 @@ GROUPS.L[0] = ['Sweden', 78]
 type Tmpl = (F: string, D: string) => string
 const LINES: Record<AgentRole, Tmpl[]> = {
   MacroScout: [
-    (F, D) => `${F} control this with the ball — they squeeze ${D}'s midfield and win the game they're meant to win.`,
+    (F, D) => `${F} control this with the ball, they squeeze ${D}'s midfield and win the game they're meant to win.`,
     (F, D) => `Shape decides it: ${F}'s back line steps up and ${D} can't play through them.`,
     (F, D) => `${D} will sit deep, but ${F} have the patience and the overloads to break a low block.`,
-    (F, D) => `A managed performance from ${F} — see out the early ${D} press, then take over.`,
+    (F, D) => `A managed performance from ${F}, see out the early ${D} press, then take over.`,
   ],
   NewsHawk: [
     (F, D) => `${F} name a full-strength side; ${D} are missing a key man at the back. Edge ${F}.`,
     (F, D) => `Word from the camp: ${F} rotate but keep the spine, ${D} risk a fitness doubt up top.`,
-    (F, D) => `${D} have a suspension in midfield — that's the gap ${F} exploit.`,
-    (F, D) => `Both rest legs, but ${F}'s bench depth dwarfs ${D}'s — they finish stronger.`,
+    (F, D) => `${D} have a suspension in midfield, that's the gap ${F} exploit.`,
+    (F, D) => `Both rest legs, but ${F}'s bench depth dwarfs ${D}'s, they finish stronger.`,
   ],
   CrowdPulse: [
-    (F, D) => `${F} are flying and ${D} are nervy — momentum is one-way here.`,
+    (F, D) => `${F} are flying and ${D} are nervy, momentum is one-way here.`,
     (F, D) => `Feel of the group says ${F}; ${D} look like a side playing not to lose.`,
     (F, D) => `${D} have belief on a good day, but ${F} carry the room when it tightens.`,
-    (F, D) => `${F}'s crowd will travel and lift them — ${D} fold when it gets loud.`,
+    (F, D) => `${F}'s crowd will travel and lift them, ${D} fold when it gets loud.`,
   ],
   BookWatcher: [
     (F, D) => `${F}'s xG profile dwarfs ${D}'s; the line under-rates the gap.`,
-    (F, D) => `Shot volume and chance quality both favour ${F} — the numbers say comfortable.`,
+    (F, D) => `Shot volume and chance quality both favour ${F}, the numbers say comfortable.`,
     (F, D) => `${D} concede high-value chances; ${F} convert them. Edge to ${F} on the data.`,
-    (F, D) => `Set-piece threat tilts ${F} too — that's the marginal goal in a tight one.`,
+    (F, D) => `Set-piece threat tilts ${F} too, that's the marginal goal in a tight one.`,
   ],
   Skeptic: [
-    (F, D) => `${D}'s only path is a smash-and-grab on the counter — possible, but I'm with the panel.`,
+    (F, D) => `${D}'s only path is a smash-and-grab on the counter, possible, but I'm with the panel.`,
     (F, D) => `Tournament openers are cagey and ${F} can be flat, but they've too much for ${D}.`,
     (F, D) => `Watch a ${D} set-piece, but one chance doesn't beat ${F} over 90.`,
-    (F, D) => `If ${F} switch off it's a draw — narrowly, the panel's right to back them.`,
+    (F, D) => `If ${F} switch off it's a draw, narrowly, the panel's right to back them.`,
   ],
 }
 const ROLES: AgentRole[] = ['MacroScout', 'NewsHawk', 'CrowdPulse', 'BookWatcher', 'Skeptic']
@@ -104,18 +104,18 @@ function makeFixtureCall(group: string, a: [string, number], b: [string, number]
     const isOutfield = role !== 'Skeptic'
     const dissent = isOutfield && i >= 4 - dissenters
     if (role === 'Skeptic') {
-      // THE PUNDIT is a genuine contrarian — he fades the favourite ~45% of the
+      // THE PUNDIT is a genuine contrarian, he fades the favourite ~45% of the
       // time (and pays for it on the chalk that holds). That's why he ends up
-      // miscalibrated and on the smallest budget — the accountability loop biting.
+      // miscalibrated and on the smallest budget, the accountability loop biting.
       if (r() < 0.45) {
         return { role, vote: 'NO', confidence: Math.round((0.55 + r() * 0.15) * 100) / 100,
-          oneLiner: `Everyone's piled on ${F} — that's exactly when they bottle it. I'll take ${D}.` }
+          oneLiner: `Everyone's piled on ${F}, that's exactly when they bottle it. I'll take ${D}.` }
       }
       return { role, vote: 'YES', confidence: Math.round((0.18 + r() * 0.18) * 100) / 100, oneLiner: line(F, D) }
     }
     if (dissent) {
       // an upset shout for the dog
-      return { role, vote: 'NO', confidence: Math.round((0.52 + r() * 0.12) * 100) / 100, oneLiner: `${D} are live here — ${F} are beatable if they start slow.` }
+      return { role, vote: 'NO', confidence: Math.round((0.52 + r() * 0.12) * 100) / 100, oneLiner: `${D} are live here, ${F} are beatable if they start slow.` }
     }
     return { role, vote: 'YES', confidence: Math.round((favProb - 0.05 + r() * 0.12) * 100) / 100, oneLiner: line(F, D) }
   })
@@ -142,10 +142,10 @@ function makeFixtureCall(group: string, a: [string, number], b: [string, number]
     locked: {
       thesis: `Group ${group} fixture. The panel backs ${F} to beat ${D} at ${Math.round(selectedSideProb * 100)}% against a ${Math.round(marketImpliedYes * 100)}% line. The case rests on the talent and control gap; the live risk is a slow ${F} start letting ${D} settle.`,
       evidenceUrls: [
-        { label: `${F} vs ${D} — form + xG`, url: 'https://fbref.com', signal: 'YES' },
+        { label: `${F} vs ${D}, form + xG`, url: 'https://fbref.com', signal: 'YES' },
         { label: 'Group team-news watch', url: 'https://www.fifa.com', signal: 'YES' },
       ],
-      sizingRationale: `Bond ${bond} USDC — scaled to the strength gap between ${F} and ${D}.`,
+      sizingRationale: `Bond ${bond} USDC, scaled to the strength gap between ${F} and ${D}.`,
       counterarguments: `${D}'s path is an early goal on the counter and a low block thereafter; the panel rates that the minority case.`,
     },
   }
@@ -153,7 +153,7 @@ function makeFixtureCall(group: string, a: [string, number], b: [string, number]
 
 // The 2026 World Cup hasn't been played, so EVERY fixture is genuinely PENDING.
 // We do NOT invent results for matches that haven't aired. The agents' track
-// record comes from a backtest on real, already-played matches instead — see
+// record comes from a backtest on real, already-played matches instead, see
 // lib/historical-matches.ts. (Kept as an empty export for back-compat.)
 export const FIXTURE_RESOLUTIONS: Record<string, 'YES' | 'NO'> = {}
 
@@ -161,7 +161,7 @@ export const FIXTURE_CALLS: PublishedCall[] = (() => {
   const out: PublishedCall[] = []
   let idx = 0
   for (const [group, teams] of Object.entries(GROUPS)) {
-    // round-robin: 6 matches per group of 4 — all upcoming, all pending
+    // round-robin: 6 matches per group of 4, all upcoming, all pending
     for (let i = 0; i < teams.length; i++) {
       for (let j = i + 1; j < teams.length; j++) {
         out.push(makeFixtureCall(group, teams[i], teams[j], idx))

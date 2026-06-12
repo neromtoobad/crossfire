@@ -1,13 +1,13 @@
 'use client'
 
-// THE LIVE RUN — the spine. One continuous, narrated arc that stitches the
+// THE LIVE RUN, the spine. One continuous, narrated arc that stitches the
 // working pieces into a single flow a judge can watch end to end:
 //
-//   1. AUTHORIZE  — you grant a capped mandate (MetaMask Kit · ERC-7715)
-//   2. DEBATE     — the council argues and bonds its conviction (A2A · Venice · x402)
-//   3. THE REVERT — the enforcer rejects anything over the cap (ERC-7710)  ← the hero
-//   4. SETTLE     — executed once on Base mainnet via 1Shot
-//   5. ACCOUNT    — every call is Brier-scored; track record sets the next budget
+//   1. AUTHORIZE , you grant a capped mandate (MetaMask Kit · ERC-7715)
+//   2. DEBATE    , the council argues and bonds its conviction (A2A · Venice · x402)
+//   3. THE REVERT, the enforcer rejects anything over the cap (ERC-7710)  ← the hero
+//   4. SETTLE    , executed once on Base mainnet via 1Shot
+//   5. ACCOUNT   , every call is Brier-scored; track record sets the next budget
 //
 // Each stage is the real, independently-runnable component. The spine adds the
 // narrative, the track tags, and a progress rail that lights up as each stage
@@ -28,10 +28,10 @@ const STAGES: StageMeta[] = [
     title: 'Approve a spending limit',
     tags: ['MetaMask Kit', 'ERC-7715'],
     caption:
-      'You sign once in MetaMask to let the agents spend a few dollars — and not a cent more. It expires on its own, and you can cancel anytime. The limit lives on the blockchain, so no bug in our code can get past it.',
+      'You sign once in MetaMask to let the agents spend a few dollars, and not a cent more. It expires on its own, and you can cancel anytime. The limit lives on the blockchain, so no bug in our code can get past it.',
   },
   {
-    title: 'The agents debate — and bet',
+    title: 'The agents debate, and bet',
     tags: ['A2A', 'Venice', 'x402'],
     caption:
       'Each of the five agents gets a slice of your budget. They research the question, debate it live, and a skeptic pushes back. If the call holds up, they put real money behind it.',
@@ -40,7 +40,7 @@ const STAGES: StageMeta[] = [
     title: 'The blockchain blocks overspending',
     tags: ['ERC-7710'],
     caption:
-      'Now watch an agent try to spend more than you allowed. The blockchain rejects it on the spot. Nothing in our code stops it — the network itself refuses.',
+      'Now watch an agent try to spend more than you allowed. The blockchain rejects it on the spot. Nothing in our code stops it, the network itself refuses.',
     hero: true,
   },
   {

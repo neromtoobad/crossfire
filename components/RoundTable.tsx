@@ -1,6 +1,6 @@
 'use client'
 
-// THE ROUND TABLE — the broadcast set. The five agents are seated around a
+// THE ROUND TABLE, the broadcast set. The five agents are seated around a
 // glowing table; whoever holds the floor leans in, lights up ON AIR, and their
 // live argument plays on the table with an audio equalizer. Pure CSS/SVG stage
 // driven by the real Venice debate + voice (no video gen, fully reliable).
@@ -28,11 +28,11 @@ export function Equalizer({ color, bars = 16, height = 18 }: { color: string; ba
 
 // seat positions around an elliptical table (head at the back, two each side/front)
 const SEATS: Record<AgentRole, { left: number; top: number; s: number }> = {
-  MacroScout: { left: 50, top: 13, s: 0.82 },  // PHOENIX — head of the table
-  NewsHawk: { left: 13, top: 42, s: 0.92 },     // ORION — left
-  CrowdPulse: { left: 87, top: 42, s: 0.92 },   // NEXUS — right
-  BookWatcher: { left: 27, top: 79, s: 1.06 },  // ECHO — front-left
-  Skeptic: { left: 73, top: 79, s: 1.06 },      // VEGA — front-right
+  MacroScout: { left: 50, top: 13, s: 0.82 },  // PHOENIX, head of the table
+  NewsHawk: { left: 13, top: 42, s: 0.92 },     // ORION, left
+  CrowdPulse: { left: 87, top: 42, s: 0.92 },   // NEXUS, right
+  BookWatcher: { left: 27, top: 79, s: 1.06 },  // ECHO, front-left
+  Skeptic: { left: 73, top: 79, s: 1.06 },      // VEGA, front-right
 }
 
 type Speaking = { role: AgentRole; text: string } | null
@@ -72,7 +72,7 @@ export function RoundTable({
         transition: 'border-color 400ms ease, box-shadow 400ms ease',
       }} />
 
-      {/* centre of the table — the live argument / status */}
+      {/* centre of the table, the live argument / status */}
       <div style={{
         position: 'absolute', left: '50%', top: '52%', transform: 'translate(-50%,-50%)',
         width: '52%', maxWidth: 520, textAlign: 'center', zIndex: 4,

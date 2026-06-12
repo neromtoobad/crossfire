@@ -1,7 +1,7 @@
-// MetaMask Embedded Wallets (Web3Auth v10) — feature flag.
+// MetaMask Embedded Wallets (Web3Auth v10), feature flag.
 //
 // Activates ONLY when NEXT_PUBLIC_WEB3AUTH_CLIENT_ID is set. Otherwise the app
-// falls back to the existing RainbowKit / MetaMask flow, unchanged — so the
+// falls back to the existing RainbowKit / MetaMask flow, unchanged, so the
 // working demo can never break.
 //
 // To enable: get a free Client ID at https://dashboard.web3auth.io (create a

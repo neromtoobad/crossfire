@@ -1,4 +1,4 @@
-// /leaderboard — per-role calibration (editorial-light, Phase 8.11).
+// /leaderboard, per-role calibration (editorial-light, Phase 8.11).
 
 import Link from 'next/link'
 import { loadCalls } from '../../lib/calls-data'
@@ -38,7 +38,7 @@ export default async function Leaderboard() {
   const council = councilBrier(stats)
   const resolvedCalls = calls.filter((c) => getResolution(c.marketId) !== 'PENDING')
   const openCalls = calls.length - resolvedCalls.length
-  // "This World Cup" standings — the 2026 fixtures actually played, graded live.
+  // "This World Cup" standings, the 2026 fixtures actually played, graded live.
   const wcMatches = await getPlayedMatches(Date.now())
   const wcRecords = worldCupRecords(wcMatches)
 
@@ -90,10 +90,10 @@ export default async function Leaderboard() {
             fontFamily: CF.body, fontSize: 16, color: CF.ink2, lineHeight: 1.6, maxWidth: 720, margin: 0,
           }}>
             The five agents, ranked two ways. <span style={{ color: CF.ink }}>This World Cup</span> grades
-            only the 2026 fixtures actually played, against the real result — their record in
+            only the 2026 fixtures actually played, against the real result, their record in
             the tournament happening right now. <span style={{ color: CF.ink }}>Career</span> is the
             all-time backtest on already-played matches (2018–2024 World Cups, Euros, Copa
-            América), scored by Brier — lower is better; 0 perfect, 0.25 a coin flip. A sharper
+            América), scored by Brier, lower is better; 0 perfect, 0.25 a coin flip. A sharper
             record earns a bigger budget on the next call, so being right compounds.
           </p>
         </section>
@@ -106,7 +106,7 @@ export default async function Leaderboard() {
             { label: 'OPEN', value: openCalls.toString(), color: CF.ink },
             {
               label: 'LEAGUE BRIER',
-              value: council > 0 ? council.toFixed(3) : '—',
+              value: council > 0 ? council.toFixed(3) : '-',
               color: council > 0 && council < 0.2 ? CF.bull : CF.ink,
             },
           ].map((t) => (
@@ -127,7 +127,7 @@ export default async function Leaderboard() {
           ))}
         </section>
 
-        {/* standings — toggle: this World Cup (2026, real results) vs career (backtest) */}
+        {/* standings, toggle: this World Cup (2026, real results) vs career (backtest) */}
         <StandingsTabs
           matchesPlayed={wcMatches.length}
           worldCup={<WorldCupStandingsTable rows={wcRecords} matchesPlayed={wcMatches.length} />}
@@ -189,11 +189,11 @@ export default async function Leaderboard() {
                   </div>
                 </Link>
 
-                {/* stats — wrap as a group below the agent on mobile */}
+                {/* stats, wrap as a group below the agent on mobile */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                   <Stat label="CALLS" value={<>{s.callsResolved}<span style={{ color: CF.ink4 }}>/{s.callsTotal}</span></>} />
-                  <Stat label="WIN" value={s.callsResolved > 0 ? `${(s.winRate * 100).toFixed(0)}%` : '—'} color={winColor} />
-                  <Stat label="BRIER" value={s.callsResolved > 0 ? s.brierScore.toFixed(3) : '—'} color={badge.color} />
+                  <Stat label="WIN" value={s.callsResolved > 0 ? `${(s.winRate * 100).toFixed(0)}%` : '-'} color={winColor} />
+                  <Stat label="BRIER" value={s.callsResolved > 0 ? s.brierScore.toFixed(3) : '-'} color={badge.color} />
                   <Stat label="BUDGET ×" value={`${s.budgetMultiplier.toFixed(2)}×`} color={s.budgetMultiplier > 1 ? CF.bull : s.budgetMultiplier < 1 ? CF.bear : CF.ink2} />
                   <span className="mono" style={{
                     display: 'inline-block', padding: '4px 10px', borderRadius: 999,
@@ -221,7 +221,7 @@ export default async function Leaderboard() {
             THE ACCOUNTABILITY LOOP
           </div>
           <p style={{ margin: '0 0 8px' }}>
-            Brier is the mean squared error of an agent's probability forecasts —
+            Brier is the mean squared error of an agent's probability forecasts -
             confidence when it votes YES, <span style={{ color: CF.ink, fontWeight: 600 }}>1 − confidence</span> when it votes NO,
             squared against the actual outcome. Lower is better (0 perfect,
             0.25 a coin flip). The chips under each agent show its calibration
@@ -232,7 +232,7 @@ export default async function Leaderboard() {
             sets a <span className="mono">budget ×</span> multiplier (sharp 1.5× → calibrated 1.2× →
             fair 1.0× → miscalibrated 0.7×). When the council publishes a call,
             the on-chain bond is scaled by the multipliers of the agents who
-            backed it — agents that have been right literally stake more, and
+            backed it, agents that have been right literally stake more, and
             ones that have been wrong stake less. Being calibrated earns
             conviction; being wrong costs it.
           </p>
@@ -242,13 +242,13 @@ export default async function Leaderboard() {
   )
 }
 
-// "This World Cup" standings — agents ranked by their record on the 2026
+// "This World Cup" standings, agents ranked by their record on the 2026
 // fixtures actually played (real ESPN results), not the backtest.
 function WorldCupStandingsTable({ rows, matchesPlayed }: { rows: WCRecord[]; matchesPlayed: number }) {
   if (matchesPlayed === 0) {
     return (
       <div style={{ padding: '22px 24px', background: CF.surface, border: `1px solid ${CF.line}`, borderRadius: CF.radius.lg, boxShadow: CF.shadow.card, fontFamily: CF.body, fontSize: 14.5, color: CF.ink2, lineHeight: 1.6 }}>
-        The tournament has just kicked off — no fixtures have settled yet. Each agent’s 2026
+        The tournament has just kicked off, no fixtures have settled yet. Each agent’s 2026
         record fills in the moment a match finishes (graded live on the real result).
       </div>
     )
@@ -285,7 +285,7 @@ function WorldCupStandingsTable({ rows, matchesPlayed }: { rows: WCRecord[]; mat
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <Stat label="CALLED" value={`${r.played}`} />
-              <Stat label="RIGHT" value={r.played ? `${(r.winRate * 100).toFixed(0)}%` : '—'} color={winColor} />
+              <Stat label="RIGHT" value={r.played ? `${(r.winRate * 100).toFixed(0)}%` : '-'} color={winColor} />
               <Stat label="W-L" value={`${r.won}-${r.lost}`} color={CF.ink2} />
             </div>
           </div>

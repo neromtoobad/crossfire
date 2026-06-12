@@ -1,6 +1,6 @@
 'use client'
 
-// Phase 9.2 — modal that sends a Polymarket watch market to the council and
+// Phase 9.2, modal that sends a Polymarket watch market to the council and
 // streams the live debate + verdict.
 
 import { useEffect, useRef, useState } from 'react'
@@ -209,7 +209,7 @@ export function WatchDebateModal({ target, onClose }: { target: WatchTarget; onC
 
           {phase === 'done' && !verdict ? (
             <div className="mono" style={{ marginTop: 12, fontSize: 12, color: CF.ink3 }}>
-              · debate complete — no verdict produced.
+              · debate complete, no verdict produced.
             </div>
           ) : null}
 

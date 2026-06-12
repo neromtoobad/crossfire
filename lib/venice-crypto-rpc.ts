@@ -1,8 +1,8 @@
-// Venice Crypto RPC — a pay-per-call multi-chain JSON-RPC proxy Venice exposes
+// Venice Crypto RPC, a pay-per-call multi-chain JSON-RPC proxy Venice exposes
 // at POST /api/v1/crypto/rpc/{network}. Same shape as Alchemy/Infura. We use it
 // to pull LIVE on-chain context for a market right before the forecasters reason,
-// so their calls are anchored to real chain state — fetched through Venice, not a
-// third-party node. (Recommendation #3 — verified live: 23 networks incl. base.)
+// so their calls are anchored to real chain state, fetched through Venice, not a
+// third-party node. (Recommendation #3, verified live: 23 networks incl. base.)
 //
 // Auth: Bearer VENICE_API_KEY today; the same endpoint accepts SIWE/x402 once the
 // wallet path is funded, so this becomes another wallet-paid Venice call.
@@ -36,7 +36,7 @@ export async function cryptoRpc<T = unknown>(
   return json.result as T
 }
 
-/** Live chain context for a market — block height + gas, fetched via Venice. */
+/** Live chain context for a market, block height + gas, fetched via Venice. */
 export type ChainContext = {
   network: RpcNetwork
   chainId: number
