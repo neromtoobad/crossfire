@@ -7,6 +7,7 @@ import { ConnectButton } from '../components/ConnectButton'
 import { VideoBackground } from '../components/VideoBackground'
 import { WinnerPicks } from '../components/WinnerPicks'
 import { OpeningReceipts } from '../components/OpeningReceipts'
+import { WorldCupStandings } from '../components/WorldCupStandings'
 import { DraftBoard } from '../components/DraftBoard'
 import { BrandLogo } from '../components/Logo'
 import { loadCalls } from '../lib/calls-data'
@@ -71,7 +72,8 @@ export default function Arena() {
           </div>
           <nav className="cf-nav">
             <Link href="/agents" style={navStyle}>Agents</Link>
-            <Link href="/leaderboard" style={navStyle}>Standings</Link>
+            <Link href="/fixtures" style={navStyle}>Fixtures</Link>
+            <Link href="/leaderboard" className="cf-hide-sm" style={navStyle}>Standings</Link>
             <Link href="/portfolio" className="cf-hide-sm" style={navStyle}>Vault</Link>
             <Link href="/lab" style={navStyle}>War Room</Link>
             <ConnectButton variant="primary" />
@@ -150,6 +152,9 @@ export default function Arena() {
 
         {/* ── opening weekend: the first results + the agents' receipts ── */}
         <OpeningReceipts />
+
+        {/* ── live World Cup table: the real fixtures played so far ── */}
+        <WorldCupStandings />
 
         {/* ── how it works ── */}
         <Section eyebrow="HOW IT WORKS" title="On-chain. Transparent. Trustless.">
