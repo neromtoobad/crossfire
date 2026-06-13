@@ -59,14 +59,23 @@ const ROLES: AgentRole[] = ['MacroScout', 'NewsHawk', 'CrowdPulse', 'BookWatcher
 // Build the agents' pre-match calls for a real fixture: the four lane agents
 // back the stronger side (YES), the contrarian VEGA fades it (NO). Confidence
 // scales with the strength gap. Deterministic, no result peeking.
-function callsFor(favProb: number): SettledCall[] {
+// Deterministic ~50/50 from a string (FNV-1a, low bit). Stable per match.
+function seedFlip(seed: string): boolean {
+  let h = 2166136261
+  for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619) }
+  return ((h >>> 0) & 1) === 0
+}
+
+function callsFor(favProb: number, idx = 0): SettledCall[] {
   return ROLES.map((role, i) => {
     // VEGA, the contrarian, always fades the favourite.
     if (role === 'Skeptic') return { role, vote: 'NO', confidence: 0.55 + (i % 2) * 0.02 }
-    // NEXUS, the momentum model, is the SECOND independent voice, it fades a
-    // shaky (closer) favourite, so the panel isn't four clones plus one.
-    if (role === 'CrowdPulse' && favProb < 0.66) {
-      return { role, vote: 'NO', confidence: Math.min(0.7, Math.round((0.55 + (0.66 - favProb)) * 100) / 100) }
+    // NEXUS, the momentum model, is the WILDCARD: it zigzags match to match
+    // (rides whoever has the momentum), so it backs the favourite on some and
+    // fades on others, landing ~50% over time. Never a clone of the pack, never
+    // a permanent fader like VEGA.
+    if (role === 'CrowdPulse') {
+      return { role, vote: idx % 2 === 0 ? 'YES' : 'NO', confidence: Math.round((0.5 + (i % 2) * 0.03) * 100) / 100 }
     }
     return { role, vote: 'YES', confidence: Math.round((favProb - 0.04 + i * 0.02) * 100) / 100 }
   })
@@ -133,7 +142,7 @@ export async function getPlayedMatches(nowMs: number, maxMatches = 4): Promise<S
           outcome,
           story,
           source: 'ESPN · live feed',
-          calls: callsFor(favProb),
+          calls: callsFor(favProb, out.length),
         })
       }
     }
@@ -173,10 +182,14 @@ function makeMarketCall(fav: string, dog: string, favProb: number, dayLabel: str
   const votes: AgentVote[] = ROLES.map((role) => {
     // VEGA, the contrarian, fades the favourite.
     if (role === 'Skeptic') return { role, vote: 'NO' as const, confidence: 0.56, oneLiner: oneLiner(role, fav, dog) }
-    // NEXUS, the momentum model, is the second independent voice, it fades a
-    // shaky (closer) favourite instead of following the pack.
-    if (role === 'CrowdPulse' && favProb < 0.66) {
-      return { role, vote: 'NO' as const, confidence: Math.min(0.68, Math.round((0.55 + (0.66 - favProb)) * 100) / 100), oneLiner: `${dog} carry the momentum swing here, ${fav} have wobbled when it tightens.` }
+    // NEXUS, the momentum model, is the WILDCARD: an unpredictable per-match
+    // coin flip (it rides whoever has the momentum), landing ~50% over time.
+    if (role === 'CrowdPulse') {
+      const yes = seedFlip(`${fav}-${dog}|nexus`)
+      return { role, vote: yes ? 'YES' as const : 'NO' as const, confidence: 0.55,
+        oneLiner: yes
+          ? `${fav} have the momentum and the belief, ${dog} tend to fold when it tightens.`
+          : `The momentum's swung to ${dog}, ${fav} look there for the taking.` }
     }
     return { role, vote: 'YES' as const, confidence: Math.min(0.9, Math.max(0.5, Math.round((favProb - 0.04) * 100) / 100)), oneLiner: oneLiner(role, fav, dog) }
   })
@@ -238,12 +251,12 @@ const SNAPSHOT: SettledMatch[] = [
     id: 'mex-rsa-2026', home: 'Mexico', homeFlag: '🇲🇽', away: 'South Africa', awayFlag: '🇿🇦',
     score: '2–0', stage: '2026 World Cup · Jun 11', market: 'Mexico to beat South Africa',
     favorite: 'Mexico', outcome: 'YES', story: 'The favourite delivered, Mexico saw off South Africa.',
-    source: 'ESPN', calls: callsFor(0.78),
+    source: 'ESPN', calls: callsFor(0.78, 0),
   },
   {
     id: 'kor-cze-2026', home: 'South Korea', homeFlag: '🇰🇷', away: 'Czechia', awayFlag: '🇨🇿',
     score: '2–1', stage: '2026 World Cup · Jun 11', market: 'South Korea to beat Czechia',
     favorite: 'South Korea', outcome: 'YES', story: 'The favourite delivered, South Korea edged Czechia.',
-    source: 'ESPN', calls: callsFor(0.6),
+    source: 'ESPN', calls: callsFor(0.6, 1),
   },
 ]
