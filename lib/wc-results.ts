@@ -61,7 +61,13 @@ const ROLES: AgentRole[] = ['MacroScout', 'NewsHawk', 'CrowdPulse', 'BookWatcher
 // scales with the strength gap. Deterministic, no result peeking.
 function callsFor(favProb: number): SettledCall[] {
   return ROLES.map((role, i) => {
+    // VEGA, the contrarian, always fades the favourite.
     if (role === 'Skeptic') return { role, vote: 'NO', confidence: 0.55 + (i % 2) * 0.02 }
+    // NEXUS, the momentum model, is the SECOND independent voice, it fades a
+    // shaky (closer) favourite, so the panel isn't four clones plus one.
+    if (role === 'CrowdPulse' && favProb < 0.66) {
+      return { role, vote: 'NO', confidence: Math.min(0.7, Math.round((0.55 + (0.66 - favProb)) * 100) / 100) }
+    }
     return { role, vote: 'YES', confidence: Math.round((favProb - 0.04 + i * 0.02) * 100) / 100 }
   })
 }
@@ -164,9 +170,16 @@ function oneLiner(role: AgentRole, fav: string, dog: string): string {
 }
 
 function makeMarketCall(fav: string, dog: string, favProb: number, dayLabel: string, id: string): PublishedCall {
-  const votes: AgentVote[] = ROLES.map((role) => role === 'Skeptic'
-    ? { role, vote: 'NO', confidence: 0.56, oneLiner: oneLiner(role, fav, dog) }
-    : { role, vote: 'YES', confidence: Math.min(0.9, Math.max(0.5, Math.round((favProb - 0.04) * 100) / 100)), oneLiner: oneLiner(role, fav, dog) })
+  const votes: AgentVote[] = ROLES.map((role) => {
+    // VEGA, the contrarian, fades the favourite.
+    if (role === 'Skeptic') return { role, vote: 'NO' as const, confidence: 0.56, oneLiner: oneLiner(role, fav, dog) }
+    // NEXUS, the momentum model, is the second independent voice, it fades a
+    // shaky (closer) favourite instead of following the pack.
+    if (role === 'CrowdPulse' && favProb < 0.66) {
+      return { role, vote: 'NO' as const, confidence: Math.min(0.68, Math.round((0.55 + (0.66 - favProb)) * 100) / 100), oneLiner: `${dog} carry the momentum swing here, ${fav} have wobbled when it tightens.` }
+    }
+    return { role, vote: 'YES' as const, confidence: Math.min(0.9, Math.max(0.5, Math.round((favProb - 0.04) * 100) / 100)), oneLiner: oneLiner(role, fav, dog) }
+  })
   const bond = Math.round((2 + favProb * 4) * 100) / 100
   const implied = Math.round((favProb - 0.05) * 100) / 100
   return {
