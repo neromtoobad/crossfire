@@ -250,7 +250,7 @@ BASE SEPOLIA / MAINNET
 - **Foundry** — `BinaryMarket.sol`, dependency-free, ~75 lines
 - Base **Sepolia** for delegations / redemptions / the revert; Base **mainnet** for the one 1Shot relay
 
-Venice models: `qwen3-235b-a22b-instruct-2507` (chat) + `venice-sd35` (verdict-card image) — chosen to avoid Venice-routed Claude/GPT models that would muddy the "Venice as sole engine" claim.
+Venice models: `qwen3-235b-a22b-instruct-2507` (chat) + `venice-sd35` (verdict-card image) — chosen to avoid Venice-routed third-party models that would muddy the "Venice as sole engine" claim.
 
 > **Build note:** the repo uses NodeNext module resolution with explicit `.js` import extensions (the tsx operational scripts need it). Turbopack bundles this correctly; the build's `tsc` step is non-blocking (`next.config.mjs → typescript.ignoreBuildErrors`) because of the App-Router/NodeNext friction. Type-check separately with `npm run typecheck`.
 
@@ -292,7 +292,7 @@ None change the architecture or invalidate a track claim.
 ## Files worth reading first
 
 - [`PROOF.md`](./PROOF.md) — every on-chain receipt by phase
-- [`CLAUDE.md`](./CLAUDE.md) — the project brief and competitive thesis
+- [`AGENTS.md`](./AGENTS.md) — the project brief and competitive thesis
 - [`lib/pundits.ts`](./lib/pundits.ts) — the five agents (handle, voice, colour)
 - [`lib/verdict-card.ts`](./lib/verdict-card.ts) — the Venice image verdict card
 - [`scripts/relay-bet.ts`](./scripts/relay-bet.ts) — the real mainnet 1Shot relay, step by step

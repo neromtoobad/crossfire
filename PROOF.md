@@ -58,8 +58,8 @@ Every claim that wins a track has a tx hash, error string, or webhook payload he
 - Root:   USER SA `0x1C0D7D54bAce6761Af45Eb96C403AA805c495d8D` → ORCH EOA `0x58a17A308431e7C56A92Df78cEeBeB6a99D5301f` · cap 50 USDC
 - Bull:   ORCH EOA → BULL EOA `0x57142Bd8cb6d73e9bA130A5d9e5d53DA17F0C407` · cap 20 USDC · parent = root
 - Bear:   ORCH EOA → BEAR EOA `0x74440bB0E85EbB8669559055a885031073889FEb` · cap 20 USDC · parent = root
-- Chain link integrity verified: each child.delegator == parent.delegate (CLAUDE.md footgun #3)
-- Encoding order: `encodeDelegations([child, root])` — LEAF-TO-ROOT (CLAUDE.md footgun #2)
+- Chain link integrity verified: each child.delegator == parent.delegate (AGENTS.md footgun #3)
+- Encoding order: `encodeDelegations([child, root])` — LEAF-TO-ROOT (AGENTS.md footgun #2)
 
 ### In-cap sub-redeems ✓
 - BULL 1 USDC: `0x5cdcdb45505aa49b8f76cf759dbe2a58b3e2300aafc7356969f7ed19b7d6ba41`
@@ -97,7 +97,7 @@ Every claim that wins a track has a tx hash, error string, or webhook payload he
 - Facilitator (ORCH EOA) accumulates received USDC
 
 ### Venice — the only decision engine
-- Chat model: `qwen3-235b-a22b-instruct-2507` (Venice-native, not a routed-through-Claude model)
+- Chat model: `qwen3-235b-a22b-instruct-2507` (Venice-native, not a routed-through-external model)
 - `venice_parameters.enable_web_scraping: true` enabled
 - Image model: `flux-2-pro`
 - `lib/venice.ts` `conviction()` returns validated `{side, estProb, impliedProb, edge, stakeUsdc, rationale}` with server-side stake guardrails

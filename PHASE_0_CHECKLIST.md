@@ -21,13 +21,13 @@ Tick every box. Phase 0 failures are what kill hackathon weekends, not the hard 
 - [ ] `git init`, and **git identity set**: `git config user.name` and `git config user.email` to the identity you want on the commits.
 - [ ] `.gitignore` covers `.env`, `node_modules`, `out`, `cache`, `.next`.
 
-## Skills setup for Claude Code (this is your edge as a vibecoder)
+## Skills setup for the coding agent (this is your edge as a vibecoder)
 
 Two different layers — don't confuse them.
 
 **Layer 1 — context, auto-read (no install).**
-- [ ] `CLAUDE.md` sits at the repo root. Claude Code reads it every session automatically. Nothing to install.
-- [ ] `BUILD_GUIDE.md`, `EXECUTION_PLAN.md`, `PHASE_0_CHECKLIST.md` at root too — not auto-read, but CLAUDE.md points to them and you paste from them.
+- [ ] `AGENTS.md` sits at the repo root. the coding agent reads it every session automatically. Nothing to install.
+- [ ] `BUILD_GUIDE.md`, `EXECUTION_PLAN.md`, `PHASE_0_CHECKLIST.md` at root too — not auto-read, but AGENTS.md points to them and you paste from them.
 
 **Layer 2 — skills, installed individually (project scope, travels with the repo).**
 
@@ -46,18 +46,18 @@ mkdir -p .claude/skills/venice
 
 If either ships as a published plugin instead of a raw SKILL.md, use the built-in system rather than copying files:
 ```bash
-# inside a Claude Code session
+# inside a the coding agent session
 /plugin            # browse + install
 # or from the terminal
 claude plugin install <name>@<marketplace>
 ```
 
-- [ ] 1Shot relayer skill installed (do this one — it keeps Claude Code from guessing the relayer param shapes).
+- [ ] 1Shot relayer skill installed (do this one — it keeps the coding agent from guessing the relayer param shapes).
 - [ ] Venice skill installed (optional — agent-tooling patterns).
-- [ ] Started a fresh Claude Code session after installing, so the skills load.
-- [ ] Confirmed they loaded: ask Claude Code to list active skills, or watch it reference them on the first relevant call.
+- [ ] Started a fresh the coding agent session after installing, so the skills load.
+- [ ] Confirmed they loaded: ask the coding agent to list active skills, or watch it reference them on the first relevant call.
 
-**Note:** your personal Claude.ai skills (anti-slop, the hackathon workflow) do NOT carry into Claude Code. Different product, different skills folder. The key rules from those already live inside `CLAUDE.md` — keep it that way rather than reinstalling them here.
+**Note:** your personal the web assistant skills (anti-slop, the hackathon workflow) do NOT carry into the coding agent. Different product, different skills folder. The key rules from those already live inside `AGENTS.md` — keep it that way rather than reinstalling them here.
 
 ## Sanity checks (do these before Phase 1)
 - [ ] `relayer_getCapabilities` returns successfully and lists Base + an accepted USDC fee token. Save the response.
@@ -66,7 +66,7 @@ claude plugin install <name>@<marketplace>
 - [ ] You know which prediction market you are betting into: for the demo, your own deployed binary market on Base Sepolia. (Live mainnet markets are out of scope for the build window.)
 
 ## Documents staged
-- [ ] `CLAUDE.md` at repo root.
+- [ ] `AGENTS.md` at repo root.
 - [ ] `BUILD_GUIDE.md` open in a tab.
 - [ ] `EXECUTION_PLAN.md` open — you will paste from it phase by phase.
 - [ ] A scratch `PROOF.md` to paste tx hashes, the mainnet relay TaskId, and screenshots into as you go.

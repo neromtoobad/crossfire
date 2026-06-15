@@ -64,7 +64,7 @@ Each phase is done only when its criterion is provably true. Commit at each gree
 
 ### SESSION START
 ```
-Read CLAUDE.md and BUILD_GUIDE.md in full before doing anything.
+Read AGENTS.md and BUILD_GUIDE.md in full before doing anything.
 We are on Phase <N>: <one line>. Do not start later phases.
 Confirm: (1) the acceptance criterion, (2) the exact files you will touch,
 (3) the verified Smart Accounts Kit / 1Shot / Venice methods you will call.
@@ -76,7 +76,7 @@ proof and a real mainnet 1Shot relay must stay intact. Then wait for my go.
 ```
 Stop. Do not guess or swap libraries, and never swap Venice for another model.
 Restate: what we expected, what happened, the exact error.
-List 3 likely causes ranked by probability. For the top cause, cite the CLAUDE.md
+List 3 likely causes ranked by probability. For the top cause, cite the AGENTS.md
 footgun or doc behaviour it matches. Propose the smallest fix that tests that cause
 only. Wait for my go.
 ```

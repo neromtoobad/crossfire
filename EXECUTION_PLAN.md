@@ -1,6 +1,6 @@
 # EXECUTION_PLAN.md — CROSSFIRE
 
-Every prompt pastes straight into Claude Code, in order. Run SESSION START (in BUILD_GUIDE.md) at the top of each session, then paste phase prompts one at a time. Hit each acceptance criterion before moving on. Use STUCK when something fails twice, COMMIT at each green.
+Every prompt pastes straight into the coding agent, in order. Run SESSION START (in BUILD_GUIDE.md) at the top of each session, then paste phase prompts one at a time. Hit each acceptance criterion before moving on. Use STUCK when something fails twice, COMMIT at each green.
 
 Maps to the week: Phase 0 setup → P1 core+proof → P2 duel skeleton → P3 evidence+Venice → P4 market+netting → P5 mainnet relay+dashboard → P6 submit. Phases 3–4 share the mid-week; the dashboard in P5 is the polish day.
 
@@ -20,13 +20,13 @@ accounts.ts: build userSmartAccount and orchestratorSmartAccount with
 toMetaMaskSmartAccount (Implementation.Hybrid, deployParams [owner.address,[],[],[]],
 deploySalt '0x', signer { account: owner }). Export both + a helper that logs each
 .address and deployment status. Write scripts/check-accounts.ts and run it.
-Use only the methods in CLAUDE.md. Do not invent names.
+Use only the methods in AGENTS.md. Do not invent names.
 ```
 
 ### Prompt 1.2 — deploy + fund the orchestrator (avoid the ERC-1271 footgun)
 ```
 The account the proof redeems from must be DEPLOYED and FUNDED, or DelegationManager
-signature validation fails (see CLAUDE.md footgun). Write scripts/deploy-orchestrator.ts
+signature validation fails (see AGENTS.md footgun). Write scripts/deploy-orchestrator.ts
 to deploy orchestratorSmartAccount (a no-op user op) and wait for the receipt. Confirm it
 holds Base Sepolia USDC; if not, print funding instructions. Run until deployed = true and
 USDC > 0.
@@ -63,7 +63,7 @@ sign with the orchestrator smart account. Make bullBudget (20 USDC) and bearBudg
 ```
 Add redeemAsSub(sub, signedChain, execution). CRITICAL: encode the chain LEAF-TO-ROOT and
 ensure each child's delegator equals the parent's delegate, or redemption throws
-invalid-delegate (see CLAUDE.md). Write scripts/duel-skeleton.ts: each sub-agent redeems a
+invalid-delegate (see AGENTS.md). Write scripts/duel-skeleton.ts: each sub-agent redeems a
 1 USDC in-cap transfer → assert success + hash. Then each attempts 40 USDC (2x its sub-cap)
 → assert revert. Assert combined spend never exceeds the 50 USDC root.
 ```
@@ -84,7 +84,7 @@ With valid payment it returns one evidence item for the market:
 
 ### Prompt 3.2 — buyer-with-delegation (metered, on-chain costly signal)
 ```
-Create lib/x402-buyer.ts per CLAUDE.md: handle 402, assert extra.assetTransferMethod ===
+Create lib/x402-buyer.ts per AGENTS.md: handle 402, assert extra.assetTransferMethod ===
 'erc7710', createOpenDelegation (Erc20TransferAmount on accepted.asset, maxAmount
 BigInt(accepted.amount), caveat CaveatType.Redeemer = accepted.extra.facilitators), sign,
 encodeDelegations([signed]) → permissionContext, build paymentPayload { x402Version:2,

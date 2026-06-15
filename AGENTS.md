@@ -1,4 +1,4 @@
-# CLAUDE.md — CROSSFIRE
+# AGENTS.md — CROSSFIRE
 
 > Working codename: **CROSSFIRE**. The thesis in one line: a user hands an agent a *mandate* — a scoped, revocable, on-chain spending permission — not their keys. The chain, not the code, enforces the limit.
 

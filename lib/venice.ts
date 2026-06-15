@@ -23,7 +23,7 @@ export const venice = new OpenAI({
   baseURL: 'https://api.venice.ai/api/v1',
 })
 
-// Model choices, both Venice-native, picked deliberately (no Claude/GPT
+// Model choices, both Venice-native, picked deliberately (no non-Venice
 // routing models that would muddy the "Venice as sole engine" track claim).
 const CONVICTION_MODEL = 'qwen3-235b-a22b-instruct-2507' // instruct, schema, web-search
 const IMAGE_MODEL = 'flux-2-pro'

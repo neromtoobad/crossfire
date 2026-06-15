@@ -12,7 +12,7 @@
 // Reason: erc7710WalletActions.sendTransactionWithDelegation submits the
 // redemption from a viem WalletClient (EOA-signed), making the EOA the
 // delegate avoids needing a bundler or routing through SA.execute() at this
-// stage. CLAUDE.md uses orchestratorSmartAccount.address as delegate; we
+// stage. AGENTS.md uses orchestratorSmartAccount.address as delegate; we
 // match that pattern in Phase 2 redelegation once Bull/Bear/Orch are unified.
 
 import { createDelegation, ScopeType } from '@metamask/smart-accounts-kit'

@@ -71,7 +71,7 @@ async function main() {
   console.log(`  Bull budget signed: ORCH EOA → BULL EOA (cap ${formatUnits(BULL_CAP_USDC, 6)} USDC)`)
   console.log(`  Bear budget signed: ORCH EOA → BEAR EOA (cap ${formatUnits(BEAR_CAP_USDC, 6)} USDC)`)
 
-  // Sanity: chain link integrity (CLAUDE.md footgun)
+  // Sanity: chain link integrity (AGENTS.md footgun)
   if (bullBudget.delegator !== signedRoot.delegate) {
     throw new Error('Bull chain broken: child.delegator != parent.delegate')
   }
@@ -80,7 +80,7 @@ async function main() {
   }
   console.log('  ✓ chain link integrity verified (each child.delegator == parent.delegate)')
 
-  // ── encodeDelegations is LEAF-TO-ROOT per CLAUDE.md ─────────────────────
+  // ── encodeDelegations is LEAF-TO-ROOT per AGENTS.md ─────────────────────
   const bullChain: Hex = encodeDelegations([bullBudget, signedRoot])
   const bearChain: Hex = encodeDelegations([bearBudget, signedRoot])
 

@@ -11,7 +11,7 @@
 // redemption time. The kit's createDelegation handles the linking; we just
 // sign with the parent's delegate (ORCH EOA).
 //
-// CLAUDE.md footgun (taken seriously):
+// AGENTS.md footgun (taken seriously):
 //   "Each child's delegator must equal the parent's delegate."
 //   Here: child.from = ORCH EOA == root.to = ORCH EOA. ✓
 //   "Delegation chain order is LEAF-TO-ROOT when encoding [sub, ..., root]."

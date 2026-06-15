@@ -1,7 +1,7 @@
 // Phase 1 — Prompt 1.2.
 // Deploy the orchestrator smart account on Base Sepolia and confirm it holds USDC.
 //
-// Why: CLAUDE.md footgun #1 — counterfactual accounts holding 0 USDC fail
+// Why: AGENTS.md footgun #1 — counterfactual accounts holding 0 USDC fail
 // ERC-1271 signature validation in the DelegationManager. The account that
 // redeems the mandate MUST be deployed AND funded.
 //
