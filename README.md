@@ -171,6 +171,7 @@ Posts from [@neromtoobad](https://x.com/neromtoobad) sharing the CROSSFIRE build
 - https://x.com/neromtoobad/status/2064789235430027310
 - https://x.com/neromtoobad/status/2064421069683909049
 - https://x.com/neromtoobad/status/2064067861526520180
+- https://x.com/neromtoobad/status/2066611821117624641
 
 Each post shows how MetaMask Advanced Permissions (ERC-7715) shaped the UX — the one-signature capped mandate and the over-cap revert.
 
