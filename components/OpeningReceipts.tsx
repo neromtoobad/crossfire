@@ -109,9 +109,10 @@ function MatchReceipt({ m }: { m: SettledMatch }) {
 }
 
 export async function OpeningReceipts() {
-  const matches = await getPlayedMatches(Date.now())
-  if (matches.length === 0) return null
-  const n = matches.length
+  const all = await getPlayedMatches(Date.now())
+  if (all.length === 0) return null
+  const n = all.length              // true total played so far
+  const shown = all.slice(0, 4)     // newest few on the homepage; full record lives on /leaderboard
   return (
     <section style={{ marginTop: 8, padding: '8px 0 0' }}>
       <div style={{ marginBottom: 18 }}>
@@ -129,9 +130,14 @@ export async function OpeningReceipts() {
           scores, markets without a confirmed result yet stay <span style={{ color: A.text }}>open</span>.
         </p>
       </div>
-      <div className={n > 1 ? 'cf-g2' : ''} style={{ gap: 16, maxWidth: n > 1 ? undefined : 600 }}>
-        {matches.map((m) => <MatchReceipt key={m.id} m={m} />)}
+      <div className={shown.length > 1 ? 'cf-g2' : ''} style={{ gap: 16, maxWidth: shown.length > 1 ? undefined : 600 }}>
+        {shown.map((m) => <MatchReceipt key={m.id} m={m} />)}
       </div>
+      {n > shown.length && (
+        <div className="mono" style={{ fontSize: 11, color: A.text3, marginTop: 12 }}>
+          <a href="/leaderboard" style={{ color: A.gold }}>See all {n} settled, and each agent&apos;s record →</a>
+        </div>
+      )}
       <div className="mono" style={{ fontSize: 10.5, color: A.text3, marginTop: 12, lineHeight: 1.5 }}>
         ⚖ Live markets settle via <span style={{ color: A.gold }}>UMA&apos;s Optimistic Oracle</span> (the same
         decentralized, on-chain resolver Polymarket uses), never a number we type. Verify any market at{' '}

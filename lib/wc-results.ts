@@ -96,61 +96,65 @@ let cache: { at: number; value: SettledMatch[] } | null = null
 const TTL = 10 * 60_000
 
 // ── the live feed ───────────────────────────────────────────────────────────
-export async function getPlayedMatches(nowMs: number, maxMatches = 4): Promise<SettledMatch[]> {
-  if (cache && nowMs - cache.at < TTL) return cache.value
+// Pulls the WHOLE tournament so far in a SINGLE ESPN date-range query
+// (dates=YYYYMMDD-YYYYMMDD). A ~45-day look-back covers the entire World Cup
+// window (group stage through the final) from any point during it, so the
+// opener is never dropped and the count is never capped at a stale handful.
+// Returns FULL-TIME matches only, newest first. The full list is cached;
+// callers that only want a few (the homepage strip) slice the result.
+export async function getPlayedMatches(nowMs: number, maxMatches = 200): Promise<SettledMatch[]> {
+  if (cache && nowMs - cache.at < TTL) return cache.value.slice(0, maxMatches)
 
-  const days: string[] = []
-  for (let i = 0; i < 3; i++) days.push(ymd(new Date(nowMs - i * 86400_000)))
+  const start = ymd(new Date(nowMs - 45 * 86400_000))
+  const end = ymd(new Date(nowMs))
 
   const out: SettledMatch[] = []
   try {
-    const pages = await Promise.all(days.map((d) =>
-      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${d}`,
-        { headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' }, signal: AbortSignal.timeout(6000) })
-        .then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ))
+    const page = await fetch(
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${start}-${end}`,
+      { headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+      .then((r) => (r.ok ? r.json() : null)).catch(() => null)
 
-    for (let di = 0; di < pages.length; di++) {
-      const evs = (pages[di]?.events ?? []) as EspnEvent[]
-      for (const e of evs) {
-        const comp = e.competitions?.[0]
-        if (!comp?.status?.type?.completed) continue // FULL-TIME only
-        const cs = comp.competitors ?? []
-        const a = cs[0], b = cs[1]
-        const an = a?.team?.displayName, bn = b?.team?.displayName
-        if (!an || !bn) continue
-        const as = Number(a?.score ?? 0), bs = Number(b?.score ?? 0)
+    const evs = (page?.events ?? []) as EspnEvent[]
+    for (const e of evs) {
+      const comp = e.competitions?.[0]
+      if (!comp?.status?.type?.completed) continue // FULL-TIME only
+      const cs = comp.competitors ?? []
+      const a = cs[0], b = cs[1]
+      const an = a?.team?.displayName, bn = b?.team?.displayName
+      if (!an || !bn) continue
+      const as = Number(a?.score ?? 0), bs = Number(b?.score ?? 0)
 
-        // frame around the stronger side
-        const [fav, favScore, dog, dogScore] = rankOf(an) <= rankOf(bn) ? [an, as, bn, bs] : [bn, bs, an, as]
-        const favProb = Math.min(0.85, Math.max(0.52, 0.5 + (rankOf(dog) - rankOf(fav)) * 0.006))
-        const outcome: 'YES' | 'NO' = favScore > dogScore ? 'YES' : 'NO'
-        const story = outcome === 'YES'
-          ? `The favourite delivered, ${fav} saw off ${dog}.`
-          : favScore === dogScore
-            ? `Held to a draw, ${fav} couldn't break ${dog} down.`
-            : `The upset landed, ${dog} stunned ${fav}.`
+      // frame around the stronger side
+      const [fav, favScore, dog, dogScore] = rankOf(an) <= rankOf(bn) ? [an, as, bn, bs] : [bn, bs, an, as]
+      const favProb = Math.min(0.85, Math.max(0.52, 0.5 + (rankOf(dog) - rankOf(fav)) * 0.006))
+      const outcome: 'YES' | 'NO' = favScore > dogScore ? 'YES' : 'NO'
+      const story = outcome === 'YES'
+        ? `The favourite delivered, ${fav} saw off ${dog}.`
+        : favScore === dogScore
+          ? `Held to a draw, ${fav} couldn't break ${dog} down.`
+          : `The upset landed, ${dog} stunned ${fav}.`
 
-        out.push({
-          id: e.id ?? `${fav}-${dog}-${days[di]}`,
-          home: fav, homeFlag: flagOf(fav),
-          away: dog, awayFlag: flagOf(dog),
-          score: `${favScore}–${dogScore}`,
-          stage: `2026 World Cup · ${formatDay(e.date)}`,
-          market: `${fav} to beat ${dog}`,
-          favorite: fav,
-          outcome,
-          story,
-          source: 'ESPN · live feed',
-          calls: callsFor(favProb, out.length),
-        })
-      }
+      out.push({
+        id: e.id ?? `${fav}-${dog}`,
+        home: fav, homeFlag: flagOf(fav),
+        away: dog, awayFlag: flagOf(dog),
+        score: `${favScore}–${dogScore}`,
+        stage: `2026 World Cup · ${formatDay(e.date)}`,
+        market: `${fav} to beat ${dog}`,
+        favorite: fav,
+        outcome,
+        story,
+        source: 'ESPN · live feed',
+        calls: callsFor(favProb, out.length),
+      })
     }
   } catch { /* fall through to snapshot */ }
 
-  const result = out.length ? out.slice(0, maxMatches) : SNAPSHOT
-  cache = { at: nowMs, value: result }
-  return result
+  // newest first (ESPN returns chronological); cache the FULL list, slice per call.
+  const full = out.length ? out.reverse() : SNAPSHOT
+  cache = { at: nowMs, value: full }
+  return full.slice(0, maxMatches)
 }
 
 function formatDay(iso?: string): string {
