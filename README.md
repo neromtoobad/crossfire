@@ -192,13 +192,6 @@ The arena is built and running end-to-end — the chain primitives, the 5-agent 
 - Brier-scored **standings** with the accountability loop (record → budget multiplier → next stake)
 - wagmi + MetaMask connect; dark broadcast-gold design system pinned across the app
 
-### Next (packaging only)
-| | Task | Status |
-|---|---|---|
-| 1 | Deploy to Vercel (live judge-clickable URL) | pending |
-| 2 | Demo video (sub-3-min): live call → Fade/Follow grant → revert → 1Shot mainnet relay | pending |
-| 3 | Submit to the tracks + social/feedback | pending |
-
 ---
 
 ## Run it locally
