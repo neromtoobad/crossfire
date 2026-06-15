@@ -165,10 +165,14 @@ Honest developer-experience notes from building on the kit (Best Feedback track)
 
 ## Social Media
 
-Posts sharing the CROSSFIRE build, tagging [@MetaMaskDev](https://x.com/MetaMaskDev) (Best Social Media Presence track):
+Posts from [@neromtoobad](https://x.com/neromtoobad) sharing the CROSSFIRE build, tagging [@MetaMaskDev](https://x.com/MetaMaskDev) (Best Social Media Presence track):
 
-- _Add your X post links here, e.g._ `https://x.com/<handle>/status/<id>`
-- Each post shows how MetaMask Advanced Permissions (ERC-7715) shaped the UX — the one-signature capped mandate and the over-cap revert.
+- https://x.com/neromtoobad/status/2065147704154505359
+- https://x.com/neromtoobad/status/2064789235430027310
+- https://x.com/neromtoobad/status/2064421069683909049
+- https://x.com/neromtoobad/status/2064067861526520180
+
+Each post shows how MetaMask Advanced Permissions (ERC-7715) shaped the UX — the one-signature capped mandate and the over-cap revert.
 
 ---
 
