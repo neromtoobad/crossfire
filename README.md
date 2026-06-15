@@ -117,6 +117,61 @@ Three guarantees are enforced by the build, not by trust:
 
 ---
 
+## Code usage (MetaMask submission checklist)
+
+Direct links to the exact code, per the Dev Cook Off submission checklist.
+
+### Smart Accounts Kit usage
+
+**Advanced Permissions (ERC-7715)**
+- Request: [`GrantCouncilMandate.tsx#L175-L190`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/components/GrantCouncilMandate.tsx#L175-L190) — `walletClient.extend(erc7715ProviderActions()).requestExecutionPermissions([...])`, the native MetaMask Advanced Permissions dialog, in the main bet flow.
+- Redeem: [`x402-facilitator.ts#L124-L165`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/x402-facilitator.ts#L124-L165) — `DelegationManager.redeemDelegations(...)`. The encoded permission context that is redeemed is built in [`duel-engine.ts#L235-L255`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/duel-engine.ts#L235-L255).
+
+**Delegations**
+- Create: [`mandate.ts#L67-L82`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/mandate.ts#L67-L82) — `createDelegation({ scope: Erc20TransferAmount, ... })` + `signDelegation(...)` (the root mandate).
+- Redeem: [`x402-facilitator.ts#L124-L165`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/x402-facilitator.ts#L124-L165) — `redeemDelegations` against the DelegationManager.
+
+**Redelegation**
+- Create: [`duel.ts#L46-L75`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/duel.ts#L46-L75) and [`duel-engine.ts#L124-L140`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/duel-engine.ts#L124-L140) — child delegation with `parentDelegation = signedRoot` (the user → orchestrator → Bull/Bear chain; `child.delegator == parent.delegate`).
+
+**x402**
+- Server: [`x402-facilitator.ts#L1-L60`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/x402-facilitator.ts#L1-L60) (builds the `PAYMENT-REQUIRED` descriptor + verifies settlement) and the 402 endpoint [`app/api/unlock/[callId]/route.ts#L54-L64`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/app/api/unlock/%5BcallId%5D/route.ts#L54-L64).
+- Client (x402 ERC-7710 asset-transfer method): [`x402-buyer.ts#L79-L120`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/x402-buyer.ts#L79-L120) — asserts `assetTransferMethod === 'erc7710'`, builds an open delegation with `createOpenDelegation`, `encodeDelegations([...])` → `permissionContext`, and wraps the x402 `paymentPayload`.
+
+### 1Shot API usage
+- JSON-RPC client (`getCapabilities` / `getFeeData` / `estimate7710` / `send7710` / `getStatus`): [`relayer.ts`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/relayer.ts).
+- 7702 authorization + `relayer_send7710Transaction` flow: [`relay-flow.ts#L95-L140`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/relay-flow.ts#L95-L140) (uses viem `signAuthorization` to upgrade the EOA in-flight).
+- The real Base-mainnet relay script: [`scripts/relay-bet.ts`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/scripts/relay-bet.ts).
+- In-app trigger (NDJSON stream): [`app/api/relay/run/route.ts`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/app/api/relay/run/route.ts). Webhook receiver: [`app/api/relayer-webhook/route.ts`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/app/api/relayer-webhook/route.ts).
+- Proof: confirmed mainnet tx [`0x5a09…2651`](https://basescan.org/tx/0x5a093da29349a1519e67aed5f0b6a518109ade6fed6a5f53ca35f8d6a1312651) (type-4 EIP-7702, gas paid in USDC).
+
+### Venice AI usage
+- Conviction reasoning (chat completions): [`venice.ts#L95-L136`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/venice.ts#L95-L136).
+- Verdict card (image generate): [`venice.ts#L155-L174`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/venice.ts#L155-L174) and [`verdict-card.ts#L40-L55`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/verdict-card.ts#L40-L55).
+- Per-agent voice (audio/speech TTS): [`voice.ts#L24-L45`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/voice.ts#L24-L45).
+- World Cup winner picks (chat): [`winner-picks.ts#L60-L90`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/winner-picks.ts#L60-L90).
+- Venice over x402 (paid inference): [`venice-x402.ts`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/venice-x402.ts) · Venice crypto RPC: [`venice-crypto-rpc.ts`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/venice-crypto-rpc.ts).
+- Venice is the **only** model provider in the repo (`grep`-enforced, no fallback): [`venice.ts`](https://github.com/neromtoobad/crossfire/blob/ad1f018e53faa0fd8355f6e28bb1b4ea64e13af1/lib/venice.ts).
+
+## Feedback
+
+Honest developer-experience notes from building on the kit (Best Feedback track):
+
+- **ERC-7715 `requestExecutionPermissions` is gated by wallet build.** It only resolves on the MetaMask extension with smart accounts / Flask; on a stock wallet it throws an unknown-method error. We added explicit detection + a clear message, but a documented capability check (`wallet_getCapabilities`-style) would save everyone the trial-and-error.
+- **Smart-account payments break naive x402 verification.** When the payer is a MetaMask smart account, a `USDC.transfer` is redeemed through the DelegationManager, so the outer `tx.to` is the manager, not the asset. Server-side verification must read the USDC `Transfer` **event** in the receipt, not `tx.to`/calldata. A note about this in the x402 buyer guide would prevent a common false-reject.
+- **Embedded-wallet chain default.** With MetaMask Embedded Wallets, the wallet seeded a different default chain (Ethereum Sepolia, 11155111) than our target (Base Sepolia, 84532), so transactions asserted a chain mismatch. We auto-switch (`wallet_switchEthereumChain` + 4902 add-chain) before redeeming; clearer guidance on setting the embedded default chain would help.
+- **1Shot was the smoothest piece.** `getCapabilities` → `getFeeData` → `send7710Transaction` with a single EIP-7702 `authorizationList` entry worked first try on Base mainnet, and pointing `destinationUrl` at a public webhook endpoint (a Vercel route, no tunnel) gave clean status pushes. Splitting fee + work into two transfers in one redemption was the one non-obvious bit.
+- **Testnet/mainnet split.** The relayer is mainnet-only while the enforcement story is cheapest on Base Sepolia; a testnet relayer (even rate-limited) would let teams prove the full 7710-via-1Shot loop without spending real USDC.
+
+## Social Media
+
+Posts sharing the CROSSFIRE build, tagging [@MetaMaskDev](https://x.com/MetaMaskDev) (Best Social Media Presence track):
+
+- _Add your X post links here, e.g._ `https://x.com/<handle>/status/<id>`
+- Each post shows how MetaMask Advanced Permissions (ERC-7715) shaped the UX — the one-signature capped mandate and the over-cap revert.
+
+---
+
 ## What works now vs what's next
 
 The arena is built and running end-to-end — the chain primitives, the 5-agent Venice panel, the World Cup feed (82 markets + 72 fixtures, 49 resolved), agent profiles, Fade/Follow, the Venice verdict card, The Vault, and the proof console. **The production build is green.** What remains is packaging.
